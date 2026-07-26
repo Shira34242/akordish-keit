@@ -220,6 +220,7 @@ namespace AkordishKeit.Controllers
                 try
                 {
                     await _context.SaveChangesAsync();
+                    await _emailService.SyncUserSubscriptionAsync(user.Id);
                 }
                 catch (DbUpdateException ex)
                 {
@@ -265,6 +266,7 @@ namespace AkordishKeit.Controllers
                 try
                 {
                     await _context.SaveChangesAsync();
+                    await _emailService.SyncUserSubscriptionAsync(user.Id);
                 }
                 catch (DbUpdateException ex)
                 {
@@ -525,6 +527,7 @@ namespace AkordishKeit.Controllers
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
+            await _emailService.SyncUserSubscriptionAsync(user.Id);
 
             _logger.LogInformation("New user registered: UserId={UserId} Email={Email} IP={IP}",
                 user.Id, user.Email, HttpContext.Connection.RemoteIpAddress);
@@ -798,6 +801,11 @@ namespace AkordishKeit.Controllers
                 user.MarketingConsentAt = DateTime.UtcNow;
                 user.MarketingConsentRevokedAt = null;
                 user.MarketingConsentSource = "profile";
+
+                var unsubscribe = await _context.MarketingUnsubscribes
+                    .FirstOrDefaultAsync(u => u.Email == user.Email.Trim().ToLower());
+                if (unsubscribe != null)
+                    _context.MarketingUnsubscribes.Remove(unsubscribe);
             }
             else
             {
@@ -807,6 +815,7 @@ namespace AkordishKeit.Controllers
 
             user.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
+            await _emailService.SyncUserSubscriptionAsync(user.Id);
 
             var hasProfessionalProfile = user.ServiceProviderProfiles.Any(p => !p.IsDeleted)
                 || (user.ManagedArtist != null && !user.ManagedArtist.IsDeleted);

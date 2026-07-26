@@ -141,7 +141,9 @@ public class AkordishKeitDbContext : DbContext
     // Email Campaigns
     public DbSet<EmailGroup> EmailGroups { get; set; }
     public DbSet<EmailGroupMember> EmailGroupMembers { get; set; }
+    public DbSet<EmailSubscriber> EmailSubscribers { get; set; }
     public DbSet<SiteInterestRegistration> SiteInterestRegistrations { get; set; }
+    public DbSet<MarketingUnsubscribe> MarketingUnsubscribes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -272,16 +274,30 @@ public class AkordishKeitDbContext : DbContext
         });
         modelBuilder.Entity<EmailGroupMember>(e =>
         {
-            e.ToTable("EmailGroupMembers");
-            e.HasKey(m => new { m.EmailGroupId, m.UserId });
+            e.ToTable("EmailSubscriberGroups");
+            e.HasKey(m => new { m.EmailGroupId, m.SubscriberId });
             e.HasOne(m => m.EmailGroup)
                 .WithMany(g => g.Members)
                 .HasForeignKey(m => m.EmailGroupId)
                 .OnDelete(DeleteBehavior.Cascade);
-            e.HasOne(m => m.User)
-                .WithMany()
-                .HasForeignKey(m => m.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(m => m.Subscriber)
+                .WithMany(s => s.Groups)
+                .HasForeignKey(m => m.SubscriberId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        modelBuilder.Entity<EmailSubscriber>(e =>
+        {
+            e.ToTable("EmailSubscribers");
+            e.HasKey(s => s.Id);
+            e.Property(s => s.Email).HasMaxLength(320).IsRequired();
+            e.Property(s => s.Name).HasMaxLength(200);
+            e.Property(s => s.Source).HasMaxLength(100).IsRequired();
+            e.HasIndex(s => s.Email).IsUnique();
+            e.HasIndex(s => s.UserId).IsUnique().HasFilter("[UserId] IS NOT NULL");
+            e.HasOne(s => s.User)
+                .WithOne()
+                .HasForeignKey<EmailSubscriber>(s => s.UserId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
         modelBuilder.Entity<SiteInterestRegistration>(e =>
         {
@@ -290,6 +306,14 @@ public class AkordishKeitDbContext : DbContext
             e.Property(s => s.Email).HasMaxLength(320).IsRequired();
             e.Property(s => s.Source).HasMaxLength(100);
             e.HasIndex(s => s.Email).IsUnique();
+        });
+        modelBuilder.Entity<MarketingUnsubscribe>(e =>
+        {
+            e.ToTable("MarketingUnsubscribes");
+            e.HasKey(u => u.Id);
+            e.Property(u => u.Email).HasMaxLength(320).IsRequired();
+            e.Property(u => u.Source).HasMaxLength(100).IsRequired();
+            e.HasIndex(u => u.Email).IsUnique();
         });
 
         // Seed Data

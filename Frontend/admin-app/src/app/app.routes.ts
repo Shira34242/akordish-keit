@@ -6,6 +6,11 @@ import { pendingArticleDraftGuard } from './guards/pending-article-draft.guard';
 
 export const routes: Routes = [
     {
+        path: 'unsubscribe',
+        loadComponent: () => import('./components/public/unsubscribe/unsubscribe.component').then(m => m.UnsubscribeComponent),
+        title: 'הסרה מרשימת התפוצה - אקורדישקייט'
+    },
+    {
         path: 'join-index/agency/:slug',
         loadComponent: () => import('./components/public/join-index/join-index.component').then(m => m.JoinIndexComponent),
         title: 'הצטרפות לאינדקס'

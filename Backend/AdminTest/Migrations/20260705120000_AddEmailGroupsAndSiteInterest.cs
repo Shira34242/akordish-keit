@@ -1,9 +1,13 @@
+using AkordishKeit.Data;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace AkordishKeit.Migrations
 {
+    [DbContext(typeof(AkordishKeitDbContext))]
+    [Migration("20260705120000_AddEmailGroupsAndSiteInterest")]
     public partial class AddEmailGroupsAndSiteInterest : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)

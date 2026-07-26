@@ -417,7 +417,11 @@
 .quick-categories--hero {
   width: 100%;
   max-width: 560px;
-  justify-content: center;
+  box-sizing: border-box;
+  justify-content: flex-start;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
   padding: var(--space-base) 0 0;
 }
 

@@ -14,6 +14,10 @@
       <span class="material-symbols-outlined">send</span>
       שליחה
     </button>
+    <button class="tab-btn" [class.active]="activeTab === 'subscribers'" (click)="switchTab('subscribers')">
+      <span class="material-symbols-outlined">contacts</span>
+      ניהול מנויים
+    </button>
     <button class="tab-btn" [class.active]="activeTab === 'groups'" (click)="switchTab('groups')">
       <span class="material-symbols-outlined">group_add</span>
       קבוצות
@@ -115,7 +119,7 @@
       </div>
 
       <!-- Right: Editor -->
-      <div class="composer-main">
+      <div class="composer-main" [class.composer-main--mobile]="mobilePreview">
 
         <!-- Subject -->
         <div class="subject-row">
@@ -127,10 +131,33 @@
             placeholder="הכנסי נושא למייל..."
             maxlength="150"
           />
+          <div class="composer-tools">
+            <button type="button" (click)="undo()"><span class="material-symbols-outlined">undo</span>ביטול</button>
+            <button type="button" (click)="redo()"><span class="material-symbols-outlined">redo</span>ביצוע מחדש</button>
+            <button type="button" (click)="saveDraft()"><span class="material-symbols-outlined">save</span>שמור טיוטה</button>
+            <button type="button" (click)="sendTestEmail()"><span class="material-symbols-outlined">forward_to_inbox</span>שלח לעצמי בדיקה</button>
+          </div>
+          @if (drafts.length || sentEmails.length) {
+            <div class="saved-emails">
+              @if (drafts.length) {
+                <label>טיוטות</label>
+                @for (item of drafts; track item.id) { <button type="button" (click)="loadSavedEmail(item)">{{ item.subject }}</button> }
+              }
+              @if (sentEmails.length) {
+                <label>מיילים שנשלחו</label>
+                @for (item of sentEmails; track item.id) { <button type="button" (click)="loadSavedEmail(item)">{{ item.subject }}</button> }
+              }
+            </div>
+          }
         </div>
 
         <!-- Toolbar -->
-        <div class="editor-toolbar">
+        <div
+          class="editor-toolbar editor-toolbar--floating"
+          [class.visible]="editorMenuVisible"
+          [style.left.px]="editorMenuX"
+          [style.top.px]="editorMenuY"
+          (mousedown)="onToolbarMouseDown($event)">
           <div class="toolbar-group">
             <button class="tb-btn" (click)="format('bold')" title="מודגש"><strong>B</strong></button>
             <button class="tb-btn italic-btn" (click)="format('italic')" title="נטוי"><em>I</em></button>
@@ -157,6 +184,20 @@
             </button>
           </div>
           <div class="toolbar-group">
+            <select class="tb-select tb-select--font" (change)="setFontFamily($event)" title="פונט">
+              <option value="">פונט האתר</option>
+              <option value="Open Sans, Arial, sans-serif">Open Sans</option>
+              <option value="Arial, Helvetica, sans-serif">Arial</option>
+              <option value="Georgia, serif">Georgia</option>
+            </select>
+            <select class="tb-select" (change)="setFontWeight($event)" title="משקל פונט">
+              <option value="">משקל</option>
+              <option value="300">דק</option>
+              <option value="400">רגיל</option>
+              <option value="600">חצי מודגש</option>
+              <option value="700">מודגש</option>
+              <option value="800">כבד</option>
+            </select>
             <select class="tb-select" (change)="setFontSize($event)" title="גודל טקסט">
               <option value="">גודל</option>
               <option value="1">קטן מאוד</option>
@@ -180,6 +221,14 @@
               <span class="material-symbols-outlined">image</span>
               <span>תמונה</span>
             </button>
+            <button class="tb-btn tb-btn--video" (mousedown)="$event.preventDefault()" (click)="openVideoDialog()" title="הוסף סרטון">
+              <span class="material-symbols-outlined">smart_display</span>
+              <span>סרטון</span>
+            </button>
+            <button class="tb-btn tb-btn--button" (mousedown)="$event.preventDefault()" (click)="openButtonDialog()" title="הוסף לחצן">
+              <span class="material-symbols-outlined">ads_click</span>
+              <span>לחצן</span>
+            </button>
           </div>
           <div class="toolbar-group">
             <button class="tb-btn" (click)="format('removeFormat')" title="נקה עיצוב">
@@ -194,14 +243,27 @@
           class="editor-body"
           contenteditable="true"
           dir="rtl"
+          (mouseup)="onEditorSelectionChange()"
+          (keyup)="onEditorSelectionChange()"
+          (blur)="onEditorSelectionChange()"
+          (click)="onEditorClick($event)"
           [attr.data-placeholder]="'כתבי את תוכן המייל כאן...'"
         ></div>
 
+        <div class="editor-insert-menu" aria-label="הוספת תוכן">
+          <span class="material-symbols-outlined">add_circle</span>
+          <div class="editor-insert-actions">
+            <button type="button" (click)="openImageDialog()"><span class="material-symbols-outlined">image</span>תמונה</button>
+            <button type="button" (click)="openVideoDialog()"><span class="material-symbols-outlined">smart_display</span>סרטון</button>
+            <button type="button" (click)="openButtonDialog()"><span class="material-symbols-outlined">ads_click</span>לחצן</button>
+          </div>
+        </div>
+
         <!-- Actions -->
         <div class="editor-actions">
-          <button class="btn-preview" (click)="togglePreview()">
-            <span class="material-symbols-outlined">{{ showPreview ? 'edit' : 'preview' }}</span>
-            {{ showPreview ? 'חזרה לעריכה' : 'תצוגה מקדימה' }}
+          <button class="btn-preview" type="button" (click)="mobilePreview = !mobilePreview">
+            <span class="material-symbols-outlined">{{ mobilePreview ? 'desktop_windows' : 'phone_iphone' }}</span>
+            {{ mobilePreview ? 'תצוגת מחשב' : 'תצוגת מובייל' }}
           </button>
           <button
             class="btn-send"
@@ -213,23 +275,6 @@
           </button>
         </div>
 
-        <!-- Preview Panel -->
-        @if (showPreview) {
-          <div class="preview-panel">
-            <div class="preview-header">
-              <span class="material-symbols-outlined">preview</span>
-              <span>תצוגה מקדימה</span>
-              <small>כך בדיוק ייראה המייל אצל הלקוחות</small>
-            </div>
-            <div class="preview-body">
-              @if (loadingPreview) {
-                <div class="preview-loading">טוען תצוגה מקדימה...</div>
-              } @else if (previewSafeHtml) {
-                <iframe class="preview-iframe" [srcdoc]="previewSafeHtml" title="תצוגה מקדימה של המייל"></iframe>
-              }
-            </div>
-          </div>
-        }
       </div>
     </div>
   }
@@ -237,6 +282,96 @@
   <!-- ════════════════════════════════════════════
        TAB 2: GROUPS
   ════════════════════════════════════════════ -->
+  @if (activeTab === 'subscribers') {
+    <div class="tab-content subscribers-tab">
+      <div class="tab-content-header">
+        <div>
+          <h2>ניהול מנויים</h2>
+          <p class="tab-desc">ניהול הרשמה לדיוור ושיוך ידני לקבוצות.</p>
+        </div>
+        <button class="btn-primary" (click)="openCreateSubscriberDialog()">
+          <span class="material-symbols-outlined">person_add</span>
+          הוספת מנוי
+        </button>
+      </div>
+
+      <div class="subscriber-stats">
+        <div class="subscriber-stat"><strong>{{ subscribedCount | number }}</strong><span>פעילים</span></div>
+        <div class="subscriber-stat"><strong>{{ unsubscribedCount | number }}</strong><span>מוסרים</span></div>
+        <div class="subscriber-stat"><strong>{{ (subscribedCount + unsubscribedCount) | number }}</strong><span>סה״כ</span></div>
+      </div>
+
+      <div class="subscriber-filters">
+        <label class="subscriber-search">
+          <span class="material-symbols-outlined">search</span>
+          <input type="search" [(ngModel)]="subscriberSearch" (keyup.enter)="loadSubscribers(true)" placeholder="חיפוש לפי שם או מייל" />
+        </label>
+        <select [(ngModel)]="subscriberStatus" (ngModelChange)="loadSubscribers(true)">
+          <option value="all">כל הסטטוסים</option>
+          <option value="subscribed">פעילים</option>
+          <option value="unsubscribed">מוסרים</option>
+        </select>
+        <select [(ngModel)]="subscriberGroupId" (ngModelChange)="loadSubscribers(true)">
+          <option [ngValue]="null">כל הקבוצות</option>
+          @for (group of emailGroups; track group.id) {
+            <option [ngValue]="group.id">{{ group.name }}</option>
+          }
+        </select>
+        <button class="btn-secondary" (click)="loadSubscribers(true)">חיפוש</button>
+      </div>
+
+      @if (loadingSubscribers) {
+        <div class="loading-state">טוען מנויים...</div>
+      } @else if (subscribers.length === 0) {
+        <div class="empty-state">
+          <span class="material-symbols-outlined">contacts</span>
+          <p>לא נמצאו מנויים מתאימים</p>
+        </div>
+      } @else {
+        <div class="subscriber-table-wrap">
+          <table class="subscriber-table">
+            <thead>
+              <tr><th>מנוי</th><th>סטטוס</th><th>מקור</th><th>קבוצות</th><th>פעולות</th></tr>
+            </thead>
+            <tbody>
+              @for (subscriber of subscribers; track subscriber.id) {
+                <tr>
+                  <td>
+                    <div class="subscriber-identity">
+                      <strong>{{ subscriber.name || 'ללא שם' }}</strong>
+                      <span>{{ subscriber.email }}</span>
+                    </div>
+                  </td>
+                  <td><span class="subscriber-status" [class.subscriber-status--active]="subscriber.isSubscribed">{{ subscriber.isSubscribed ? 'פעיל' : 'הוסר' }}</span></td>
+                  <td><span class="source-tag">{{ subscriber.source }}</span></td>
+                  <td>
+                    <div class="subscriber-groups">
+                      @for (group of subscriber.groups; track group.id) { <span>{{ group.name }}</span> }
+                      @if (subscriber.groups.length === 0) { <em>ללא קבוצה</em> }
+                    </div>
+                  </td>
+                  <td>
+                    <div class="subscriber-actions">
+                      <button class="btn-icon" title="עריכת מנוי" (click)="openEditSubscriberDialog(subscriber)"><span class="material-symbols-outlined">edit</span></button>
+                      <button class="btn-status" [class.btn-status--restore]="!subscriber.isSubscribed" (click)="toggleSubscriberStatus(subscriber)">
+                        {{ subscriber.isSubscribed ? 'הסרה' : 'הפעלה' }}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div class="subscriber-pagination">
+          <button (click)="changeSubscriberPage(-1)" [disabled]="subscriberPage <= 1">הקודם</button>
+          <span>עמוד {{ subscriberPage }} מתוך {{ subscriberPageCount }}</span>
+          <button (click)="changeSubscriberPage(1)" [disabled]="subscriberPage >= subscriberPageCount">הבא</button>
+        </div>
+      }
+    </div>
+  }
+
   @if (activeTab === 'groups') {
     <div class="tab-content">
       <div class="tab-content-header">
@@ -379,16 +514,83 @@
         <h3>הוספת תמונה</h3>
       </div>
       <div class="dialog-body">
-        <label class="field-label">כתובת URL של התמונה</label>
-        <input class="field-input" type="url" [(ngModel)]="imageUrl" placeholder="https://res.cloudinary.com/..." dir="ltr" />
+        <label class="field-label">תמונה</label>
+        <app-file-upload-input
+          [(url)]="imageUrl"
+          [fileOnly]="false"
+          uploadIcon="add_photo_alternate"
+          uploadButtonText="העלאת תמונה"
+          [showPreview]="true"
+        />
         <label class="field-label">טקסט חלופי (alt)</label>
         <input class="field-input" type="text" [(ngModel)]="imageAlt" placeholder="תיאור התמונה" />
-        <label class="field-label">רוחב</label>
-        <input class="field-input" type="text" [(ngModel)]="imageWidth" placeholder="100% או 300px" dir="ltr" />
+        <label class="field-label">גודל: {{ imageWidth }}%</label>
+        <input class="image-size-range" type="range" min="30" max="100" step="5" [(ngModel)]="imageWidth" />
+        <label class="field-label">יישור</label>
+        <div class="choice-row">
+          <button type="button" [class.active]="imageAlign === 'right'" (click)="imageAlign = 'right'">ימין</button>
+          <button type="button" [class.active]="imageAlign === 'center'" (click)="imageAlign = 'center'">מרכז</button>
+          <button type="button" [class.active]="imageAlign === 'left'" (click)="imageAlign = 'left'">שמאל</button>
+        </div>
+        <label class="field-label">קישור בלחיצה (לא חובה)</label>
+        <input class="field-input" type="url" [(ngModel)]="imageLink" placeholder="https://..." dir="ltr" />
+        <label class="field-label">כיתוב לתמונה (לא חובה)</label>
+        <input class="field-input" type="text" [(ngModel)]="imageCaption" placeholder="כיתוב קצר מתחת לתמונה" />
       </div>
       <div class="dialog-actions">
         <button class="btn-dialog-cancel" (click)="showImageDialog = false">ביטול</button>
         <button class="btn-dialog-confirm" (click)="insertImage()" [disabled]="!imageUrl">הוסף תמונה</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Video Dialog -->
+@if (showVideoDialog) {
+  <div class="dialog-overlay" (click)="showVideoDialog = false">
+    <div class="dialog" (click)="$event.stopPropagation()">
+      <div class="dialog-header"><span class="material-symbols-outlined">smart_display</span><h3>הוספת סרטון</h3></div>
+      <div class="dialog-body">
+        <p class="dialog-hint">במייל הסרטון מוצג כלחצן לחיץ, כדי שיעבוד בכל תיבות הדואר.</p>
+        <label class="field-label">קישור לסרטון</label>
+        <input class="field-input" type="url" [(ngModel)]="videoUrl" placeholder="https://youtube.com/..." dir="ltr" />
+        <label class="field-label">טקסט ללחצן</label>
+        <input class="field-input" type="text" [(ngModel)]="videoLabel" />
+      </div>
+      <div class="dialog-actions">
+        <button class="btn-dialog-cancel" (click)="showVideoDialog = false">ביטול</button>
+        <button class="btn-dialog-confirm" (click)="insertVideo()" [disabled]="!videoUrl">הוסף סרטון</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Button Dialog -->
+@if (showButtonDialog) {
+  <div class="dialog-overlay" (click)="showButtonDialog = false">
+    <div class="dialog" (click)="$event.stopPropagation()">
+      <div class="dialog-header"><span class="material-symbols-outlined">ads_click</span><h3>הוספת לחצן</h3></div>
+      <div class="dialog-body">
+        <label class="field-label">טקסט ללחצן</label>
+        <input class="field-input" type="text" [(ngModel)]="buttonLabel" placeholder="לקריאה נוספת" />
+        <label class="field-label">קישור</label>
+        <input class="field-input" type="url" [(ngModel)]="buttonUrl" placeholder="https://..." dir="ltr" />
+        <label class="field-label">סגנון</label>
+        <div class="choice-row">
+          <button type="button" [class.active]="buttonVariant === 'primary'" (click)="buttonVariant = 'primary'">צהוב</button>
+          <button type="button" [class.active]="buttonVariant === 'dark'" (click)="buttonVariant = 'dark'">שחור</button>
+          <button type="button" [class.active]="buttonVariant === 'soft'" (click)="buttonVariant = 'soft'">בהיר</button>
+        </div>
+        <label class="field-label">יישור</label>
+        <div class="choice-row">
+          <button type="button" [class.active]="buttonAlign === 'right'" (click)="buttonAlign = 'right'">ימין</button>
+          <button type="button" [class.active]="buttonAlign === 'center'" (click)="buttonAlign = 'center'">מרכז</button>
+          <button type="button" [class.active]="buttonAlign === 'left'" (click)="buttonAlign = 'left'">שמאל</button>
+        </div>
+      </div>
+      <div class="dialog-actions">
+        <button class="btn-dialog-cancel" (click)="showButtonDialog = false">ביטול</button>
+        <button class="btn-dialog-confirm" (click)="insertButton()" [disabled]="!buttonUrl || !buttonLabel">הוסף לחצן</button>
       </div>
     </div>
   </div>
@@ -500,6 +702,46 @@
 }
 
 <!-- Group Edit/Create Dialog -->
+@if (showSubscriberDialog) {
+  <div class="dialog-overlay" (click)="showSubscriberDialog = false">
+    <div class="dialog dialog--subscriber" (click)="$event.stopPropagation()">
+      <div class="dialog-header">
+        <span class="material-symbols-outlined">manage_accounts</span>
+        <h3>{{ editingSubscriber ? 'עריכת מנוי' : 'הוספת מנוי' }}</h3>
+      </div>
+      <div class="dialog-body">
+        <label class="field-label">כתובת מייל *</label>
+        <input class="field-input" type="email" [(ngModel)]="subscriberEmail" [disabled]="!!editingSubscriber" placeholder="name@example.com" />
+
+        <label class="field-label">שם</label>
+        <input class="field-input" type="text" [(ngModel)]="subscriberName" maxlength="200" placeholder="שם המנוי" />
+
+        <label class="subscriber-consent-toggle">
+          <input type="checkbox" [(ngModel)]="subscriberIsSubscribed" />
+          <span>פעיל ברשימת הדיוור</span>
+        </label>
+
+        <div class="field-label">שיוך לקבוצות</div>
+        <div class="subscriber-group-options">
+          @for (group of emailGroups; track group.id) {
+            <label [class.selected]="subscriberGroupIds.has(group.id)">
+              <input type="checkbox" [checked]="subscriberGroupIds.has(group.id)" (change)="toggleSubscriberGroup(group.id)" />
+              <span>{{ group.name }}</span>
+            </label>
+          }
+          @if (emailGroups.length === 0) { <div class="member-empty">אין קבוצות עדיין</div> }
+        </div>
+      </div>
+      <div class="dialog-actions">
+        <button class="btn-dialog-cancel" (click)="showSubscriberDialog = false" [disabled]="savingSubscriber">ביטול</button>
+        <button class="btn-dialog-confirm" (click)="saveSubscriber()" [disabled]="savingSubscriber || (!editingSubscriber && !subscriberEmail.trim())">
+          {{ savingSubscriber ? 'שומר...' : 'שמירה' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
 @if (showGroupDialog) {
   <div class="dialog-overlay" (click)="closeGroupDialog()">
     <div class="dialog dialog--group" (click)="$event.stopPropagation()">
@@ -535,7 +777,7 @@
               @for (u of userSearchResults; track u.id) {
                 <div class="user-dropdown-item" (click)="addMemberFromSearch(u)">
                   <span class="material-symbols-outlined">person</span>
-                  <span class="user-name">{{ u.username }}</span>
+                  <span class="user-name">{{ u.name || u.email }}</span>
                   <span class="user-email">{{ u.email }}</span>
                 </div>
               }
@@ -546,10 +788,10 @@
         <!-- Member chips -->
         @if (groupMembers.length > 0) {
           <div class="member-chips">
-            @for (m of groupMembers; track m.userId) {
+            @for (m of groupMembers; track m.subscriberId) {
               <div class="member-chip">
                 <span>{{ m.username }}</span>
-                <button class="chip-remove" (click)="removeMember(m.userId)">
+                <button class="chip-remove" (click)="removeMember(m.subscriberId)">
                   <span class="material-symbols-outlined">close</span>
                 </button>
               </div>

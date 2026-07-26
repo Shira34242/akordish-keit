@@ -1,6 +1,8 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Security.Cryptography;
+using Ganss.Xss;
 using AkordishKeit.Data;
 using AkordishKeit.Models.DTOs;
 using AkordishKeit.Models.Entities;
@@ -50,8 +52,7 @@ public class EmailService : IEmailService
 
         var fromEmail = request.FromEmail ?? _configuration["Brevo:FromEmail"] ?? "noreply@akordishkeit.com";
         var fromName  = request.FromName  ?? _configuration["Brevo:FromName"]  ?? "אקורדישקייט";
-        var htmlBody  = WrapInEmailTemplate(request.HtmlBody, request.Subject);
-
+        var sanitizedContent = SanitizeEmailContent(request.HtmlBody);
         int sentCount = 0, failedCount = 0;
 
         var semaphore = new SemaphoreSlim(20);
@@ -60,8 +61,13 @@ public class EmailService : IEmailService
             await semaphore.WaitAsync();
             try
             {
+                var unsubscribeUrl = BuildUnsubscribeUrl(r.Email);
+                var htmlBody = WrapInEmailTemplate(sanitizedContent, request.Subject, unsubscribeUrl);
+                var plainText = string.IsNullOrWhiteSpace(request.PlainTextBody)
+                    ? null
+                    : $"{request.PlainTextBody.Trim()}\n\nלהסרה מדיוור שיווקי: {unsubscribeUrl}";
                 return await SendBrevoEmailAsync(apiKey, fromEmail, fromName,
-                    r.Email, r.Name, request.Subject, htmlBody);
+                    r.Email, r.Name, request.Subject, htmlBody, plainText);
             }
             finally { semaphore.Release(); }
         });
@@ -106,22 +112,7 @@ public class EmailService : IEmailService
     // ── Recipient count ────────────────────────────────────────────────────────
 
     public async Task<int> GetRecipientCountAsync(EmailRecipientGroup group, int? emailGroupId = null)
-    {
-        if (group == EmailRecipientGroup.InterestedInSite)
-            return (await GetInterestedInSiteRecipientsAsync()).Count;
-
-        if (group == EmailRecipientGroup.CustomGroup && emailGroupId.HasValue)
-            return await _context.EmailGroupMembers
-                .Where(m => m.EmailGroupId == emailGroupId.Value)
-                .CountAsync();
-
-        if (group is EmailRecipientGroup.AllServiceProviders or EmailRecipientGroup.AllTeachers)
-            return (await GetProviderRecipientsAsync(group)).Count;
-
-        var query = _context.Users.Where(u => !u.IsDeleted && u.Email != string.Empty);
-        query = ApplyGroupFilter(query, group);
-        return await query.CountAsync();
-    }
+        => (await GetRecipientsAsync(group, emailGroupId)).Count;
 
     public async Task<List<EmailRecipientDto>> GetRecipientsPreviewAsync(EmailRecipientGroup group, int? emailGroupId = null)
     {
@@ -132,7 +123,87 @@ public class EmailService : IEmailService
             .ToList();
     }
 
-    public string BuildPreviewHtml(string subject, string htmlBody) => WrapInEmailTemplate(htmlBody, subject);
+    public string BuildPreviewHtml(string subject, string htmlBody) =>
+        WrapInEmailTemplate(SanitizeEmailContent(htmlBody), subject, "https://akordishkayt.com/unsubscribe");
+
+    public async Task<MarketingUnsubscribeResultDto> UnsubscribeAsync(string token)
+    {
+        if (!TryReadUnsubscribeToken(token, out var email))
+        {
+            return new MarketingUnsubscribeResultDto
+            {
+                Success = false,
+                Message = "קישור ההסרה אינו תקין. אפשר לפנות אלינו ונשמח להסיר את הכתובת ידנית."
+            };
+        }
+
+        var normalizedEmail = NormalizeEmail(email);
+        var existing = await _context.MarketingUnsubscribes
+            .FirstOrDefaultAsync(u => u.Email == normalizedEmail);
+
+        if (existing == null)
+        {
+            _context.MarketingUnsubscribes.Add(new MarketingUnsubscribe
+            {
+                Email = normalizedEmail,
+                UnsubscribedAt = DateTime.UtcNow,
+                Source = "email-link"
+            });
+        }
+
+        var matchingUsers = await _context.Users
+            .Where(u => u.Email.ToLower() == normalizedEmail && !u.IsDeleted)
+            .ToListAsync();
+
+        foreach (var user in matchingUsers)
+        {
+            user.MarketingConsent = false;
+            user.MarketingConsentRevokedAt ??= DateTime.UtcNow;
+            user.UpdatedAt = DateTime.UtcNow;
+        }
+
+        var subscriber = await _context.EmailSubscribers
+            .FirstOrDefaultAsync(s => s.Email == normalizedEmail);
+        if (subscriber == null)
+        {
+            subscriber = new EmailSubscriber
+            {
+                Email = normalizedEmail,
+                Name = matchingUsers.FirstOrDefault()?.Username,
+                UserId = matchingUsers.FirstOrDefault()?.Id,
+                Source = "email-link",
+                SubscribedAt = DateTime.UtcNow,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.EmailSubscribers.Add(subscriber);
+        }
+        subscriber.IsSubscribed = false;
+        subscriber.UnsubscribedAt = DateTime.UtcNow;
+        subscriber.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return new MarketingUnsubscribeResultDto
+        {
+            Success = true,
+            Message = "הוסרת בהצלחה מרשימת הדיוור השיווקי."
+        };
+    }
+
+    public async Task<EmailSendResultDto> SendTestEmailAsync(SendEmailRequestDto request, string recipientEmail)
+    {
+        var apiKey = _configuration["Brevo:ApiKey"];
+        if (string.IsNullOrEmpty(apiKey) || apiKey.StartsWith("REPLACE"))
+            return new EmailSendResultDto { Success = false, Message = "Brevo API key לא מוגדר" };
+
+        var fromEmail = request.FromEmail ?? _configuration["Brevo:FromEmail"] ?? "noreply@akordishkeit.com";
+        var fromName = request.FromName ?? _configuration["Brevo:FromName"] ?? "אקורדישקייט";
+        var html = WrapInEmailTemplate(SanitizeEmailContent(request.HtmlBody), request.Subject, BuildUnsubscribeUrl(recipientEmail));
+        var sent = await SendBrevoEmailAsync(apiKey, fromEmail, fromName, recipientEmail, null,
+            $"[בדיקה] {request.Subject}", html);
+        return new EmailSendResultDto { Success = sent, SentCount = sent ? 1 : 0, FailedCount = sent ? 0 : 1,
+            Message = sent ? "מייל בדיקה נשלח" : "שליחת מייל הבדיקה נכשלה" };
+    }
 
     // ── Email Groups ───────────────────────────────────────────────────────────
 
@@ -150,9 +221,10 @@ public class EmailService : IEmailService
                 CreatedAt   = g.CreatedAt,
                 Members     = g.Members.Select(m => new EmailGroupMemberDto
                 {
-                    UserId   = m.UserId,
-                    Username = m.User!.Username,
-                    Email    = m.User!.Email
+                    SubscriberId = m.SubscriberId,
+                    UserId       = m.Subscriber!.UserId,
+                    Username     = m.Subscriber.Name ?? m.Subscriber.Email,
+                    Email        = m.Subscriber.Email
                 }).ToList()
             })
             .ToListAsync();
@@ -171,12 +243,12 @@ public class EmailService : IEmailService
         _context.EmailGroups.Add(group);
         await _context.SaveChangesAsync();
 
-        if (dto.UserIds.Count > 0)
+        if (dto.SubscriberIds.Count > 0)
         {
-            var members = dto.UserIds.Distinct().Select(uid => new EmailGroupMember
+            var members = dto.SubscriberIds.Distinct().Select(subscriberId => new EmailGroupMember
             {
                 EmailGroupId = group.Id,
-                UserId       = uid,
+                SubscriberId = subscriberId,
                 AddedAt      = DateTime.UtcNow
             });
             _context.EmailGroupMembers.AddRange(members);
@@ -200,10 +272,10 @@ public class EmailService : IEmailService
 
         // Replace members
         _context.EmailGroupMembers.RemoveRange(group.Members);
-        var newMembers = dto.UserIds.Distinct().Select(uid => new EmailGroupMember
+        var newMembers = dto.SubscriberIds.Distinct().Select(subscriberId => new EmailGroupMember
         {
             EmailGroupId = group.Id,
-            UserId       = uid,
+            SubscriberId = subscriberId,
             AddedAt      = DateTime.UtcNow
         });
         _context.EmailGroupMembers.AddRange(newMembers);
@@ -224,6 +296,149 @@ public class EmailService : IEmailService
     }
 
     // ── Site Interest ──────────────────────────────────────────────────────────
+
+    public async Task<EmailSubscriberPageDto> GetSubscribersAsync(
+        string? search, string? status, int? groupId, int page, int pageSize)
+    {
+        await SyncKnownSubscribersAsync();
+
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 10, 100);
+        var query = _context.EmailSubscribers.AsNoTracking().AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim().ToLower();
+            query = query.Where(s => s.Email.ToLower().Contains(term) ||
+                                     (s.Name != null && s.Name.ToLower().Contains(term)));
+        }
+
+        query = status?.ToLowerInvariant() switch
+        {
+            "subscribed" => query.Where(s => s.IsSubscribed),
+            "unsubscribed" => query.Where(s => !s.IsSubscribed),
+            _ => query
+        };
+
+        if (groupId.HasValue)
+            query = query.Where(s => s.Groups.Any(g => g.EmailGroupId == groupId.Value));
+
+        var totalCount = await query.CountAsync();
+        var subscribedCount = await _context.EmailSubscribers.CountAsync(s => s.IsSubscribed);
+        var unsubscribedCount = await _context.EmailSubscribers.CountAsync(s => !s.IsSubscribed);
+
+        var items = await query
+            .OrderByDescending(s => s.UpdatedAt ?? s.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(s => new EmailSubscriberDto
+            {
+                Id = s.Id,
+                Email = s.Email,
+                Name = s.Name,
+                UserId = s.UserId,
+                IsSubscribed = s.IsSubscribed,
+                Source = s.Source,
+                SubscribedAt = s.SubscribedAt,
+                UnsubscribedAt = s.UnsubscribedAt,
+                Groups = s.Groups.Where(g => !g.EmailGroup!.IsDeleted)
+                    .Select(g => new EmailSubscriberGroupDto
+                    {
+                        Id = g.EmailGroupId,
+                        Name = g.EmailGroup!.Name
+                    }).ToList()
+            })
+            .ToListAsync();
+
+        return new EmailSubscriberPageDto
+        {
+            Items = items,
+            TotalCount = totalCount,
+            SubscribedCount = subscribedCount,
+            UnsubscribedCount = unsubscribedCount
+        };
+    }
+
+    public async Task<EmailSubscriberDto?> CreateSubscriberAsync(SaveEmailSubscriberDto dto)
+    {
+        var email = NormalizeEmail(dto.Email);
+        if (string.IsNullOrWhiteSpace(email) || !email.Contains('@')) return null;
+
+        var subscriber = await _context.EmailSubscribers
+            .Include(s => s.Groups)
+            .FirstOrDefaultAsync(s => s.Email == email);
+
+        if (subscriber == null)
+        {
+            subscriber = new EmailSubscriber
+            {
+                Email = email,
+                Name = dto.Name?.Trim(),
+                IsSubscribed = dto.IsSubscribed,
+                Source = "admin",
+                SubscribedAt = DateTime.UtcNow,
+                UnsubscribedAt = dto.IsSubscribed ? null : DateTime.UtcNow,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.EmailSubscribers.Add(subscriber);
+            await _context.SaveChangesAsync();
+        }
+
+        await ApplySubscriberUpdateAsync(subscriber, dto.Name, dto.IsSubscribed, dto.GroupIds);
+        return await GetSubscriberByIdAsync(subscriber.Id);
+    }
+
+    public async Task<EmailSubscriberDto?> UpdateSubscriberAsync(int id, UpdateEmailSubscriberDto dto)
+    {
+        var subscriber = await _context.EmailSubscribers
+            .Include(s => s.Groups)
+            .FirstOrDefaultAsync(s => s.Id == id);
+        if (subscriber == null) return null;
+
+        await ApplySubscriberUpdateAsync(subscriber, dto.Name, dto.IsSubscribed, dto.GroupIds);
+        return await GetSubscriberByIdAsync(id);
+    }
+
+    public async Task SyncUserSubscriptionAsync(int userId)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted);
+        if (user == null || string.IsNullOrWhiteSpace(user.Email)) return;
+
+        var email = NormalizeEmail(user.Email);
+        var subscriber = await _context.EmailSubscribers
+            .FirstOrDefaultAsync(s => s.UserId == user.Id || s.Email == email);
+        if (subscriber == null)
+        {
+            subscriber = new EmailSubscriber { Email = email, UserId = user.Id, CreatedAt = DateTime.UtcNow };
+            _context.EmailSubscribers.Add(subscriber);
+        }
+
+        subscriber.Email = email;
+        subscriber.UserId = user.Id;
+        subscriber.Name = user.Username;
+        subscriber.IsSubscribed = user.MarketingConsent;
+        subscriber.Source = user.MarketingConsentSource ?? "user";
+        subscriber.SubscribedAt = user.MarketingConsentAt ?? user.CreatedAt;
+        subscriber.UnsubscribedAt = user.MarketingConsent ? null : user.MarketingConsentRevokedAt;
+        subscriber.UpdatedAt = DateTime.UtcNow;
+
+        var suppression = await _context.MarketingUnsubscribes
+            .FirstOrDefaultAsync(u => u.Email == email);
+        if (user.MarketingConsent && suppression != null)
+        {
+            _context.MarketingUnsubscribes.Remove(suppression);
+        }
+        else if (!user.MarketingConsent && suppression == null)
+        {
+            _context.MarketingUnsubscribes.Add(new MarketingUnsubscribe
+            {
+                Email = email,
+                UnsubscribedAt = user.MarketingConsentRevokedAt ?? DateTime.UtcNow,
+                Source = "profile"
+            });
+        }
+        await _context.SaveChangesAsync();
+    }
 
     public async Task<List<SiteInterestDto>> GetSiteInterestsAsync()
     {
@@ -259,15 +474,28 @@ public class EmailService : IEmailService
     public async Task<bool> RegisterSiteInterestAsync(string email, string? source)
     {
         email = email.Trim().ToLowerInvariant();
-        if (await _context.SiteInterestRegistrations.AnyAsync(s => s.Email == email))
-            return true; // already registered — silently succeed
-
-        _context.SiteInterestRegistrations.Add(new SiteInterestRegistration
+        if (!await _context.SiteInterestRegistrations.AnyAsync(s => s.Email == email))
         {
-            Email     = email,
-            Source    = source,
-            CreatedAt = DateTime.UtcNow
-        });
+            _context.SiteInterestRegistrations.Add(new SiteInterestRegistration
+            {
+                Email     = email,
+                Source    = source,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+
+        var subscriber = await _context.EmailSubscribers.FirstOrDefaultAsync(s => s.Email == email);
+        if (subscriber == null)
+        {
+            _context.EmailSubscribers.Add(new EmailSubscriber
+            {
+                Email = email,
+                IsSubscribed = true,
+                Source = source?.Trim() ?? "site-interest",
+                SubscribedAt = DateTime.UtcNow,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
         await _context.SaveChangesAsync();
         return true;
     }
@@ -284,6 +512,207 @@ public class EmailService : IEmailService
 
     // ── Private helpers ────────────────────────────────────────────────────────
 
+    private async Task ApplySubscriberUpdateAsync(
+        EmailSubscriber subscriber, string? name, bool isSubscribed, IReadOnlyCollection<int> groupIds)
+    {
+        var now = DateTime.UtcNow;
+        subscriber.Name = string.IsNullOrWhiteSpace(name) ? subscriber.Name : name.Trim();
+        subscriber.IsSubscribed = isSubscribed;
+        subscriber.UpdatedAt = now;
+
+        if (isSubscribed)
+        {
+            subscriber.SubscribedAt = now;
+            subscriber.UnsubscribedAt = null;
+
+            var suppression = await _context.MarketingUnsubscribes
+                .FirstOrDefaultAsync(u => u.Email == subscriber.Email);
+            if (suppression != null) _context.MarketingUnsubscribes.Remove(suppression);
+        }
+        else
+        {
+            subscriber.UnsubscribedAt = now;
+            if (!await _context.MarketingUnsubscribes.AnyAsync(u => u.Email == subscriber.Email))
+            {
+                _context.MarketingUnsubscribes.Add(new MarketingUnsubscribe
+                {
+                    Email = subscriber.Email,
+                    UnsubscribedAt = now,
+                    Source = "admin"
+                });
+            }
+        }
+
+        var users = await _context.Users
+            .Where(u => !u.IsDeleted && u.Email.ToLower() == subscriber.Email)
+            .ToListAsync();
+        foreach (var user in users)
+        {
+            user.MarketingConsent = isSubscribed;
+            user.UpdatedAt = now;
+            if (isSubscribed)
+            {
+                user.MarketingConsentAt = now;
+                user.MarketingConsentRevokedAt = null;
+                user.MarketingConsentSource = "admin";
+            }
+            else
+            {
+                user.MarketingConsentRevokedAt = now;
+            }
+        }
+
+        _context.EmailGroupMembers.RemoveRange(subscriber.Groups);
+        var validGroupIds = await _context.EmailGroups
+            .Where(g => groupIds.Contains(g.Id) && !g.IsDeleted)
+            .Select(g => g.Id)
+            .ToListAsync();
+        _context.EmailGroupMembers.AddRange(validGroupIds.Distinct().Select(groupId => new EmailGroupMember
+        {
+            EmailGroupId = groupId,
+            SubscriberId = subscriber.Id,
+            AddedAt = now
+        }));
+
+        await _context.SaveChangesAsync();
+    }
+
+    private async Task<EmailSubscriberDto?> GetSubscriberByIdAsync(int id)
+    {
+        return await _context.EmailSubscribers.AsNoTracking()
+            .Where(s => s.Id == id)
+            .Select(s => new EmailSubscriberDto
+            {
+                Id = s.Id,
+                Email = s.Email,
+                Name = s.Name,
+                UserId = s.UserId,
+                IsSubscribed = s.IsSubscribed,
+                Source = s.Source,
+                SubscribedAt = s.SubscribedAt,
+                UnsubscribedAt = s.UnsubscribedAt,
+                Groups = s.Groups.Where(g => !g.EmailGroup!.IsDeleted)
+                    .Select(g => new EmailSubscriberGroupDto { Id = g.EmailGroupId, Name = g.EmailGroup!.Name })
+                    .ToList()
+            })
+            .FirstOrDefaultAsync();
+    }
+
+    private async Task SyncKnownSubscribersAsync()
+    {
+        var existing = (await _context.EmailSubscribers.Include(s => s.Groups).ToListAsync())
+            .ToDictionary(s => s.Email, StringComparer.OrdinalIgnoreCase);
+        var existingByUserId = existing.Values
+            .Where(s => s.UserId.HasValue)
+            .ToDictionary(s => s.UserId!.Value);
+        var suppressed = (await _context.MarketingUnsubscribes.ToListAsync())
+            .ToDictionary(s => s.Email, StringComparer.OrdinalIgnoreCase);
+
+        var users = await _context.Users
+            .Where(u => !u.IsDeleted && u.Email != string.Empty)
+            .Select(u => new
+            {
+                u.Id, u.Email, u.Username, u.MarketingConsent, u.MarketingConsentSource,
+                u.MarketingConsentAt, u.MarketingConsentRevokedAt, u.CreatedAt
+            })
+            .ToListAsync();
+
+        foreach (var user in users)
+        {
+            var email = NormalizeEmail(user.Email);
+            existing.TryGetValue(email, out var subscriber);
+            existingByUserId.TryGetValue(user.Id, out var linkedSubscriber);
+
+            if (subscriber != null && linkedSubscriber != null && subscriber.Id != linkedSubscriber.Id)
+            {
+                var existingGroupIds = subscriber.Groups.Select(g => g.EmailGroupId).ToHashSet();
+                _context.EmailGroupMembers.AddRange(linkedSubscriber.Groups
+                    .Where(g => !existingGroupIds.Contains(g.EmailGroupId))
+                    .Select(g => new EmailGroupMember
+                    {
+                        EmailGroupId = g.EmailGroupId,
+                        SubscriberId = subscriber.Id,
+                        AddedAt = g.AddedAt
+                    }));
+                _context.EmailSubscribers.Remove(linkedSubscriber);
+                existing.Remove(linkedSubscriber.Email);
+                subscriber.UserId = user.Id;
+                existingByUserId[user.Id] = subscriber;
+            }
+            else if (subscriber == null && linkedSubscriber != null)
+            {
+                existing.Remove(linkedSubscriber.Email);
+                linkedSubscriber.Email = email;
+                linkedSubscriber.Name = user.Username;
+                subscriber = linkedSubscriber;
+                existing[email] = linkedSubscriber;
+            }
+
+            if (subscriber == null)
+            {
+                suppressed.TryGetValue(email, out var suppression);
+                subscriber = new EmailSubscriber
+                {
+                    Email = email,
+                    Name = user.Username,
+                    UserId = user.Id,
+                    IsSubscribed = user.MarketingConsent && suppression == null,
+                    Source = user.MarketingConsentSource ?? "user",
+                    SubscribedAt = user.MarketingConsentAt ?? user.CreatedAt,
+                    UnsubscribedAt = user.MarketingConsent ? suppression?.UnsubscribedAt : user.MarketingConsentRevokedAt,
+                    CreatedAt = user.CreatedAt
+                };
+                _context.EmailSubscribers.Add(subscriber);
+                existing[email] = subscriber;
+                existingByUserId[user.Id] = subscriber;
+            }
+            else if (subscriber.UserId == null)
+            {
+                subscriber.UserId = user.Id;
+                subscriber.Name ??= user.Username;
+            }
+        }
+
+        var interests = await _context.SiteInterestRegistrations.ToListAsync();
+        foreach (var interest in interests)
+        {
+            var email = NormalizeEmail(interest.Email);
+            if (existing.ContainsKey(email)) continue;
+            suppressed.TryGetValue(email, out var suppression);
+            var subscriber = new EmailSubscriber
+            {
+                Email = email,
+                IsSubscribed = suppression == null,
+                Source = interest.Source ?? "site-interest",
+                SubscribedAt = interest.CreatedAt,
+                UnsubscribedAt = suppression?.UnsubscribedAt,
+                CreatedAt = interest.CreatedAt
+            };
+            _context.EmailSubscribers.Add(subscriber);
+            existing[email] = subscriber;
+        }
+
+        foreach (var legacy in await GetComingSoonSubscribersAsync())
+        {
+            var email = NormalizeEmail(legacy.Email);
+            if (existing.ContainsKey(email)) continue;
+            suppressed.TryGetValue(email, out var suppression);
+            var subscriber = new EmailSubscriber
+            {
+                Email = email,
+                IsSubscribed = suppression == null,
+                Source = "coming_soon",
+                SubscribedAt = legacy.CreatedAt,
+                UnsubscribedAt = suppression?.UnsubscribedAt,
+                CreatedAt = legacy.CreatedAt
+            };
+            _context.EmailSubscribers.Add(subscriber);
+            existing[email] = subscriber;
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
     private async Task<EmailGroupDto?> GetEmailGroupByIdAsync(int id)
     {
         return await _context.EmailGroups
@@ -297,9 +726,10 @@ public class EmailService : IEmailService
                 CreatedAt   = g.CreatedAt,
                 Members     = g.Members.Select(m => new EmailGroupMemberDto
                 {
-                    UserId   = m.UserId,
-                    Username = m.User!.Username,
-                    Email    = m.User!.Email
+                    SubscriberId = m.SubscriberId,
+                    UserId       = m.Subscriber!.UserId,
+                    Username     = m.Subscriber.Name ?? m.Subscriber.Email,
+                    Email        = m.Subscriber.Email
                 }).ToList()
             })
             .FirstOrDefaultAsync();
@@ -308,28 +738,42 @@ public class EmailService : IEmailService
     private async Task<List<(string Email, string? Name)>> GetRecipientsAsync(
         EmailRecipientGroup group, int? emailGroupId = null)
     {
-        if (group == EmailRecipientGroup.InterestedInSite)
-            return await GetInterestedInSiteRecipientsAsync();
+        List<(string Email, string? Name)> recipients;
 
-        if (group == EmailRecipientGroup.CustomGroup && emailGroupId.HasValue)
+        if (group == EmailRecipientGroup.InterestedInSite)
         {
-            return await _context.EmailGroupMembers
-                .Where(m => m.EmailGroupId == emailGroupId.Value)
-                .Select(m => new { m.User!.Email, m.User.Username })
-                .ToListAsync()
-                .ContinueWith(t => t.Result.Select(u => (u.Email, (string?)u.Username)).ToList());
+            recipients = await GetInterestedInSiteRecipientsAsync();
+        }
+        else if (group == EmailRecipientGroup.CustomGroup && emailGroupId.HasValue)
+        {
+            var groupMembers = await _context.EmailGroupMembers
+                .Where(m => m.EmailGroupId == emailGroupId.Value &&
+                            m.Subscriber!.IsSubscribed)
+                .Select(m => new { m.Subscriber!.Email, m.Subscriber.Name })
+                .ToListAsync();
+            recipients = groupMembers
+                .Select(u => (u.Email, u.Name))
+                .ToList();
+        }
+        else if (group is EmailRecipientGroup.AllServiceProviders or EmailRecipientGroup.AllTeachers)
+        {
+            recipients = await GetProviderRecipientsAsync(group);
+        }
+        else
+        {
+            var query = _context.Users
+                .Where(u => !u.IsDeleted && u.Email != string.Empty && u.MarketingConsent);
+            query = ApplyGroupFilter(query, group);
+
+            var users = await query
+                .Select(u => new { u.Email, u.Username })
+                .ToListAsync();
+            recipients = users
+                .Select(u => (u.Email, (string?)u.Username))
+                .ToList();
         }
 
-        if (group is EmailRecipientGroup.AllServiceProviders or EmailRecipientGroup.AllTeachers)
-            return await GetProviderRecipientsAsync(group);
-
-        var query = _context.Users.Where(u => !u.IsDeleted && u.Email != string.Empty);
-        query = ApplyGroupFilter(query, group);
-
-        return await query
-            .Select(u => new { u.Email, u.Username })
-            .ToListAsync()
-            .ContinueWith(t => t.Result.Select(u => (u.Email, (string?)u.Username)).ToList());
+        return await ExcludeUnsubscribedAsync(recipients);
     }
 
     private async Task<List<(string Email, string? Name)>> GetProviderRecipientsAsync(EmailRecipientGroup group)
@@ -338,27 +782,14 @@ public class EmailService : IEmailService
 
         // משתמשים עם פרופיל מקצועי מחובר → email מהמשתמש
         var fromUsers = await _context.Users
-            .Where(u => !u.IsDeleted && u.Email != string.Empty)
+            .Where(u => !u.IsDeleted && u.Email != string.Empty && u.MarketingConsent)
             .Where(u => _context.ServiceProviders.Any(sp =>
                 sp.UserId == u.Id && !sp.IsDeleted &&
                 (!teachersOnly || _context.Teachers.Any(t => t.Id == sp.Id))))
             .Select(u => new { u.Email, Name = u.Username })
             .ToListAsync();
 
-        // פרופילים מקצועיים ללא משתמש מחובר אבל עם email עצמאי
-        var spWithEmailQuery = _context.ServiceProviders
-            .Where(sp => !sp.IsDeleted && sp.UserId == null
-                         && sp.Email != null && sp.Email != string.Empty);
-
-        if (teachersOnly)
-            spWithEmailQuery = spWithEmailQuery.Where(sp => _context.Teachers.Any(t => t.Id == sp.Id));
-
-        var fromProviders = await spWithEmailQuery
-            .Select(sp => new { Email = sp.Email!, sp.DisplayName })
-            .ToListAsync();
-
         return fromUsers.Select(u => (u.Email, (string?)u.Name))
-            .Concat(fromProviders.Select(p => (p.Email, (string?)p.DisplayName)))
             .GroupBy(e => e.Item1.ToLowerInvariant())
             .Select(g => g.First())
             .ToList();
@@ -419,6 +850,124 @@ public class EmailService : IEmailService
                     !_context.ServiceProviders.Any(sp => sp.UserId == u.Id && !sp.IsDeleted)),
             _ => query
         };
+    }
+
+    private async Task<List<(string Email, string? Name)>> ExcludeUnsubscribedAsync(
+        List<(string Email, string? Name)> recipients)
+    {
+        if (recipients.Count == 0) return recipients;
+
+        var unsubscribed = (await _context.MarketingUnsubscribes
+                .Select(u => u.Email)
+                .ToListAsync())
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        return recipients
+            .Where(r => !unsubscribed.Contains(NormalizeEmail(r.Email)))
+            .GroupBy(r => NormalizeEmail(r.Email))
+            .Select(g => g.First())
+            .ToList();
+    }
+
+    private string BuildUnsubscribeUrl(string email)
+    {
+        var baseUrl = (_configuration["Frontend:BaseUrl"] ?? "https://akordishkayt.com").TrimEnd('/');
+        return $"{baseUrl}/unsubscribe?token={Uri.EscapeDataString(CreateUnsubscribeToken(email))}";
+    }
+
+    private string CreateUnsubscribeToken(string email)
+    {
+        var payload = Base64UrlEncode(Encoding.UTF8.GetBytes(NormalizeEmail(email)));
+        using var hmac = new HMACSHA256(GetUnsubscribeSecret());
+        var signature = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
+        return $"{payload}.{Base64UrlEncode(signature)}";
+    }
+
+    private bool TryReadUnsubscribeToken(string token, out string email)
+    {
+        email = string.Empty;
+        if (string.IsNullOrWhiteSpace(token)) return false;
+
+        var parts = token.Split('.', 2);
+        if (parts.Length != 2) return false;
+
+        try
+        {
+            using var hmac = new HMACSHA256(GetUnsubscribeSecret());
+            var expected = hmac.ComputeHash(Encoding.UTF8.GetBytes(parts[0]));
+            var actual = Base64UrlDecode(parts[1]);
+            if (!CryptographicOperations.FixedTimeEquals(expected, actual)) return false;
+
+            email = Encoding.UTF8.GetString(Base64UrlDecode(parts[0]));
+            return !string.IsNullOrWhiteSpace(email) && email.Contains('@');
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
+    }
+
+    private byte[] GetUnsubscribeSecret()
+    {
+        var secret = _configuration["EmailUnsubscribe:Secret"] ?? _configuration["Jwt:Key"];
+        if (string.IsNullOrWhiteSpace(secret))
+            throw new InvalidOperationException("Email unsubscribe signing secret is not configured.");
+        return Encoding.UTF8.GetBytes(secret);
+    }
+
+    private static string NormalizeEmail(string email) => email.Trim().ToLowerInvariant();
+
+    /// <summary>
+    /// Campaign content is authored as rich HTML by administrators. Keep only email-safe markup
+    /// and inline presentation attributes before it is sent or rendered in a preview.
+    /// </summary>
+    private static string SanitizeEmailContent(string content)
+    {
+        if (string.IsNullOrWhiteSpace(content)) return string.Empty;
+
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.AllowedTags.Clear();
+        foreach (var tag in new[]
+        {
+            "p", "br", "strong", "b", "em", "i", "u", "s", "strike", "font", "span",
+            "a", "h1", "h2", "h3", "h4", "ul", "ol", "li", "div", "img",
+            "table", "tbody", "thead", "tr", "td", "th"
+        }) sanitizer.AllowedTags.Add(tag);
+
+        sanitizer.AllowedAttributes.Clear();
+        foreach (var attribute in new[]
+        {
+            "href", "src", "alt", "title", "target", "rel", "style", "width", "height",
+            "border", "cellpadding", "cellspacing", "align", "role", "face", "color"
+        }) sanitizer.AllowedAttributes.Add(attribute);
+
+        sanitizer.AllowedSchemes.Clear();
+        sanitizer.AllowedSchemes.Add("https");
+        sanitizer.AllowedSchemes.Add("http");
+        sanitizer.AllowedSchemes.Add("mailto");
+        sanitizer.AllowedSchemes.Add("tel");
+
+        sanitizer.AllowedCssProperties.Clear();
+        foreach (var property in new[]
+        {
+            "background", "background-color", "border", "border-radius", "color", "display",
+            "font-family", "font-size", "font-style", "font-weight", "height", "line-height",
+            "margin", "margin-top", "margin-right", "margin-bottom", "margin-left", "max-width",
+            "padding", "padding-top", "padding-right", "padding-bottom", "padding-left", "text-align",
+            "text-decoration", "vertical-align", "width"
+        }) sanitizer.AllowedCssProperties.Add(property);
+
+        return sanitizer.Sanitize(content);
+    }
+
+    private static string Base64UrlEncode(byte[] value) =>
+        Convert.ToBase64String(value).TrimEnd('=').Replace('+', '-').Replace('/', '_');
+
+    private static byte[] Base64UrlDecode(string value)
+    {
+        var padded = value.Replace('-', '+').Replace('_', '/');
+        padded += (padded.Length % 4) switch { 2 => "==", 3 => "=", _ => string.Empty };
+        return Convert.FromBase64String(padded);
     }
 
     private async Task<bool> SendBrevoEmailAsync(
@@ -538,7 +1087,7 @@ public class EmailService : IEmailService
         </html>
         """;
 
-    private static string WrapInEmailTemplate(string content, string subject) => $"""
+    private static string WrapInEmailTemplate(string content, string subject, string unsubscribeUrl) => $"""
         <!DOCTYPE html>
         <html dir="rtl" lang="he">
         <head>
@@ -549,16 +1098,8 @@ public class EmailService : IEmailService
         <body style="font-family: Arial, Helvetica, sans-serif; direction: rtl; text-align: right; background-color: #F2F2F2; margin: 0; padding: 32px 16px;">
           <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 20px; overflow: hidden;">
 
-            <!-- Yellow accent bar -->
-            <div style="background-color: #ddff53; height: 6px;"></div>
-
-            <!-- Brand -->
-            <div style="padding: 24px 32px 12px; text-align: center;">
-              <div style="font-size: 22px; font-weight: 900; color: #000000; letter-spacing: 1px;">אקורדישקייט</div>
-            </div>
-
             <!-- Content -->
-            <div style="padding: 12px 40px 32px; color: #000000; font-size: 15px; line-height: 1.75;">
+            <div style="padding: 32px 40px; color: #000000; font-size: 15px; line-height: 1.75;">
               {content}
             </div>
 
@@ -566,6 +1107,10 @@ public class EmailService : IEmailService
             <div style="background-color: #F2F2F2; padding: 18px 32px; text-align: center;">
               <p style="color: #404040; margin: 0; font-size: 12px;">
                 © אקורדישקייט — כל הזכויות שמורות
+              </p>
+              <p style="color: #404040; margin: 10px 0 0; font-size: 12px; line-height: 1.5;">
+                לא רוצה לקבל מאיתנו דיוור שיווקי?
+                <a href="{System.Net.WebUtility.HtmlEncode(unsubscribeUrl)}" style="color: #000000; font-weight: 700; text-decoration: underline;">להסרה מרשימת התפוצה</a>
               </p>
             </div>
 

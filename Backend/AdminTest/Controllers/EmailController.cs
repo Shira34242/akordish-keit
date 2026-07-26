@@ -42,6 +42,17 @@ public class EmailController : ControllerBase
         return Ok(result);
     }
 
+    [HttpPost("send-test")]
+    public async Task<ActionResult<EmailSendResultDto>> SendTest([FromBody] SendTestEmailRequestDto request)
+    {
+        if (string.IsNullOrWhiteSpace(request.RecipientEmail) || !request.RecipientEmail.Contains('@'))
+            return BadRequest("כתובת מייל לא תקינה");
+        if (string.IsNullOrWhiteSpace(request.Subject) || string.IsNullOrWhiteSpace(request.HtmlBody))
+            return BadRequest("נושא ותוכן הם שדות חובה");
+
+        return Ok(await _emailService.SendTestEmailAsync(request, request.RecipientEmail));
+    }
+
     [HttpGet("recipients")]
     public async Task<ActionResult<List<EmailRecipientDto>>> GetRecipients(
         [FromQuery] EmailRecipientGroup group = EmailRecipientGroup.AllUsers,
@@ -56,6 +67,15 @@ public class EmailController : ControllerBase
     {
         var html = _emailService.BuildPreviewHtml(request.Subject, request.HtmlBody);
         return Ok(new { html });
+    }
+
+    [AllowAnonymous]
+    [HttpPost("unsubscribe")]
+    public async Task<ActionResult<MarketingUnsubscribeResultDto>> Unsubscribe(
+        [FromBody] MarketingUnsubscribeRequestDto request)
+    {
+        var result = await _emailService.UnsubscribeAsync(request.Token);
+        return result.Success ? Ok(result) : BadRequest(result);
     }
 
     // ── Email Groups ──────────────────────────────────────────────────────────
@@ -95,6 +115,33 @@ public class EmailController : ControllerBase
     {
         var ok = await _emailService.DeleteEmailGroupAsync(id);
         return ok ? NoContent() : NotFound();
+    }
+
+    [HttpGet("subscribers")]
+    public async Task<ActionResult<EmailSubscriberPageDto>> GetSubscribers(
+        [FromQuery] string? search = null,
+        [FromQuery] string? status = null,
+        [FromQuery] int? groupId = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 25)
+    {
+        return Ok(await _emailService.GetSubscribersAsync(search, status, groupId, page, pageSize));
+    }
+
+    [HttpPost("subscribers")]
+    public async Task<ActionResult<EmailSubscriberDto>> CreateSubscriber([FromBody] SaveEmailSubscriberDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.Email)) return BadRequest("כתובת המייל היא שדה חובה");
+        var subscriber = await _emailService.CreateSubscriberAsync(dto);
+        return subscriber == null ? BadRequest("כתובת המייל אינה תקינה") : Ok(subscriber);
+    }
+
+    [HttpPut("subscribers/{id}")]
+    public async Task<ActionResult<EmailSubscriberDto>> UpdateSubscriber(
+        int id, [FromBody] UpdateEmailSubscriberDto dto)
+    {
+        var subscriber = await _emailService.UpdateSubscriberAsync(id, dto);
+        return subscriber == null ? NotFound() : Ok(subscriber);
     }
 
     // ── Site Interest ─────────────────────────────────────────────────────────

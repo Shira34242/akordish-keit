@@ -38,8 +38,18 @@ export interface EmailSendResult {
   failedCount: number;
 }
 
+export interface SendTestEmailRequest extends SendEmailRequest {
+  recipientEmail: string;
+}
+
+export interface MarketingUnsubscribeResult {
+  success: boolean;
+  message: string;
+}
+
 export interface EmailGroupMemberDto {
-  userId: number;
+  subscriberId: number;
+  userId?: number;
   username: string;
   email: string;
 }
@@ -56,7 +66,38 @@ export interface EmailGroupDto {
 export interface SaveEmailGroupDto {
   name: string;
   description?: string;
-  userIds: number[];
+  subscriberIds: number[];
+}
+
+export interface EmailSubscriberGroupDto {
+  id: number;
+  name: string;
+}
+
+export interface EmailSubscriberDto {
+  id: number;
+  email: string;
+  name?: string;
+  userId?: number;
+  isSubscribed: boolean;
+  source: string;
+  subscribedAt: string;
+  unsubscribedAt?: string;
+  groups: EmailSubscriberGroupDto[];
+}
+
+export interface EmailSubscriberPageDto {
+  items: EmailSubscriberDto[];
+  totalCount: number;
+  subscribedCount: number;
+  unsubscribedCount: number;
+}
+
+export interface SaveEmailSubscriberDto {
+  email: string;
+  name?: string;
+  isSubscribed: boolean;
+  groupIds: number[];
 }
 
 export interface SiteInterestDto {
@@ -93,6 +134,14 @@ export class EmailCampaignService {
     return this.http.post<EmailSendResult>(`${this.apiUrl}/send-campaign`, request, { withCredentials: true });
   }
 
+  sendTestEmail(request: SendTestEmailRequest): Observable<EmailSendResult> {
+    return this.http.post<EmailSendResult>(`${this.apiUrl}/send-test`, request, { withCredentials: true });
+  }
+
+  unsubscribe(token: string): Observable<MarketingUnsubscribeResult> {
+    return this.http.post<MarketingUnsubscribeResult>(`${this.apiUrl}/unsubscribe`, { token });
+  }
+
   // ── Email Groups ────────────────────────────────────────────────
 
   getGroups(): Observable<EmailGroupDto[]> {
@@ -109,6 +158,26 @@ export class EmailCampaignService {
 
   deleteGroup(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/groups/${id}`, { withCredentials: true });
+  }
+
+  getSubscribers(
+    search = '', status = 'all', groupId?: number, page = 1, pageSize = 25
+  ): Observable<EmailSubscriberPageDto> {
+    let params = new HttpParams()
+      .set('search', search)
+      .set('status', status)
+      .set('page', page.toString())
+      .set('pageSize', pageSize.toString());
+    if (groupId != null) params = params.set('groupId', groupId.toString());
+    return this.http.get<EmailSubscriberPageDto>(`${this.apiUrl}/subscribers`, { params, withCredentials: true });
+  }
+
+  createSubscriber(dto: SaveEmailSubscriberDto): Observable<EmailSubscriberDto> {
+    return this.http.post<EmailSubscriberDto>(`${this.apiUrl}/subscribers`, dto, { withCredentials: true });
+  }
+
+  updateSubscriber(id: number, dto: Omit<SaveEmailSubscriberDto, 'email'>): Observable<EmailSubscriberDto> {
+    return this.http.put<EmailSubscriberDto>(`${this.apiUrl}/subscribers/${id}`, dto, { withCredentials: true });
   }
 
   // ── Site Interest ────────────────────────────────────────────────

@@ -32,3 +32,19 @@ public class EmailSendResultDto
     public int SentCount { get; set; }
     public int FailedCount { get; set; }
 }
+
+public class SendTestEmailRequestDto : SendEmailRequestDto
+{
+    public string RecipientEmail { get; set; } = string.Empty;
+}
+
+public class MarketingUnsubscribeResultDto
+{
+    public bool Success { get; set; }
+    public string Message { get; set; } = string.Empty;
+}
+
+public class MarketingUnsubscribeRequestDto
+{
+    public string Token { get; set; } = string.Empty;
+}

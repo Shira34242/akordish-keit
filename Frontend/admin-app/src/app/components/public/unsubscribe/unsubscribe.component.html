@@ -1,0 +1,31 @@
+<main class="unsubscribe-page" dir="rtl">
+  <section class="unsubscribe-card" [attr.aria-busy]="state === 'loading'">
+    <a class="brand" routerLink="/" aria-label="חזרה לעמוד הבית">אקורדישקייט</a>
+
+    <div class="status-icon" [class.status-icon--success]="state === 'success'" [class.status-icon--error]="state === 'error'">
+      @if (state === 'loading') {
+        <span class="spinner" aria-hidden="true"></span>
+      } @else if (state === 'success') {
+        <span class="material-icons" aria-hidden="true">check</span>
+      } @else {
+        <span class="material-icons" aria-hidden="true">priority_high</span>
+      }
+    </div>
+
+    <h1>
+      @if (state === 'loading') {
+        מעדכנים את ההעדפות שלך
+      } @else if (state === 'success') {
+        ההסרה הושלמה
+      } @else {
+        לא הצלחנו להשלים את ההסרה
+      }
+    </h1>
+
+    <p>{{ message }}</p>
+
+    @if (state !== 'loading') {
+      <a class="home-button" routerLink="/">חזרה לאתר</a>
+    }
+  </section>
+</main>

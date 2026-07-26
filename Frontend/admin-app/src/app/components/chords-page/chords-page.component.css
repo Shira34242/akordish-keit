@@ -1100,12 +1100,29 @@
         flex-basis: 14.3rem;
     }
 
-    .hero-bg { border-radius: 20px; }
+    /* במובייל תיבת הפתיחה היא חלק מזרימת הדף, ללא כיווץ או שכבת שינוי צבע. */
+    .hero-bg {
+        position: absolute;
+        top: 8px;
+        height: 60vh !important;
+        border-radius: 20px;
+        will-change: auto;
+    }
+
+    .hero-collapse-overlay { display: none; }
 
     /* Hero גובה מצומצם — אין מסננים, תוכן קצר יותר */
-    .hero-content-area { height: calc(50vh - 76px); }
+    .hero-content-area {
+        height: 60vh;
+        box-sizing: border-box;
+        align-items: center;
+        padding: 0 var(--space-xl);
+    }
 
-    .hero-title { font-size: 3rem; letter-spacing: 0; }
+    .hero-title {
+        font-size: 3rem;
+        letter-spacing: 0;
+    }
 
     .hero-subtitle {
         font-size: var(--font-sm);
@@ -1148,10 +1165,10 @@
     .hero-bg { border-radius: 16px; }
 
     .hero-content-area {
-        height: auto;
-        min-height: calc(44vh - 76px);
-        padding: var(--space-2xl) var(--space-md) var(--space-xl);
-        align-items: flex-end;
+        height: 60vh;
+        min-height: 0;
+        padding: 0 var(--space-md);
+        align-items: center;
     }
 
     .hero-title { font-size: 2.4rem; }
