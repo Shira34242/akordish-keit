@@ -1869,6 +1869,12 @@
     width: 100%;
   }
 
+  /* כרטיסי אקורדים קומפקטיים בשליש בשתי שורות הבית במובייל בלבד. */
+  .songs-grid--mobile-list.recent-songs-row app-song-card ::ng-deep .song-card,
+  .songs-grid--mobile-list.popular-songs-row app-song-card ::ng-deep .song-card {
+    aspect-ratio: 18 / 5;
+  }
+
   .artists-loop-row--mobile {
     padding-top: var(--space-xs);
     padding-bottom: var(--space-xs);
