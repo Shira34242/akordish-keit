@@ -69,40 +69,84 @@
             }
           </div>
 
-          <!-- Custom group selector -->
-          @if (recipientGroup === RecipientGroup.CustomGroup) {
-            <div class="custom-group-select">
-              <select class="field-input" [(ngModel)]="selectedEmailGroupId" (ngModelChange)="onCustomGroupChange()">
-                <option [value]="null">— בחרי קבוצה —</option>
-                @for (g of emailGroups; track g.id) {
-                  <option [value]="g.id">{{ g.name }} ({{ g.memberCount }})</option>
+          @if (recipientGroup === RecipientGroup.ManualOneTime) {
+            <div class="manual-recipient-box">
+              <label class="field-label" for="manual-recipients">כתובות מייל</label>
+              <textarea
+                id="manual-recipients"
+                class="field-input manual-recipient-input"
+                [(ngModel)]="manualRecipientsText"
+                (ngModelChange)="onManualRecipientsChange()"
+                placeholder="name@example.com&#10;another@example.com"
+                dir="ltr"
+                spellcheck="false"
+              ></textarea>
+              <p class="manual-help">אפשר להפריד באמצעות שורה חדשה, פסיק או נקודה־פסיק. הכתובות לא יישמרו כמנויים.</p>
+
+              <div class="manual-summary" aria-live="polite">
+                @if (checkingManualRecipients) {
+                  <span><span class="material-symbols-outlined spinning">progress_activity</span> בודק כתובות...</span>
+                } @else {
+                  <span><strong>{{ manualEligibleCount | number }}</strong> מוכנות לשליחה</span>
+                  @if (manualDuplicateCount > 0) { <span>{{ manualDuplicateCount }} כפולות הוסרו</span> }
+                  @if (manualSuppressedCount > 0) { <span>{{ manualSuppressedCount }} חסומות ולא יקבלו מייל</span> }
                 }
-              </select>
-              @if (emailGroups.length === 0) {
-                <button class="btn-load-groups" (click)="switchTab('groups')">
-                  <span class="material-symbols-outlined">group_add</span>
-                  צרי קבוצה קודם
-                </button>
+              </div>
+
+              @if (manualInvalidEmails.length > 0) {
+                <div class="manual-error">
+                  <strong>{{ manualInvalidEmails.length }} כתובות לא תקינות:</strong>
+                  <span dir="ltr">{{ manualInvalidEmails.join(', ') }}</span>
+                </div>
+              }
+              @if ((manualEligibleCount + manualSuppressedCount) > manualMaxAllowed) {
+                <div class="manual-error">ניתן לשלוח לעד {{ manualMaxAllowed }} כתובות ייחודיות בכל שליחה.</div>
+              }
+              @if (manualValidationFailed) {
+                <div class="manual-error">לא הצלחנו לבדוק את רשימת ההסרות. השליחה נעצרה עד שהבדיקה תצליח.</div>
+              }
+
+              <label class="manual-permission">
+                <input type="checkbox" [(ngModel)]="manualPermissionConfirmed" />
+                <span>אני מאשר/ת שיש לי הרשאה לשלוח הודעה לנמענים האלה.</span>
+              </label>
+            </div>
+          } @else {
+            <!-- Custom group selector -->
+            @if (recipientGroup === RecipientGroup.CustomGroup) {
+              <div class="custom-group-select">
+                <select class="field-input" [(ngModel)]="selectedEmailGroupId" (ngModelChange)="onCustomGroupChange()">
+                  <option [value]="null">— בחרי קבוצה —</option>
+                  @for (g of emailGroups; track g.id) {
+                    <option [value]="g.id">{{ g.name }} ({{ g.memberCount }})</option>
+                  }
+                </select>
+                @if (emailGroups.length === 0) {
+                  <button class="btn-load-groups" (click)="switchTab('groups')">
+                    <span class="material-symbols-outlined">group_add</span>
+                    צרי קבוצה קודם
+                  </button>
+                }
+              </div>
+            }
+
+            <div class="recipient-count">
+              @if (loadingCount) {
+                <span class="count-loading">טוען...</span>
+              } @else {
+                <span class="material-symbols-outlined">people</span>
+                <strong>{{ effectiveRecipientCount | number }}</strong>
+                <span>נמענים</span>
+                @if (excludedEmails.size > 0) {
+                  <span class="excluded-hint">({{ excludedEmails.size }} הוסרו)</span>
+                }
               }
             </div>
+            <button class="btn-manage-recipients" (click)="openRecipientsDialog()">
+              <span class="material-symbols-outlined">manage_search</span>
+              הצג רשימת נמענים / הסרה ידנית
+            </button>
           }
-
-          <div class="recipient-count">
-            @if (loadingCount) {
-              <span class="count-loading">טוען...</span>
-            } @else {
-              <span class="material-symbols-outlined">people</span>
-              <strong>{{ effectiveRecipientCount | number }}</strong>
-              <span>נמענים</span>
-              @if (excludedEmails.size > 0) {
-                <span class="excluded-hint">({{ excludedEmails.size }} הוסרו)</span>
-              }
-            }
-          </div>
-          <button class="btn-manage-recipients" (click)="openRecipientsDialog()">
-            <span class="material-symbols-outlined">manage_search</span>
-            הצג רשימת נמענים / הסרה ידנית
-          </button>
         </div>
 
         <div class="sidebar-section tips">
@@ -256,6 +300,10 @@
             <button type="button" (click)="openImageDialog()"><span class="material-symbols-outlined">image</span>תמונה</button>
             <button type="button" (click)="openVideoDialog()"><span class="material-symbols-outlined">smart_display</span>סרטון</button>
             <button type="button" (click)="openButtonDialog()"><span class="material-symbols-outlined">ads_click</span>לחצן</button>
+            <button type="button" (click)="insertBlock('article')"><span class="material-symbols-outlined">article</span>כתבה</button>
+            <button type="button" (click)="insertBlock('event')"><span class="material-symbols-outlined">event</span>אירוע</button>
+            <button type="button" (click)="insertBlock('divider')"><span class="material-symbols-outlined">horizontal_rule</span>מפריד</button>
+            <button type="button" (click)="insertBlock('greeting')"><span class="material-symbols-outlined">waving_hand</span>שם נמען</button>
           </div>
         </div>
 
@@ -623,6 +671,18 @@
               <span class="confirm-label">הוסרו ידנית:</span>
               <span class="confirm-value">{{ excludedEmails.size }} נמענים</span>
             </div>
+          }
+          @if (recipientGroup === RecipientGroup.ManualOneTime) {
+            <div class="confirm-row">
+              <span class="confirm-label">שמירת כתובות:</span>
+              <span class="confirm-value">לא יישמרו כמנויים או בקבוצות</span>
+            </div>
+            @if (manualSuppressedCount > 0) {
+              <div class="confirm-row">
+                <span class="confirm-label">חסומים:</span>
+                <span class="confirm-value">{{ manualSuppressedCount }} כתובות סוננו אוטומטית</span>
+              </div>
+            }
           }
         </div>
         <p class="confirm-warning">

@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Security.Cryptography;
+using System.Net.Mail;
 using Ganss.Xss;
 using AkordishKeit.Data;
 using AkordishKeit.Models.DTOs;
@@ -13,6 +14,7 @@ namespace AkordishKeit.Services;
 public class EmailService : IEmailService
 {
     private const string BrevoApiUrl = "https://api.brevo.com/v3/smtp/email";
+    private const int MaxManualRecipients = 500;
 
     private readonly IConfiguration _configuration;
     private readonly AkordishKeitDbContext _context;
@@ -39,7 +41,24 @@ public class EmailService : IEmailService
         if (string.IsNullOrEmpty(apiKey) || apiKey.StartsWith("REPLACE"))
             return new EmailSendResultDto { Success = false, Message = "Brevo API key לא מוגדר — יש להגדיר אותו ב-appsettings.json" };
 
-        var recipients = await GetRecipientsAsync(request.RecipientGroup, request.EmailGroupId);
+        List<(string Email, string? Name)> recipients;
+        if (request.RecipientGroup == EmailRecipientGroup.ManualOneTime)
+        {
+            if (!request.ConfirmedManualRecipientPermission)
+                return new EmailSendResultDto { Success = false, Message = "יש לאשר שקיימת הרשאה לשלוח לנמענים החד־פעמיים" };
+
+            var validation = await ValidateManualRecipientsInternalAsync(request.ManualRecipients ?? []);
+            if (validation.InvalidEmails.Count > 0)
+                return new EmailSendResultDto { Success = false, Message = $"נמצאו {validation.InvalidEmails.Count} כתובות מייל לא תקינות" };
+            if (validation.UniqueValidCount > MaxManualRecipients)
+                return new EmailSendResultDto { Success = false, Message = $"ניתן לשלוח לעד {MaxManualRecipients} כתובות בכל שליחה חד־פעמית" };
+
+            recipients = validation.EligibleEmails.Select(email => (email, (string?)null)).ToList();
+        }
+        else
+        {
+            recipients = await GetRecipientsAsync(request.RecipientGroup, request.EmailGroupId);
+        }
 
         if (request.ExcludedEmails is { Count: > 0 })
         {
@@ -76,7 +95,7 @@ public class EmailService : IEmailService
         sentCount   = results.Count(ok => ok);
         failedCount = results.Count(ok => !ok);
 
-        return new EmailSendResultDto
+        var result = new EmailSendResultDto
         {
             Success  = sentCount > 0,
             Message  = failedCount > 0
@@ -85,6 +104,15 @@ public class EmailService : IEmailService
             SentCount   = sentCount,
             FailedCount = failedCount
         };
+        _context.EmailCampaigns.Add(new EmailCampaign
+        {
+            Subject = request.Subject.Trim(), HtmlBody = sanitizedContent, FromName = fromName,
+            RecipientGroup = (int)request.RecipientGroup, EmailGroupId = request.EmailGroupId,
+            Status = result.Success ? "sent" : "failed", SentAt = DateTime.UtcNow,
+            SentCount = sentCount, FailedCount = failedCount
+        });
+        await _context.SaveChangesAsync();
+        return result;
     }
 
     // ── Password reset email ───────────────────────────────────────────────────
@@ -164,22 +192,12 @@ public class EmailService : IEmailService
 
         var subscriber = await _context.EmailSubscribers
             .FirstOrDefaultAsync(s => s.Email == normalizedEmail);
-        if (subscriber == null)
+        if (subscriber != null)
         {
-            subscriber = new EmailSubscriber
-            {
-                Email = normalizedEmail,
-                Name = matchingUsers.FirstOrDefault()?.Username,
-                UserId = matchingUsers.FirstOrDefault()?.Id,
-                Source = "email-link",
-                SubscribedAt = DateTime.UtcNow,
-                CreatedAt = DateTime.UtcNow
-            };
-            _context.EmailSubscribers.Add(subscriber);
+            subscriber.IsSubscribed = false;
+            subscriber.UnsubscribedAt = DateTime.UtcNow;
+            subscriber.UpdatedAt = DateTime.UtcNow;
         }
-        subscriber.IsSubscribed = false;
-        subscriber.UnsubscribedAt = DateTime.UtcNow;
-        subscriber.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
 
@@ -740,7 +758,11 @@ public class EmailService : IEmailService
     {
         List<(string Email, string? Name)> recipients;
 
-        if (group == EmailRecipientGroup.InterestedInSite)
+        if (group == EmailRecipientGroup.ManualOneTime)
+        {
+            recipients = [];
+        }
+        else if (group == EmailRecipientGroup.InterestedInSite)
         {
             recipients = await GetInterestedInSiteRecipientsAsync();
         }
@@ -869,10 +891,86 @@ public class EmailService : IEmailService
             .ToList();
     }
 
+    public async Task<ManualRecipientValidationResultDto> ValidateManualRecipientsAsync(List<string> emails)
+    {
+        var validation = await ValidateManualRecipientsInternalAsync(emails);
+        return new ManualRecipientValidationResultDto
+        {
+            EligibleCount = validation.EligibleEmails.Count,
+            SuppressedCount = validation.SuppressedCount,
+            DuplicateCount = validation.DuplicateCount,
+            MaxAllowed = MaxManualRecipients,
+            InvalidEmails = validation.InvalidEmails
+        };
+    }
+
+    private async Task<ManualRecipientValidation> ValidateManualRecipientsInternalAsync(List<string> emails)
+    {
+        var invalidEmails = new List<string>();
+        var uniqueEmails = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var duplicateCount = 0;
+
+        foreach (var rawEmail in emails)
+        {
+            var email = NormalizeEmail(rawEmail ?? string.Empty);
+            if (!IsValidEmail(email))
+            {
+                if (!string.IsNullOrWhiteSpace(rawEmail) &&
+                    !invalidEmails.Contains(rawEmail.Trim(), StringComparer.OrdinalIgnoreCase))
+                    invalidEmails.Add(rawEmail.Trim());
+                continue;
+            }
+
+            if (!uniqueEmails.Add(email)) duplicateCount++;
+        }
+
+        if (uniqueEmails.Count > MaxManualRecipients)
+        {
+            return new ManualRecipientValidation(
+                uniqueEmails.ToList(), invalidEmails, uniqueEmails.Count, duplicateCount, 0);
+        }
+
+        var suppressed = (await _context.MarketingUnsubscribes
+                .Where(u => uniqueEmails.Contains(u.Email))
+                .Select(u => u.Email)
+                .ToListAsync())
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        return new ManualRecipientValidation(
+            uniqueEmails.Where(email => !suppressed.Contains(email)).ToList(),
+            invalidEmails,
+            uniqueEmails.Count,
+            duplicateCount,
+            suppressed.Count);
+    }
+
+    private static bool IsValidEmail(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email) || email.Length > 254) return false;
+        var atIndex = email.LastIndexOf('@');
+        if (atIndex <= 0 || email.IndexOf('.', atIndex) <= atIndex + 1) return false;
+        try
+        {
+            var parsed = new MailAddress(email);
+            return string.Equals(parsed.Address, email, StringComparison.OrdinalIgnoreCase);
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
+    }
+
+    private sealed record ManualRecipientValidation(
+        List<string> EligibleEmails,
+        List<string> InvalidEmails,
+        int UniqueValidCount,
+        int DuplicateCount,
+        int SuppressedCount);
+
     private string BuildUnsubscribeUrl(string email)
     {
-        var baseUrl = (_configuration["Frontend:BaseUrl"] ?? "https://akordishkayt.com").TrimEnd('/');
-        return $"{baseUrl}/unsubscribe?token={Uri.EscapeDataString(CreateUnsubscribeToken(email))}";
+        var baseUrl = (_configuration["Backend:BaseUrl"] ?? "https://api.akordishkayt.com").TrimEnd('/');
+        return $"{baseUrl}/api/Email/unsubscribe-page?token={Uri.EscapeDataString(CreateUnsubscribeToken(email))}";
     }
 
     private string CreateUnsubscribeToken(string email)
@@ -929,7 +1027,7 @@ public class EmailService : IEmailService
         sanitizer.AllowedTags.Clear();
         foreach (var tag in new[]
         {
-            "p", "br", "strong", "b", "em", "i", "u", "s", "strike", "font", "span",
+            "p", "br", "hr", "strong", "b", "em", "i", "u", "s", "strike", "font", "span",
             "a", "h1", "h2", "h3", "h4", "ul", "ol", "li", "div", "img",
             "table", "tbody", "thead", "tr", "td", "th"
         }) sanitizer.AllowedTags.Add(tag);
@@ -938,7 +1036,7 @@ public class EmailService : IEmailService
         foreach (var attribute in new[]
         {
             "href", "src", "alt", "title", "target", "rel", "style", "width", "height",
-            "border", "cellpadding", "cellspacing", "align", "role", "face", "color"
+            "border", "cellpadding", "cellspacing", "align", "role", "face", "color", "bgcolor"
         }) sanitizer.AllowedAttributes.Add(attribute);
 
         sanitizer.AllowedSchemes.Clear();
@@ -950,7 +1048,7 @@ public class EmailService : IEmailService
         sanitizer.AllowedCssProperties.Clear();
         foreach (var property in new[]
         {
-            "background", "background-color", "border", "border-radius", "color", "display",
+            "background", "background-color", "border", "border-top", "border-collapse", "border-radius", "color", "display",
             "font-family", "font-size", "font-style", "font-weight", "height", "line-height",
             "margin", "margin-top", "margin-right", "margin-bottom", "margin-left", "max-width",
             "padding", "padding-top", "padding-right", "padding-bottom", "padding-left", "text-align",

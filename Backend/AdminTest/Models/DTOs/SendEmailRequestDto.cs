@@ -10,6 +10,8 @@ public class SendEmailRequestDto
     public string? FromName { get; set; }
     public string? FromEmail { get; set; }
     public List<string>? ExcludedEmails { get; set; }
+    public List<string>? ManualRecipients { get; set; }
+    public bool ConfirmedManualRecipientPermission { get; set; }
 }
 
 public enum EmailRecipientGroup
@@ -22,7 +24,8 @@ public enum EmailRecipientGroup
     AllServiceProviders  = 5,
     InterestedInSite     = 6,
     CustomGroup          = 7,
-    NoProfessionalProfile = 8
+    NoProfessionalProfile = 8,
+    ManualOneTime         = 9
 }
 
 public class EmailSendResultDto
@@ -47,4 +50,18 @@ public class MarketingUnsubscribeResultDto
 public class MarketingUnsubscribeRequestDto
 {
     public string Token { get; set; } = string.Empty;
+}
+
+public class ManualRecipientValidationRequestDto
+{
+    public List<string> Emails { get; set; } = [];
+}
+
+public class ManualRecipientValidationResultDto
+{
+    public int EligibleCount { get; set; }
+    public int SuppressedCount { get; set; }
+    public int DuplicateCount { get; set; }
+    public int MaxAllowed { get; set; }
+    public List<string> InvalidEmails { get; set; } = [];
 }

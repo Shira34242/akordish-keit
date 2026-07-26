@@ -144,6 +144,7 @@ public class AkordishKeitDbContext : DbContext
     public DbSet<EmailSubscriber> EmailSubscribers { get; set; }
     public DbSet<SiteInterestRegistration> SiteInterestRegistrations { get; set; }
     public DbSet<MarketingUnsubscribe> MarketingUnsubscribes { get; set; }
+    public DbSet<EmailCampaign> EmailCampaigns { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -314,6 +315,16 @@ public class AkordishKeitDbContext : DbContext
             e.Property(u => u.Email).HasMaxLength(320).IsRequired();
             e.Property(u => u.Source).HasMaxLength(100).IsRequired();
             e.HasIndex(u => u.Email).IsUnique();
+        });
+        modelBuilder.Entity<EmailCampaign>(e =>
+        {
+            e.ToTable("EmailCampaigns");
+            e.HasKey(c => c.Id);
+            e.Property(c => c.Subject).HasMaxLength(300).IsRequired();
+            e.Property(c => c.HtmlBody).IsRequired();
+            e.Property(c => c.FromName).HasMaxLength(160).IsRequired();
+            e.Property(c => c.Status).HasMaxLength(30).IsRequired();
+            e.HasIndex(c => new { c.Status, c.ScheduledAt });
         });
 
         // Seed Data

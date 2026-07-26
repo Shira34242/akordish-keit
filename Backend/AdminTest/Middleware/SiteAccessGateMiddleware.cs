@@ -85,6 +85,10 @@ public class SiteAccessGateMiddleware
             && path.StartsWithSegments("/api/SiteInterest/register"))
             return true;
 
+        if ((HttpMethods.IsGet(request.Method) || HttpMethods.IsPost(request.Method))
+            && path.StartsWithSegments("/api/Email/unsubscribe"))
+            return true;
+
         if (HttpMethods.IsGet(request.Method)
             && (path.StartsWithSegments("/api/Cities")
                 || path.StartsWithSegments("/api/Instruments")

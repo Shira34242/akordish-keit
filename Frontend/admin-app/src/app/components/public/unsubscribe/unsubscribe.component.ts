@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterModule } from '@angular/router';
-import { EmailCampaignService } from '../../../services/email-campaign.service';
+import { environment } from '../../../../environments/environment';
 
 type UnsubscribeState = 'loading' | 'success' | 'error';
 
@@ -16,8 +16,7 @@ export class UnsubscribeComponent implements OnInit {
   message = 'מסירים אותך מרשימת התפוצה...';
 
   constructor(
-    private route: ActivatedRoute,
-    private emailService: EmailCampaignService
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
@@ -28,16 +27,7 @@ export class UnsubscribeComponent implements OnInit {
       return;
     }
 
-    this.emailService.unsubscribe(token).subscribe({
-      next: result => {
-        this.state = result.success ? 'success' : 'error';
-        this.message = result.message;
-      },
-      error: error => {
-        this.state = 'error';
-        this.message = error?.error?.message || error?.message ||
-          'לא הצלחנו להשלים את ההסרה. אפשר לפנות אלינו ונשמח לעזור.';
-      }
-    });
+    const target = `${environment.apiBaseUrl}/api/Email/unsubscribe-page?token=${encodeURIComponent(token)}`;
+    window.location.replace(target);
   }
 }

@@ -8,6 +8,7 @@ public interface IEmailService
     Task<EmailSendResultDto> SendTestEmailAsync(SendEmailRequestDto request, string recipientEmail);
     Task<int> GetRecipientCountAsync(EmailRecipientGroup group, int? emailGroupId = null);
     Task<List<EmailRecipientDto>> GetRecipientsPreviewAsync(EmailRecipientGroup group, int? emailGroupId = null);
+    Task<ManualRecipientValidationResultDto> ValidateManualRecipientsAsync(List<string> emails);
     string BuildPreviewHtml(string subject, string htmlBody);
     Task<bool> SendPasswordResetEmailAsync(string toEmail, string toName, string code);
     Task<MarketingUnsubscribeResultDto> UnsubscribeAsync(string token);

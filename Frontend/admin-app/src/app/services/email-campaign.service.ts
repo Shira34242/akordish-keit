@@ -13,6 +13,7 @@ export enum EmailRecipientGroup {
   InterestedInSite     = 6,
   CustomGroup          = 7,
   NoProfessionalProfile = 8,
+  ManualOneTime        = 9,
 }
 
 export interface SendEmailRequest {
@@ -24,6 +25,8 @@ export interface SendEmailRequest {
   fromName?: string;
   fromEmail?: string;
   excludedEmails?: string[];
+  manualRecipients?: string[];
+  confirmedManualRecipientPermission?: boolean;
 }
 
 export interface EmailRecipient {
@@ -45,6 +48,14 @@ export interface SendTestEmailRequest extends SendEmailRequest {
 export interface MarketingUnsubscribeResult {
   success: boolean;
   message: string;
+}
+
+export interface ManualRecipientValidationResult {
+  eligibleCount: number;
+  suppressedCount: number;
+  duplicateCount: number;
+  maxAllowed: number;
+  invalidEmails: string[];
 }
 
 export interface EmailGroupMemberDto {
@@ -132,6 +143,14 @@ export class EmailCampaignService {
 
   sendCampaign(request: SendEmailRequest): Observable<EmailSendResult> {
     return this.http.post<EmailSendResult>(`${this.apiUrl}/send-campaign`, request, { withCredentials: true });
+  }
+
+  validateManualRecipients(emails: string[]): Observable<ManualRecipientValidationResult> {
+    return this.http.post<ManualRecipientValidationResult>(
+      `${this.apiUrl}/validate-manual-recipients`,
+      { emails },
+      { withCredentials: true }
+    );
   }
 
   sendTestEmail(request: SendTestEmailRequest): Observable<EmailSendResult> {

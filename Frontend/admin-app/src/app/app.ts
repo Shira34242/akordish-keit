@@ -141,7 +141,9 @@ export class AppComponent implements OnInit {
     if (typeof window === 'undefined') return false;
 
     const path = window.location.pathname.toLowerCase();
-    return path === '/join-index'
+    return path === '/unsubscribe'
+      || path.startsWith('/unsubscribe/')
+      || path === '/join-index'
       || path.startsWith('/join-index/')
       || path === '/join-chords'
       || path.startsWith('/join-chords/');

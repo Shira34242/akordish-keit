@@ -51,6 +51,17 @@ export class EmailCampaignComponent implements OnInit {
   showRecipientsDialog = false;
   recipientSearchQuery = '';
   excludedEmails = new Set<string>();
+  manualRecipientsText = '';
+  manualRecipientTokens: string[] = [];
+  manualInvalidEmails: string[] = [];
+  manualDuplicateCount = 0;
+  manualSuppressedCount = 0;
+  manualEligibleCount = 0;
+  manualMaxAllowed = 500;
+  checkingManualRecipients = false;
+  manualValidationFailed = false;
+  manualPermissionConfirmed = false;
+  private manualValidationTimer?: ReturnType<typeof setTimeout>;
 
 
   showLinkDialog = false;
@@ -89,6 +100,7 @@ export class EmailCampaignComponent implements OnInit {
   editorMenuX = 0;
   editorMenuY = 0;
   private editingImage: HTMLImageElement | null = null;
+  private editingButton: HTMLTableElement | null = null;
 
   readonly recipientGroups = [
     { value: EmailRecipientGroup.AllUsers,            label: 'כל המשתמשים',        icon: 'group' },
@@ -100,6 +112,7 @@ export class EmailCampaignComponent implements OnInit {
     { value: EmailRecipientGroup.NoProfessionalProfile, label: 'ללא פרופיל מקצועי', icon: 'person_off' },
     { value: EmailRecipientGroup.InterestedInSite,    label: 'מתעניינים באתר',      icon: 'star' },
     { value: EmailRecipientGroup.CustomGroup,         label: 'קבוצה מותאמת',        icon: 'group_add' },
+    { value: EmailRecipientGroup.ManualOneTime,       label: 'שליחה חד־פעמית',       icon: 'content_paste' },
   ];
 
   // ── Groups tab ────────────────────────────────────────────────────
@@ -167,6 +180,11 @@ export class EmailCampaignComponent implements OnInit {
   // ── Recipient count ───────────────────────────────────────────────
 
   loadCount() {
+    if (this.recipientGroup === EmailRecipientGroup.ManualOneTime) {
+      this.onManualRecipientsChange();
+      return;
+    }
+
     this.loadingCount = true;
     const groupId = this.recipientGroup === EmailRecipientGroup.CustomGroup
       ? this.selectedEmailGroupId ?? undefined
@@ -182,8 +200,8 @@ export class EmailCampaignComponent implements OnInit {
     if (this.recipientGroup !== EmailRecipientGroup.CustomGroup) {
       this.selectedEmailGroupId = null;
     }
-    this.loadCount();
     this.resetRecipientsSelection();
+    this.loadCount();
   }
 
   onCustomGroupChange() {
@@ -201,6 +219,62 @@ export class EmailCampaignComponent implements OnInit {
     this.recipients = [];
     this.excludedEmails.clear();
     this.recipientSearchQuery = '';
+  }
+
+  onManualRecipientsChange() {
+    if (this.manualValidationTimer) clearTimeout(this.manualValidationTimer);
+
+    const tokens = this.manualRecipientsText
+      .split(/[\s,;]+/)
+      .map(email => email.trim())
+      .filter(Boolean);
+    this.manualRecipientTokens = tokens;
+
+    const seen = new Set<string>();
+    const invalid = new Set<string>();
+    let duplicates = 0;
+    for (const token of tokens) {
+      const normalized = token.toLowerCase();
+      if (seen.has(normalized)) duplicates++;
+      else seen.add(normalized);
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(token) || token.length > 254) invalid.add(token);
+    }
+
+    this.manualDuplicateCount = duplicates;
+    this.manualInvalidEmails = Array.from(invalid);
+    this.manualSuppressedCount = 0;
+    this.manualEligibleCount = Math.max(0, seen.size - invalid.size);
+    this.recipientCount = this.manualEligibleCount;
+    this.manualValidationFailed = false;
+
+    if (tokens.length === 0) {
+      this.checkingManualRecipients = false;
+      return;
+    }
+
+    this.checkingManualRecipients = true;
+    const signature = tokens.join('\n');
+    this.manualValidationTimer = setTimeout(() => {
+      this.emailService.validateManualRecipients(tokens).subscribe({
+        next: result => {
+          if (this.manualRecipientTokens.join('\n') !== signature) return;
+          this.manualInvalidEmails = result.invalidEmails;
+          this.manualDuplicateCount = result.duplicateCount;
+          this.manualSuppressedCount = result.suppressedCount;
+          this.manualEligibleCount = result.eligibleCount;
+          this.manualMaxAllowed = result.maxAllowed;
+          this.recipientCount = result.eligibleCount;
+          this.checkingManualRecipients = false;
+        },
+        error: () => {
+          if (this.manualRecipientTokens.join('\n') !== signature) return;
+          this.manualEligibleCount = 0;
+          this.recipientCount = 0;
+          this.checkingManualRecipients = false;
+          this.manualValidationFailed = true;
+        },
+      });
+    }, 350);
   }
 
   openRecipientsDialog() {
@@ -239,6 +313,7 @@ export class EmailCampaignComponent implements OnInit {
   }
 
   get effectiveRecipientCount(): number {
+    if (this.recipientGroup === EmailRecipientGroup.ManualOneTime) return this.manualEligibleCount;
     return Math.max(0, this.recipientCount - this.excludedEmails.size);
   }
 
@@ -252,6 +327,18 @@ export class EmailCampaignComponent implements OnInit {
 
   undo() { this.editorBody.nativeElement.focus(); document.execCommand('undo'); }
   redo() { this.editorBody.nativeElement.focus(); document.execCommand('redo'); }
+
+  insertBlock(type: 'divider' | 'article' | 'event' | 'greeting') {
+    this.restoreSelection();
+    const blocks = {
+      divider: '<hr style="border:0;border-top:1px solid #F2F2F2;margin:24px 0;" />',
+      article: '<h2 style="margin:0 0 10px;font-size:22px;line-height:1.3;">כותרת הכתבה</h2><p style="margin:0 0 16px;line-height:1.7;">כתבי כאן תקציר קצר ומזמין.</p>',
+      event: '<div style="background-color:#F2F2F2;padding:20px;margin:16px 0;"><strong style="font-size:18px;">אירוע קרוב</strong><p style="margin:8px 0 0;">תאריך, שעה ומקום</p></div>',
+      greeting: '<p style="margin:0 0 16px;">שלום {{שם}},</p>'
+    };
+    document.execCommand('insertHTML', false, blocks[type]);
+    this.editorBody.nativeElement.focus();
+  }
 
   saveDraft() {
     const subject = this.subject.trim() || 'טיוטה ללא נושא';
@@ -339,6 +426,7 @@ export class EmailCampaignComponent implements OnInit {
   }
 
   setAlign(align: string) {
+    this.restoreSelection();
     document.execCommand(align, false, undefined);
     this.editorBody.nativeElement.focus();
   }
@@ -400,6 +488,20 @@ export class EmailCampaignComponent implements OnInit {
   }
 
   onEditorClick(event: MouseEvent) {
+    const link = (event.target as HTMLElement).closest('a');
+    const buttonTable = link?.closest('table[role="presentation"]');
+    if (link && buttonTable && !buttonTable.querySelector('img')) {
+      event.preventDefault();
+      this.editingButton = buttonTable as HTMLTableElement;
+      this.buttonLabel = link.textContent?.trim() || '';
+      this.buttonUrl = link.href || '';
+      const background = buttonTable.querySelector('td')?.getAttribute('bgcolor')?.toLowerCase() || '';
+      this.buttonVariant = background === '#000000' ? 'dark' : background === '#f2f2f2' ? 'soft' : 'primary';
+      this.buttonAlign = buttonTable.getAttribute('align') === 'right' ? 'right' : buttonTable.getAttribute('align') === 'left' ? 'left' : 'center';
+      this.showButtonDialog = true;
+      return;
+    }
+
     const image = (event.target as HTMLElement).closest('img');
     if (!(image instanceof HTMLImageElement)) return;
 
@@ -407,12 +509,12 @@ export class EmailCampaignComponent implements OnInit {
     this.editingImage = image;
     this.imageUrl = image.src;
     this.imageAlt = image.alt;
-    this.imageWidth = Math.min(100, Math.max(30, parseInt(image.style.width, 10) || 100));
-    const wrapper = image.closest('div[style*="text-align"]') as HTMLElement | null;
-    const align = wrapper?.style.textAlign;
+    const wrapper = image.closest('table[role="presentation"], div[style*="text-align"]') as HTMLElement | null;
+    this.imageWidth = Math.min(100, Math.max(30, parseInt(wrapper?.getAttribute('width') || image.style.width, 10) || 100));
+    const align = wrapper?.getAttribute('align') || wrapper?.style.textAlign;
     this.imageAlign = align === 'right' || align === 'left' ? align : 'center';
     this.imageLink = image.closest('a')?.href || '';
-    this.imageCaption = wrapper?.querySelector(':scope > div')?.textContent?.trim() || '';
+    this.imageCaption = wrapper?.querySelector('div')?.textContent?.trim() || '';
     this.showImageDialog = true;
   }
 
@@ -430,7 +532,7 @@ export class EmailCampaignComponent implements OnInit {
       this.restoreSelection();
       const html = this.buildImageHtml(url, alt, width, align, link, caption);
       if (this.editingImage) {
-        const wrapper = this.editingImage.closest('div[style*="text-align"]');
+        const wrapper = this.editingImage.closest('table[role="presentation"], div[style*="text-align"]');
         (wrapper ?? this.editingImage).outerHTML = html;
         this.editingImage = null;
       } else {
@@ -440,9 +542,11 @@ export class EmailCampaignComponent implements OnInit {
   }
 
   private buildImageHtml(url: string, alt: string, width: number, align: string, link: string, caption: string): string {
-    const image = `<img src="${this.escapeHtml(url)}" alt="${this.escapeHtml(alt)}" width="${width}%" style="width:${width}%;max-width:100%;height:auto;display:inline-block;border:0;" />`;
+    const pixelWidth = Math.round(520 * width / 100);
+    const image = `<img src="${this.escapeHtml(url)}" alt="${this.escapeHtml(alt)}" width="${pixelWidth}" style="width:100%;max-width:${pixelWidth}px;height:auto;display:block;border:0;" />`;
     const linkedImage = link ? `<a href="${link}" target="_blank" rel="noopener noreferrer">${image}</a>` : image;
-    return `<div style="text-align:${align};margin:16px 0;">${linkedImage}${caption ? `<div style="font-size:13px;color:#404040;margin-top:6px;">${caption}</div>` : ''}</div>`;
+    const tableAlign = align === 'left' ? 'left' : align === 'right' ? 'right' : 'center';
+    return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="${width}%" align="${tableAlign}" style="width:${width}%;max-width:520px;margin:16px ${align === 'center' ? 'auto' : '0'};"><tr><td align="${tableAlign}">${linkedImage}${caption ? `<div style="font-size:13px;color:#404040;margin-top:6px;text-align:${align};">${caption}</div>` : ''}</td></tr></table>`;
   }
 
   openVideoDialog() {
@@ -467,6 +571,7 @@ export class EmailCampaignComponent implements OnInit {
 
   openButtonDialog() {
     this.saveSelection();
+    this.editingButton = null;
     this.buttonLabel = '';
     this.buttonUrl = '';
     this.buttonVariant = 'primary';
@@ -488,8 +593,13 @@ export class EmailCampaignComponent implements OnInit {
     const tableAlign = this.buttonAlign === 'right' ? 'right' : this.buttonAlign === 'left' ? 'left' : 'center';
     setTimeout(() => {
       this.restoreSelection();
-      const html = `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="${tableAlign}" style="margin:16px ${this.buttonAlign === 'center' ? 'auto' : '0'};"><tr><td style="background-color:${colors.background};border-radius:999px;padding:12px 22px;text-align:center;"><a href="${url}" target="_blank" rel="noopener noreferrer" style="color:${colors.color};text-decoration:none;font-weight:700;font-family:Arial,Helvetica,sans-serif;">${label}</a></td></tr></table>`;
-      document.execCommand('insertHTML', false, html);
+      const html = `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="${tableAlign}" style="margin:16px ${this.buttonAlign === 'center' ? 'auto' : '0'};border-collapse:separate;"><tr><td bgcolor="${colors.background}" style="background-color:${colors.background};border-radius:999px;padding:12px 22px;text-align:center;mso-padding-alt:12px 22px;"><a href="${url}" target="_blank" rel="noopener noreferrer" style="display:inline-block;color:${colors.color};text-decoration:none;font-weight:700;font-family:Arial,Helvetica,sans-serif;border-radius:999px;">${label}</a></td></tr></table>`;
+      if (this.editingButton) {
+        this.editingButton.outerHTML = html;
+        this.editingButton = null;
+      } else {
+        document.execCommand('insertHTML', false, html);
+      }
     }, 50);
   }
 
@@ -534,6 +644,12 @@ export class EmailCampaignComponent implements OnInit {
                           : undefined,
         fromName:       this.fromName,
         excludedEmails: this.excludedEmails.size > 0 ? Array.from(this.excludedEmails) : undefined,
+        manualRecipients: this.recipientGroup === EmailRecipientGroup.ManualOneTime
+          ? this.manualRecipientTokens
+          : undefined,
+        confirmedManualRecipientPermission: this.recipientGroup === EmailRecipientGroup.ManualOneTime
+          ? this.manualPermissionConfirmed
+          : undefined,
       })
       .subscribe({
         next: (result) => {
@@ -564,9 +680,17 @@ export class EmailCampaignComponent implements OnInit {
     this.editorBody.nativeElement.innerHTML = '';
     this.sendResult = null;
     this.resetRecipientsSelection();
+    this.manualRecipientsText = '';
+    this.manualRecipientTokens = [];
+    this.manualInvalidEmails = [];
+    this.manualDuplicateCount = 0;
+    this.manualSuppressedCount = 0;
+    this.manualEligibleCount = 0;
+    this.manualPermissionConfirmed = false;
   }
 
   get selectedGroupLabel(): string {
+    if (this.recipientGroup === EmailRecipientGroup.ManualOneTime) return 'נמענים חד־פעמיים';
     if (this.recipientGroup === EmailRecipientGroup.CustomGroup) {
       const g = this.emailGroups.find(g => g.id === this.selectedEmailGroupId);
       return g ? `קבוצה: ${g.name}` : 'קבוצה מותאמת';
@@ -578,6 +702,12 @@ export class EmailCampaignComponent implements OnInit {
     if (!this.subject.trim()) return false;
     if (!this.editorBody?.nativeElement?.innerHTML.trim()) return false;
     if (this.recipientGroup === EmailRecipientGroup.CustomGroup && !this.selectedEmailGroupId) return false;
+    if (this.recipientGroup === EmailRecipientGroup.ManualOneTime) {
+      const uniqueCount = new Set(this.manualRecipientTokens.map(email => email.toLowerCase())).size;
+      if (!this.manualPermissionConfirmed || this.checkingManualRecipients || this.manualValidationFailed) return false;
+      if (this.manualInvalidEmails.length > 0 || this.manualEligibleCount === 0) return false;
+      if (uniqueCount > this.manualMaxAllowed) return false;
+    }
     return true;
   }
 
