@@ -1,8 +1,5 @@
 import { Component, ElementRef, HostBinding, HostListener, Input, OnInit, OnDestroy, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { interval, Subscription } from 'rxjs';
-import { Router, NavigationEnd } from '@angular/router';
-import { filter } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { CloudflareImagePipe, CloudflareImageSrcsetPipe } from '../../../pipes/cloudflare-image.pipe';
 
@@ -31,30 +28,41 @@ interface AdSpotResponse {
   standalone: true,
   imports: [CloudflareImagePipe, CloudflareImageSrcsetPipe],
   template: `
-    @if (currentAd) {
-      <div class="media-wrapper" [style.aspect-ratio]="aspectRatio" [style.max-width]="maxWidth">
-        <a [attr.href]="currentAd.knownUrl || null" target="_blank" rel="noopener sponsored" (click)="handleAdClick($event)" class="media-link" [class.media-link--disabled]="!currentAd.knownUrl">
-          @if (getMediaType(activeMediaUrl) === 'image') {
-            <img
-              [src]="activeMediaUrl | cfImage:imagePreset"
-              [srcset]="activeMediaUrl | cfSrcset:srcsetWidths"
-              [sizes]="imageSizes"
-              [alt]="currentAd.name"
-              class="media-asset"
-              loading="lazy"
-              decoding="async"
-              (load)="trackView()" />
-          } @else if (getMediaType(activeMediaUrl) === 'video') {
-            <video [src]="activeMediaUrl" class="media-asset"
-              autoplay loop muted playsinline preload="metadata" (loadeddata)="trackView()"></video>
-          }
-        </a>
+    @if (campaigns.length) {
+      <div class="media-stack">
+        @for (campaign of campaigns; track campaign.id) {
+          <div class="media-wrapper" [style.aspect-ratio]="aspectRatio" [style.max-width]="maxWidth">
+            <a [attr.href]="campaign.knownUrl || null" target="_blank" rel="noopener sponsored" (click)="handleAdClick($event, campaign)" class="media-link" [class.media-link--disabled]="!campaign.knownUrl">
+              @if (getMediaType(getActiveMediaUrl(campaign)) === 'image') {
+                <img
+                  [src]="getActiveMediaUrl(campaign) | cfImage:imagePreset"
+                  [srcset]="getActiveMediaUrl(campaign) | cfSrcset:srcsetWidths"
+                  [sizes]="imageSizes"
+                  [alt]="campaign.name"
+                  class="media-asset"
+                  loading="lazy"
+                  decoding="async"
+                  (load)="trackView(campaign)" />
+              } @else if (getMediaType(getActiveMediaUrl(campaign)) === 'video') {
+                <video [src]="getActiveMediaUrl(campaign)" class="media-asset"
+                  autoplay loop muted playsinline preload="metadata" (loadeddata)="trackView(campaign)"></video>
+              }
+            </a>
+          </div>
+        }
       </div>
     }
   `,
   styles: [`
     :host {
       display: block;
+      width: 100%;
+    }
+
+    .media-stack {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md, 10px);
       width: 100%;
     }
 
@@ -102,23 +110,16 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
   }
 
   private readonly http = inject(HttpClient);
-  private readonly router = inject(Router);
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly apiUrl = `${environment.apiBaseUrl}/api/media`;
 
   campaigns: AdCampaign[] = [];
-  currentAd: AdCampaign | null = null;
   loading = false;
   hasLoaded = false;
-  currentIndex = 0;
-  hasTrackedView = false;
   maxWidth: string | null = null;
   aspectRatio: string | null = null;
-  rotationInterval: number = 45000;
   readonly srcsetWidths = [360, 600, 1000, 1600];
 
-  private rotationSubscription?: Subscription;
-  private routerSubscription?: Subscription;
   private visibilityObserver?: IntersectionObserver;
   private hasStartedLoading = false;
   private readonly VIEWED_ADS_KEY = 'viewedAds';
@@ -126,20 +127,17 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
 
   @HostBinding('class.media-item') readonly hostClass = true;
   @HostBinding('class.media-item--ready') get isReady(): boolean {
-    return !!this.currentAd;
+    return this.campaigns.length > 0;
   }
   @HostBinding('class.media-item--loaded') get isLoaded(): boolean {
     return this.hasLoaded;
   }
 
   ngOnInit() {
-    this.setupRouteChangeListener();
     this.setupLazyLoading();
   }
 
   ngOnDestroy() {
-    this.rotationSubscription?.unsubscribe();
-    this.routerSubscription?.unsubscribe();
     this.visibilityObserver?.disconnect();
   }
 
@@ -187,10 +185,6 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
             return !!mediaUrl;
           });
 
-          if (response.rotationIntervalMs) {
-            this.rotationInterval = response.rotationIntervalMs;
-          }
-
           if (response.dimensions) {
             const sep = response.dimensions.includes('x') ? 'x' : '*';
             const parts = response.dimensions.split(sep);
@@ -205,11 +199,7 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
           }
 
           if (this.campaigns.length > 0) {
-            this.currentIndex = 0;
-            this.currentAd = this.campaigns[0];
-            this.hasTrackedView = false;
             this.hasLoaded = true;
-            this.setupRotation();
             return;
           }
 
@@ -232,40 +222,10 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
       });
   }
 
-  setupRotation() {
-    // Rotate ads based on interval from AdSpot configuration
-    this.rotationSubscription?.unsubscribe();
-    this.rotationSubscription = interval(this.rotationInterval)
-      .subscribe(() => {
-        this.rotateToNextAd();
-      });
-  }
-
-  setupRouteChangeListener() {
-    // On route change, show new ad
-    this.routerSubscription = this.router.events
-      .pipe(filter(event => event instanceof NavigationEnd))
-      .subscribe(() => {
-        this.rotateToNextAd();
-      });
-  }
-
-  rotateToNextAd() {
-    if (this.campaigns.length <= 1) {
-      return; // No need to rotate if only one or no ads
-    }
-
-    // Move to next ad
-    this.currentIndex = (this.currentIndex + 1) % this.campaigns.length;
-    this.currentAd = this.campaigns[this.currentIndex];
-    this.hasTrackedView = false;
-  }
-
-  get activeMediaUrl(): string {
-    if (!this.currentAd) return '';
-    return this.effectiveMobile && this.currentAd.mobileMediaUrl
-      ? this.currentAd.mobileMediaUrl
-      : this.currentAd.mediaUrl;
+  getActiveMediaUrl(campaign: AdCampaign): string {
+    return this.effectiveMobile && campaign.mobileMediaUrl
+      ? campaign.mobileMediaUrl
+      : campaign.mediaUrl;
   }
 
   get imagePreset(): 'card' | 'hero' {
@@ -320,35 +280,29 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
     this.markTracked(this.CLICKED_ADS_KEY, adId);
   }
 
-  trackView() {
+  trackView(campaign: AdCampaign) {
     // Only track view once per ad per user session
-    if (!this.hasTrackedView && this.currentAd) {
-      if (!this.hasViewedAd(this.currentAd.id)) {
-        this.hasTrackedView = true;
-        this.markAdAsViewed(this.currentAd.id);
-        this.http.post(`${this.apiUrl}/${this.currentAd.id}/log-view`, {})
-          .subscribe({ next: () => {}, error: () => {} });
-      } else {
-      }
+    if (!this.hasViewedAd(campaign.id)) {
+      this.markAdAsViewed(campaign.id);
+      this.http.post(`${this.apiUrl}/${campaign.id}/log-view`, {})
+        .subscribe({ next: () => {}, error: () => {} });
     }
   }
 
-  handleAdClick(event: MouseEvent) {
-    if (!this.currentAd?.knownUrl) {
+  handleAdClick(event: MouseEvent, campaign: AdCampaign) {
+    if (!campaign.knownUrl) {
       event.preventDefault();
       return;
     }
 
-    this.trackClick();
+    this.trackClick(campaign);
   }
 
-  trackClick() {
-    if (this.currentAd) {
-      if (!this.hasClickedAd(this.currentAd.id)) {
-        this.markAdAsClicked(this.currentAd.id);
-        this.http.post(`${this.apiUrl}/${this.currentAd.id}/log-click`, {})
-          .subscribe({ next: () => {}, error: () => {} });
-      } 
+  trackClick(campaign: AdCampaign) {
+    if (!this.hasClickedAd(campaign.id)) {
+      this.markAdAsClicked(campaign.id);
+      this.http.post(`${this.apiUrl}/${campaign.id}/log-click`, {})
+        .subscribe({ next: () => {}, error: () => {} });
     }
   }
 
