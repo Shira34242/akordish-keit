@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, HostListener, NgZone, OnInit } from '@angular/core';
+import { AfterViewInit, Component, HostListener, NgZone, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { SocialAuthService, SocialUser } from '@abacritt/angularx-social-login';
@@ -50,7 +50,7 @@ import { TranslatePipe } from '../../pipes/translate.pipe';
   templateUrl: './layout.component.html',
   styleUrls: ['./layout.component.css']
 })
-export class LayoutComponent implements OnInit, AfterViewInit {
+export class LayoutComponent implements OnInit, AfterViewInit, OnDestroy {
   user: User | null = null;
   socialUser: SocialUser | null = null;
   loggedIn = false;
@@ -96,6 +96,8 @@ export class LayoutComponent implements OnInit, AfterViewInit {
 
   private currentArticleId: number | null = null;
   private lastScrollY = 0;
+  private readonly authPromptStorageKey = 'akordish-auth-prompt-date';
+  private authPromptTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     private router: Router,
@@ -157,6 +159,12 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     this.authService.currentUser$.subscribe(user => {
       this.user = user;
       this.loggedIn = !!user;
+
+      if (this.loggedIn) {
+        this.clearAuthPromptTimer();
+      } else {
+        this.scheduleAuthPrompt();
+      }
 
       if (user) {
         this.notificationService.refreshUnreadCount();
@@ -230,6 +238,42 @@ export class LayoutComponent implements OnInit, AfterViewInit {
     this.langService.lang$.subscribe(lang => {
       this.currentLang = lang;
     });
+  }
+
+  ngOnDestroy(): void {
+    this.clearAuthPromptTimer();
+  }
+
+  private scheduleAuthPrompt(): void {
+    if (this.authPromptTimer || this.hasShownAuthPromptToday()) return;
+
+    this.authPromptTimer = setTimeout(() => {
+      this.authPromptTimer = null;
+
+      if (this.loggedIn || this.showAuthModal || this.hasShownAuthPromptToday()) return;
+
+      localStorage.setItem(this.authPromptStorageKey, this.getLocalDateKey());
+      this.openAuthModal();
+    }, 60_000);
+  }
+
+  private clearAuthPromptTimer(): void {
+    if (!this.authPromptTimer) return;
+
+    clearTimeout(this.authPromptTimer);
+    this.authPromptTimer = null;
+  }
+
+  private hasShownAuthPromptToday(): boolean {
+    return localStorage.getItem(this.authPromptStorageKey) === this.getLocalDateKey();
+  }
+
+  private getLocalDateKey(): string {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   ngAfterViewInit(): void {

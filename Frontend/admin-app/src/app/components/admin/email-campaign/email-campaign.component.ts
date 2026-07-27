@@ -57,7 +57,7 @@ export class EmailCampaignComponent implements OnInit {
   manualDuplicateCount = 0;
   manualSuppressedCount = 0;
   manualEligibleCount = 0;
-  manualMaxAllowed = 500;
+  manualMaxAllowed = 5000;
   checkingManualRecipients = false;
   manualValidationFailed = false;
   manualPermissionConfirmed = false;

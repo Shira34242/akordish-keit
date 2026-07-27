@@ -14,7 +14,7 @@ namespace AkordishKeit.Services;
 public class EmailService : IEmailService
 {
     private const string BrevoApiUrl = "https://api.brevo.com/v3/smtp/email";
-    private const int MaxManualRecipients = 500;
+    private const int MaxManualRecipients = 5000;
 
     private readonly IConfiguration _configuration;
     private readonly AkordishKeitDbContext _context;
