@@ -79,7 +79,7 @@
         </span>
       </div>
       <div class="grid-card-meta">
-        <span>{{ spot.dimensions }}</span>
+        <span>{{ spot.dimensions }}<ng-container *ngIf="spot.mobileDimensions"> · מובייל {{ spot.mobileDimensions }}</ng-container></span>
         <span>{{ formatCurrency(spot.totalRevenue) }}</span>
         <span>{{ spot.activeCampaigns }} פעילים</span>
       </div>
@@ -154,7 +154,7 @@
 
           <!-- Dimensions -->
           <td>
-            <span class="dimensions">{{ spot.dimensions }}</span>
+            <span class="dimensions">{{ spot.dimensions }}<ng-container *ngIf="spot.mobileDimensions"> · מובייל {{ spot.mobileDimensions }}</ng-container></span>
           </td>
 
           <!-- Total Revenue -->

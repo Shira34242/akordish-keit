@@ -18,6 +18,7 @@ interface AdSpotResponse {
   spotName: string;
   spotTechnicalId: string;
   dimensions: string;
+  mobileDimensions?: string;
   rotationIntervalMs: number;
   campaigns: AdCampaign[];
   totalCampaigns: number;
@@ -185,9 +186,12 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
             return !!mediaUrl;
           });
 
-          if (response.dimensions) {
-            const sep = response.dimensions.includes('x') ? 'x' : '*';
-            const parts = response.dimensions.split(sep);
+          const dimensions = this.effectiveMobile && response.mobileDimensions
+            ? response.mobileDimensions
+            : response.dimensions;
+          if (dimensions) {
+            const sep = dimensions.includes('x') ? 'x' : '*';
+            const parts = dimensions.split(sep);
             if (parts.length === 2) {
               const w = Number(parts[0].trim());
               const h = Number(parts[1].trim());

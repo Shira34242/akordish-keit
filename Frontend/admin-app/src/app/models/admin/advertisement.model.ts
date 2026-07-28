@@ -55,6 +55,7 @@ export interface AdSpot {
   name: string;
   technicalId: string;
   dimensions: string;
+  mobileDimensions?: string;
   isActive: boolean;
   rotationIntervalMs: number;
   description?: string;
@@ -70,6 +71,7 @@ export interface CreateAdSpotRequest {
   name: string;
   technicalId: string;
   dimensions: string;
+  mobileDimensions?: string;
   rotationIntervalMs: number;
   description?: string;
 }
@@ -78,6 +80,7 @@ export interface UpdateAdSpotRequest {
   name: string;
   technicalId: string;
   dimensions: string;
+  mobileDimensions?: string;
   isActive: boolean;
   rotationIntervalMs: number;
   description?: string;

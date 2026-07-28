@@ -27,6 +27,9 @@ public class AdSpotConfiguration : IEntityTypeConfiguration<AdSpot>
                .IsRequired()
                .HasMaxLength(50);
 
+        builder.Property(e => e.MobileDimensions)
+               .HasMaxLength(50);
+
         builder.Property(e => e.IsActive)
                .HasDefaultValue(true);
 

@@ -45,7 +45,7 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label for="dimensions">מידות</label>
+            <label for="dimensions">מידות למחשב</label>
             <input
               type="text"
               id="dimensions"
@@ -65,6 +65,26 @@
               <small class="help-text">הפרסומת תקטן במסכים צרים, אבל תשמור על היחס הזה.</small>
             </div>
             <small class="help-text">שטח זה תומך בכל סוגי המדיה: תמונות, וידאו וגיפים</small>
+          </div>
+
+          <div class="form-group">
+            <label for="mobileDimensions">מידות למובייל</label>
+            <input
+              type="text"
+              id="mobileDimensions"
+              formControlName="mobileDimensions"
+              class="form-control"
+              maxlength="50"
+              placeholder="למשל: 320x100"
+            />
+            <div class="ad-size-preview" *ngIf="previewMobileDimensions as preview">
+              <div class="ad-size-preview__canvas">
+                <div class="ad-size-preview__box" [style.aspect-ratio]="preview.ratio">
+                  {{ preview.width }}×{{ preview.height }}
+                </div>
+              </div>
+            </div>
+            <small class="help-text">אופציונלי. אם ריק, ייעשה שימוש ביחס של מידות המחשב.</small>
           </div>
         </div>
 

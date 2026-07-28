@@ -49,6 +49,7 @@ public class AdSpotDto
     public string Name { get; set; } = string.Empty;
     public string TechnicalId { get; set; } = string.Empty;
     public string Dimensions { get; set; } = string.Empty;
+    public string? MobileDimensions { get; set; }
     public bool IsActive { get; set; }
     public int RotationIntervalMs { get; set; }
     public string? Description { get; set; }
@@ -67,6 +68,7 @@ public class CreateAdSpotDto
     public string Name { get; set; } = string.Empty;
     public string TechnicalId { get; set; } = string.Empty;
     public string Dimensions { get; set; } = string.Empty;
+    public string? MobileDimensions { get; set; }
     public int RotationIntervalMs { get; set; } = 30000;
     public string? Description { get; set; }
 }
@@ -76,6 +78,7 @@ public class UpdateAdSpotDto
     public string Name { get; set; } = string.Empty;
     public string TechnicalId { get; set; } = string.Empty;
     public string Dimensions { get; set; } = string.Empty;
+    public string? MobileDimensions { get; set; }
     public bool IsActive { get; set; }
     public int RotationIntervalMs { get; set; }
     public string? Description { get; set; }

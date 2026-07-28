@@ -40,6 +40,7 @@ export class AdSpotFormComponent implements OnInit, OnChanges {
       name: [this.adSpot?.name || '', [Validators.required, Validators.maxLength(200)]],
       technicalId: [this.adSpot?.technicalId || '', [Validators.required, Validators.maxLength(100)]],
       dimensions: [this.adSpot?.dimensions || '', Validators.maxLength(50)],
+      mobileDimensions: [this.adSpot?.mobileDimensions || '', Validators.maxLength(50)],
       rotationIntervalMs: [this.adSpot?.rotationIntervalMs || 30000, [Validators.required, Validators.min(1000)]],
       description: [this.adSpot?.description || '', Validators.maxLength(1000)],
       isActive: [this.adSpot?.isActive ?? true]
@@ -74,5 +75,17 @@ export class AdSpotFormComponent implements OnInit, OnChanges {
       height,
       ratio: `${width} / ${height}`
     };
+  }
+
+  get previewMobileDimensions(): { width: number; height: number; ratio: string } | null {
+    const value = String(this.adSpotForm?.get('mobileDimensions')?.value || '').trim();
+    const match = value.match(/^(\d+)\s*[xX*]\s*(\d+)$/);
+    if (!match) return null;
+
+    const width = Number(match[1]);
+    const height = Number(match[2]);
+    if (width <= 0 || height <= 0) return null;
+
+    return { width, height, ratio: `${width} / ${height}` };
   }
 }

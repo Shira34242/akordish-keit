@@ -648,6 +648,7 @@ namespace AkordishKeit.Controllers
                 spotName = adSpot.Name,
                 spotTechnicalId = adSpot.TechnicalId,
                 dimensions = adSpot.Dimensions,
+                mobileDimensions = adSpot.MobileDimensions,
                 rotationIntervalMs = adSpot.RotationIntervalMs,
                 campaigns = campaigns,
                 totalCampaigns = campaigns.Count
@@ -709,6 +710,7 @@ namespace AkordishKeit.Controllers
                 spotName = adSpot.Name,
                 spotTechnicalId = adSpot.TechnicalId,
                 dimensions = adSpot.Dimensions,
+                mobileDimensions = adSpot.MobileDimensions,
                 rotationIntervalMs = adSpot.RotationIntervalMs,
                 campaign = campaign
             });

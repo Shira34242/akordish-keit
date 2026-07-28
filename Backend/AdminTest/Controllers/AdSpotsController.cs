@@ -36,6 +36,7 @@ namespace AkordishKeit.Controllers
                     Name = spot.Name,
                     TechnicalId = spot.TechnicalId,
                     Dimensions = spot.Dimensions,
+                    MobileDimensions = spot.MobileDimensions,
                     IsActive = spot.IsActive,
                     RotationIntervalMs = spot.RotationIntervalMs,
                     Description = spot.Description,
@@ -73,6 +74,7 @@ namespace AkordishKeit.Controllers
                     Name = spot.Name,
                     TechnicalId = spot.TechnicalId,
                     Dimensions = spot.Dimensions,
+                    MobileDimensions = spot.MobileDimensions,
                     IsActive = spot.IsActive,
                     RotationIntervalMs = spot.RotationIntervalMs,
                     Description = spot.Description,
@@ -114,6 +116,7 @@ namespace AkordishKeit.Controllers
                 Name = dto.Name,
                 TechnicalId = dto.TechnicalId,
                 Dimensions = dto.Dimensions,
+                MobileDimensions = dto.MobileDimensions,
                 RotationIntervalMs = dto.RotationIntervalMs,
                 Description = dto.Description,
                 IsActive = true,
@@ -129,6 +132,7 @@ namespace AkordishKeit.Controllers
                 Name = adSpot.Name,
                 TechnicalId = adSpot.TechnicalId,
                 Dimensions = adSpot.Dimensions,
+                MobileDimensions = adSpot.MobileDimensions,
                 IsActive = adSpot.IsActive,
                 RotationIntervalMs = adSpot.RotationIntervalMs,
                 Description = adSpot.Description,
@@ -162,6 +166,7 @@ namespace AkordishKeit.Controllers
             adSpot.Name = dto.Name;
             adSpot.TechnicalId = dto.TechnicalId;
             adSpot.Dimensions = dto.Dimensions;
+            adSpot.MobileDimensions = dto.MobileDimensions;
             adSpot.IsActive = dto.IsActive;
             adSpot.RotationIntervalMs = dto.RotationIntervalMs;
             adSpot.Description = dto.Description;
