@@ -222,6 +222,21 @@ namespace AkordishKeit.Controllers
             var articlesViewsLast30 = await _context.ArticleViews
                 .CountAsync(v => v.ViewedAt >= last30Days);
 
+            var chordViewsTotal = await _context.SongViews.CountAsync();
+            var chordViewsLast30 = await _context.SongViews
+                .CountAsync(v => v.ViewedAt >= last30Days && v.ViewedAt < periodEnd);
+            var topChordSongs = await _context.SongViews
+                .Where(v => v.ViewedAt >= last30Days && v.ViewedAt < periodEnd)
+                .GroupBy(v => v.SongId)
+                .Select(g => new { SongId = g.Key, Views = g.Count() })
+                .OrderByDescending(x => x.Views)
+                .Take(10)
+                .ToListAsync();
+            var chordSongIds = topChordSongs.Select(x => x.SongId).ToList();
+            var chordSongNames = await _context.Songs
+                .Where(s => chordSongIds.Contains(s.Id))
+                .ToDictionaryAsync(s => s.Id, s => new { s.Title, s.ViewCount });
+
             // AdBlock silent checks
             var adBlockChecksQuery = _context.AdBlockChecks
                 .AsNoTracking()
@@ -284,6 +299,18 @@ namespace AkordishKeit.Controllers
                 {
                     totalViews = articlesViewsTotal,
                     viewsLast30Days = articlesViewsLast30
+                },
+                chords = new
+                {
+                    totalViews = chordViewsTotal,
+                    viewsLast30Days = chordViewsLast30,
+                    topSongs = topChordSongs.Select(x => new
+                    {
+                        songId = x.SongId,
+                        songTitle = chordSongNames.TryGetValue(x.SongId, out var song) ? song.Title : $"Song #{x.SongId}",
+                        views = x.Views,
+                        totalViews = chordSongNames.TryGetValue(x.SongId, out var namedSong) ? namedSong.ViewCount : x.Views
+                    })
                 },
                 adBlock = new
                 {

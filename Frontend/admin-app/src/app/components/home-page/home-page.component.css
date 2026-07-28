@@ -1578,6 +1578,10 @@
   align-items: center;
 }
 
+.content-slot--mid-banner:has(app-media-item.media-item--ready) {
+  margin-block: var(--space-xs);
+}
+
 .content-slot__label {
   display: none;
 }
@@ -1586,6 +1590,7 @@
   display: block;
   font-family: 'Open Sans', sans-serif;
   font-size: var(--font-xs);
+  line-height: 1;
   color: #404040;
   opacity: 0.45;
   padding: var(--space-xs) var(--space-sm) 0;

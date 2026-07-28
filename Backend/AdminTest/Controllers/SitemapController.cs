@@ -47,12 +47,25 @@ public class SitemapController : ControllerBase
         // שירים
         var songs = await _db.Songs
             .Where(s => s.IsApproved && !s.IsDeleted)
-            .Select(s => new { s.Id, s.Title })
+            .Select(s => new
+            {
+                s.Id,
+                s.Title,
+                ArtistName = s.SongArtists
+                    .OrderBy(sa => sa.Order)
+                    .Select(sa => sa.Artist != null ? sa.Artist.Name : sa.TempArtistName)
+                    .FirstOrDefault()
+            })
             .ToListAsync();
 
         foreach (var song in songs)
         {
-            var slug = ToSlug(song.Title);
+            // Keep the sitemap URL identical to the public Angular song route:
+            // title + first artist name when an artist exists.
+            var slugSource = string.IsNullOrWhiteSpace(song.ArtistName)
+                ? song.Title
+                : $"{song.Title}-{song.ArtistName}";
+            var slug = ToSlug(slugSource);
             var loc = slug.Length > 0
                 ? $"{BaseUrl}/song/{song.Id}/{slug}"
                 : $"{BaseUrl}/song/{song.Id}";

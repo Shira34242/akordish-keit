@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router } from '@angular/router';
+import { filter } from 'rxjs';
 import { AddSongModalComponent } from './components/add-song-modal/add-song-modal.component';
 import { ReportModalComponent } from './components/shared/report-modal/report-modal.component';
 import { CommonModule } from '@angular/common';
@@ -12,6 +14,7 @@ import { AuthService } from './services/auth.service';
 import { SeoRouteService } from './services/seo-route.service';
 import { AdBlockDetectionService } from './services/adblock-detection.service';
 import { SystemSettingsService } from './services/system-settings.service';
+import { PageViewAnalyticsService } from './services/page-view-analytics.service';
 
 @Component({
   selector: 'app-root',
@@ -107,7 +110,9 @@ export class AppComponent implements OnInit {
     private authService: AuthService,
     private seoRouteService: SeoRouteService,
     private adBlockDetectionService: AdBlockDetectionService,
-    private settingsService: SystemSettingsService
+    private settingsService: SystemSettingsService,
+    private router: Router,
+    private pageViewAnalytics: PageViewAnalyticsService
   ) { }
 
   ngOnInit() {
@@ -162,6 +167,7 @@ export class AppComponent implements OnInit {
     this.appServicesStarted = true;
 
     this.seoRouteService.start();
+    this.startPageTracking();
     this.adBlockDetectionService.start();
     this.siteAlertService.patchBrowserAlerts();
     this.requiredFieldFeedback.initGlobalValidation();
@@ -179,6 +185,15 @@ export class AppComponent implements OnInit {
     this.modalService.reportModalState$.subscribe(state => {
       this.reportModal = state;
     });
+  }
+
+  private startPageTracking(): void {
+    this.pageViewAnalytics.track(this.router.url);
+    this.router.events
+      .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
+      .subscribe(event => {
+        window.setTimeout(() => this.pageViewAnalytics.track(event.urlAfterRedirects), 0);
+      });
   }
 
   openAddSongModal() {

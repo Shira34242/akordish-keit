@@ -90,6 +90,7 @@
                   <span><strong>{{ manualEligibleCount | number }}</strong> מוכנות לשליחה</span>
                   @if (manualDuplicateCount > 0) { <span>{{ manualDuplicateCount }} כפולות הוסרו</span> }
                   @if (manualSuppressedCount > 0) { <span>{{ manualSuppressedCount }} חסומות ולא יקבלו מייל</span> }
+                  @if (manualIgnoredTokenCount > 0) { <span>{{ manualIgnoredTokenCount }} פריטים שאינם כתובות מייל התעלמו אוטומטית</span> }
                 }
               </div>
 

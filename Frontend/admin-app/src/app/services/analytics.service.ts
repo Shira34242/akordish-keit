@@ -24,6 +24,11 @@ export interface AnalyticsDashboard {
     totalViews: number;
     viewsLast30Days: number;
   };
+  chords: {
+    totalViews: number;
+    viewsLast30Days: number;
+    topSongs: { songId: number; songTitle: string; views: number; totalViews: number }[];
+  };
   adBlock: {
     totalChecks: number;
     detectedCount: number;

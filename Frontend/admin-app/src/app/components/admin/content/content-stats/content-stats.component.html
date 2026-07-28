@@ -228,6 +228,35 @@
     <p>שגיאה בטעינת הנתונים. ודא שהמערכת מחוברת ורענן.</p>
   </div>
 
+  <div *ngIf="activeTab === 'chords' && !dashboardLoading && dashboard" class="tab-content">
+    <div class="section-header">
+      <div>
+        <span class="section-pill">אקורדים</span>
+        <h2>השירים הנצפים ביותר</h2>
+      </div>
+      <span class="period-badge">{{ periodLabel }}</span>
+    </div>
+    <div class="kpi-row">
+      <div class="kpi-card kpi-accent"><span class="kpi-label">סך צפיות באקורדים</span><span class="kpi-value">{{ dashboard.chords.totalViews | number }}</span></div>
+      <div class="kpi-card"><span class="kpi-label">צפיות בתקופה</span><span class="kpi-value">{{ dashboard.chords.viewsLast30Days | number }}</span></div>
+      <div class="kpi-card"><span class="kpi-label">שירים מובילים</span><span class="kpi-value">{{ dashboard.chords.topSongs.length | number }}</span></div>
+    </div>
+    <div class="table-wrap">
+      <table class="stats-table">
+        <thead><tr><th class="col-rank">#</th><th class="col-title">שיר</th><th class="col-stat">צפיות בתקופה</th><th class="col-stat">סך צפיות</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let song of dashboard.chords.topSongs; let i = index" class="data-row-static">
+            <td class="col-rank"><span class="rank-badge" [class.top3]="i < 3">{{ i + 1 }}</span></td>
+            <td class="col-title"><span class="title-text">{{ song.songTitle }}</span></td>
+            <td class="col-stat"><span class="stat-value">{{ song.views | number }}</span></td>
+            <td class="col-stat"><span class="stat-value">{{ song.totalViews | number }}</span></td>
+          </tr>
+          <tr *ngIf="dashboard.chords.topSongs.length === 0"><td colspan="4" class="empty-cell">אין נתונים עדיין</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
   <div *ngIf="activeTab === 'events' && !dashboardLoading && dashboard" class="tab-content">
     <div class="section-header">
       <div>

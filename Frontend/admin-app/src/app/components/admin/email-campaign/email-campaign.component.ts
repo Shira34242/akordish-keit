@@ -54,6 +54,7 @@ export class EmailCampaignComponent implements OnInit {
   manualRecipientsText = '';
   manualRecipientTokens: string[] = [];
   manualInvalidEmails: string[] = [];
+  manualIgnoredTokenCount = 0;
   manualDuplicateCount = 0;
   manualSuppressedCount = 0;
   manualEligibleCount = 0;
@@ -224,10 +225,14 @@ export class EmailCampaignComponent implements OnInit {
   onManualRecipientsChange() {
     if (this.manualValidationTimer) clearTimeout(this.manualValidationTimer);
 
-    const tokens = this.manualRecipientsText
+    const rawTokens = this.manualRecipientsText
       .split(/[\s,;]+/)
       .map(email => email.trim())
       .filter(Boolean);
+    const tokens = rawTokens
+      .map(email => this.normalizeManualRecipient(email))
+      .filter((email): email is string => email !== null);
+    this.manualIgnoredTokenCount = rawTokens.length - tokens.length;
     this.manualRecipientTokens = tokens;
 
     const seen = new Set<string>();
@@ -275,6 +280,20 @@ export class EmailCampaignComponent implements OnInit {
         },
       });
     }, 350);
+  }
+
+  private normalizeManualRecipient(rawEmail: string): string | null {
+    let email = rawEmail.trim();
+
+    // Accept common copy/paste formats such as "mailto:user@example.com" or "Name <user@example.com>".
+    email = email.replace(/^mailto:\s*/i, '');
+    const wrappedEmail = email.match(/<\s*([^<>\s]+@[^<>\s]+)\s*>/);
+    if (wrappedEmail) email = wrappedEmail[1];
+
+    email = email.replace(/^[<>'"“”‘’([{]+|[,;:!?)}\]>'"“”‘’]+$/g, '').trim();
+
+    // Ignore pasted labels/garbled text that cannot possibly be an email address.
+    return email.includes('@') ? email : null;
   }
 
   openRecipientsDialog() {
@@ -683,6 +702,7 @@ export class EmailCampaignComponent implements OnInit {
     this.manualRecipientsText = '';
     this.manualRecipientTokens = [];
     this.manualInvalidEmails = [];
+    this.manualIgnoredTokenCount = 0;
     this.manualDuplicateCount = 0;
     this.manualSuppressedCount = 0;
     this.manualEligibleCount = 0;

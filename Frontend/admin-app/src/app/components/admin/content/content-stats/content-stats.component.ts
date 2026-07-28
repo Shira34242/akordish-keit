@@ -7,7 +7,7 @@ import { AnalyticsService, AnalyticsDashboard } from '../../../../services/analy
 import { AgencyService, AgencyAnalyticsSummary } from '../../../../services/agency.service';
 import { getArticleLink } from '../../../../utils/article-route.utils';
 
-type Tab = 'articles' | 'events' | 'buttons' | 'ads' | 'adblock' | 'agencies';
+type Tab = 'articles' | 'chords' | 'events' | 'buttons' | 'ads' | 'adblock' | 'agencies';
 type Preset = '7' | '30' | '90' | '365';
 
 @Component({
@@ -46,7 +46,7 @@ export class ContentStatsComponent implements OnInit {
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
       const tab = params['tab'] as Tab;
-      if (tab && ['articles', 'events', 'buttons', 'ads', 'adblock', 'agencies'].includes(tab)) {
+      if (tab && ['articles', 'chords', 'events', 'buttons', 'ads', 'adblock', 'agencies'].includes(tab)) {
         this.activeTab = tab;
       }
     });
