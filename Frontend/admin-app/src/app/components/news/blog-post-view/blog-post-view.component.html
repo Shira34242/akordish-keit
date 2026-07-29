@@ -42,7 +42,17 @@
         <!-- Video Section -->
         <div class="video-section" *ngIf="safeVideoUrl">
           <div class="video-wrapper">
+            <button
+              *ngIf="article.featuredImageUrl && !isVideoActive"
+              type="button"
+              class="video-preview"
+              (click)="activateVideo()"
+              [attr.aria-label]="'הפעלת הסרטון: ' + article.title">
+              <img [src]="article.featuredImageUrl | cfImage:'content'" [alt]="article.title" class="video-preview-image" decoding="async">
+              <span class="video-play-icon material-icons" aria-hidden="true">play_arrow</span>
+            </button>
             <iframe
+              *ngIf="isVideoActive || !article.featuredImageUrl"
               [src]="safeVideoUrl"
               frameborder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
