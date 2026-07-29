@@ -1963,7 +1963,8 @@
 
   .events-scroll-track,
   .podcast-episodes-track,
-  .podcasts-home-track {
+  .podcasts-home-track,
+  .home-category-banners-track {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     width: 100%;
@@ -1982,6 +1983,7 @@
   .events-scroll-track > app-event-card:nth-child(n + 7),
   .podcast-episodes-track > .podcast-episode-card:nth-child(n + 7),
   .podcasts-home-track > .home-series-image-card:nth-child(n + 7),
+  .home-category-banners-track > .home-category-banner-card:nth-child(n + 7),
   .events-scroll-track .home-more-card--event,
   .podcast-episodes-track .home-more-card--episode,
   .podcasts-home-track .home-more-card--podcast {
@@ -1996,7 +1998,15 @@
     grid-template-columns: 1fr;
   }
 
+  .home-category-banners-track {
+    grid-template-columns: 1fr;
+  }
+
   .popular-episodes-section .podcast-episodes-track > .podcast-episode-card:nth-child(n + 4) {
+    display: none;
+  }
+
+  .home-category-banners-track > .home-category-banner-card:nth-child(n + 4) {
     display: none;
   }
 }
