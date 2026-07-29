@@ -220,7 +220,7 @@ namespace AkordishKeit.Controllers
             // ─── כתבות (קיים במערכת) ─────────────────────────────────────────
             var articlesViewsTotal = await _context.ArticleViews.CountAsync();
             var articlesViewsLast30 = await _context.ArticleViews
-                .CountAsync(v => v.ViewedAt >= last30Days);
+                .CountAsync(v => v.ViewedAt >= last30Days && v.ViewedAt < periodEnd);
 
             var chordViewsTotal = await _context.SongViews.CountAsync();
             var chordViewsLast30 = await _context.SongViews
@@ -269,6 +269,75 @@ namespace AkordishKeit.Controllers
                 .Take(10)
                 .ToListAsync();
 
+            var periodDays = Math.Max(1, (periodEnd.Date - last30Days.Date).Days);
+            var previousPeriodStart = last30Days.Date.AddDays(-periodDays);
+            var previousPeriodEnd = last30Days.Date;
+            var previousArticlesViews = await _context.ArticleViews.CountAsync(v => v.ViewedAt >= previousPeriodStart && v.ViewedAt < previousPeriodEnd);
+            var previousChordViews = await _context.SongViews.CountAsync(v => v.ViewedAt >= previousPeriodStart && v.ViewedAt < previousPeriodEnd);
+            var previousEventViews = await _context.EventViews.CountAsync(v => v.EventId == null && v.ViewedAt >= previousPeriodStart && v.ViewedAt < previousPeriodEnd);
+            var trackedButtonTypes = new[] { "ticket", "contact", "notification_link" };
+            var previousButtonClicks = await _context.ButtonClicks.CountAsync(v => trackedButtonTypes.Contains(v.ButtonType) && v.ClickedAt >= previousPeriodStart && v.ClickedAt < previousPeriodEnd);
+
+            var podcastViewsTotal = await _context.PodcastEpisodeViews.CountAsync();
+            var podcastViewsLast30 = await _context.PodcastEpisodeViews
+                .CountAsync(v => v.ViewedAt >= last30Days && v.ViewedAt < periodEnd);
+            var topPodcastEpisodes = await _context.PodcastEpisodeViews
+                .Where(v => v.ViewedAt >= last30Days && v.ViewedAt < periodEnd)
+                .GroupBy(v => v.PodcastEpisodeId)
+                .Select(g => new { EpisodeId = g.Key, Views = g.Count() })
+                .OrderByDescending(x => x.Views)
+                .Take(10)
+                .ToListAsync();
+            var podcastEpisodeIds = topPodcastEpisodes.Select(x => x.EpisodeId).ToList();
+            var podcastEpisodeNames = await _context.PodcastEpisodes
+                .Where(e => podcastEpisodeIds.Contains(e.Id))
+                .Select(e => new { e.Id, e.Title, e.ViewCount })
+                .ToDictionaryAsync(e => e.Id, e => new { e.Title, e.ViewCount });
+            var previousPodcastViews = await _context.PodcastEpisodeViews
+                .CountAsync(v => v.ViewedAt >= previousPeriodStart && v.ViewedAt < previousPeriodEnd);
+
+            // Read-only daily series for the admin dashboard. These are derived from
+            // the existing event tables and do not introduce any new tracking or storage.
+            var articleDaily = await _context.ArticleViews
+                .Where(v => v.ViewedAt >= last30Days && v.ViewedAt < periodEnd)
+                .GroupBy(v => v.ViewedAt.Date)
+                .Select(g => new { Date = g.Key, Count = g.Count() })
+                .ToListAsync();
+            var chordDaily = await _context.SongViews
+                .Where(v => v.ViewedAt >= last30Days && v.ViewedAt < periodEnd)
+                .GroupBy(v => v.ViewedAt.Date)
+                .Select(g => new { Date = g.Key, Count = g.Count() })
+                .ToListAsync();
+            var eventDaily = await _context.EventViews
+                .Where(v => v.EventId == null && v.ViewedAt >= last30Days && v.ViewedAt < periodEnd)
+                .GroupBy(v => v.ViewedAt.Date)
+                .Select(g => new { Date = g.Key, Count = g.Count() })
+                .ToListAsync();
+            var buttonDaily = await _context.ButtonClicks
+                .Where(v => v.ClickedAt >= last30Days && v.ClickedAt < periodEnd)
+                .GroupBy(v => v.ClickedAt.Date)
+                .Select(g => new { Date = g.Key, Count = g.Count() })
+                .ToListAsync();
+            var podcastDaily = await _context.PodcastEpisodeViews
+                .Where(v => v.ViewedAt >= last30Days && v.ViewedAt < periodEnd)
+                .GroupBy(v => v.ViewedAt.Date)
+                .Select(g => new { Date = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            var trend = Enumerable.Range(0, Math.Max(1, (periodEnd.Date - last30Days.Date).Days))
+                .Select(offset => last30Days.Date.AddDays(offset))
+                .Where(date => date < periodEnd.Date)
+                .Select(date => new
+                {
+                    date,
+                    articles = articleDaily.FirstOrDefault(x => x.Date == date)?.Count ?? 0,
+                    chords = chordDaily.FirstOrDefault(x => x.Date == date)?.Count ?? 0,
+                    events = eventDaily.FirstOrDefault(x => x.Date == date)?.Count ?? 0,
+                    clicks = buttonDaily.FirstOrDefault(x => x.Date == date)?.Count ?? 0,
+                    podcasts = podcastDaily.FirstOrDefault(x => x.Date == date)?.Count ?? 0
+                })
+                .ToList();
+
             return Ok(new
             {
                 events = new
@@ -312,6 +381,18 @@ namespace AkordishKeit.Controllers
                         totalViews = chordSongNames.TryGetValue(x.SongId, out var namedSong) ? namedSong.ViewCount : x.Views
                     })
                 },
+                podcasts = new
+                {
+                    totalViews = podcastViewsTotal,
+                    viewsLast30Days = podcastViewsLast30,
+                    topEpisodes = topPodcastEpisodes.Select(x => new
+                    {
+                        episodeId = x.EpisodeId,
+                        episodeTitle = podcastEpisodeNames.TryGetValue(x.EpisodeId, out var episode) ? episode.Title : $"פרק #{x.EpisodeId}",
+                        views = x.Views,
+                        totalViews = podcastEpisodeNames.TryGetValue(x.EpisodeId, out var namedEpisode) ? namedEpisode.ViewCount : x.Views
+                    })
+                },
                 adBlock = new
                 {
                     totalChecks = adBlockChecksTotal,
@@ -331,7 +412,21 @@ namespace AkordishKeit.Controllers
                         x.Detected,
                         rate = x.Checks > 0 ? Math.Round((double)x.Detected / x.Checks * 100, 1) : 0
                     })
-                }
+                },
+                comparison = new
+                {
+                    contentViews = new
+                    {
+                        current = articlesViewsLast30 + chordViewsLast30 + eventsListViewsLast30 + podcastViewsLast30,
+                        previous = previousArticlesViews + previousChordViews + previousEventViews + previousPodcastViews
+                    },
+                    clicks = new
+                    {
+                        current = ticketClicksLast30 + contactClicksLast30 + notificationLinkClicksLast30,
+                        previous = previousButtonClicks
+                    }
+                },
+                trend
             });
         }
 

@@ -40,6 +40,8 @@ public class ReportDto
     public DateTime ReportedAt { get; set; }
     public string Status { get; set; } = string.Empty;
     public string? ReporterUsername { get; set; }
+    public int? ReporterUserId { get; set; }
+    public string? ReporterProfileImageUrl { get; set; }
     public DateTime? ResolvedAt { get; set; }
     public string? ResolvedByUsername { get; set; }
     public string? AdminNotes { get; set; }
@@ -86,4 +88,31 @@ public class UpdateReportStatusDto
 
     [StringLength(500, ErrorMessage = "הערות המנהל לא יכולות לעבור 500 תווים")]
     public string? AdminNotes { get; set; }
+}
+
+public class BulkReportActionDto
+{
+    [Required, MinLength(1)]
+    public List<int> ReportIds { get; set; } = new();
+
+    [Required, RegularExpression("^(Resolved|Dismissed)$")]
+    public string Status { get; set; } = string.Empty;
+
+    [StringLength(500)]
+    public string? AdminNotes { get; set; }
+}
+
+public class BulkReportDeleteDto
+{
+    [Required, MinLength(1)]
+    public List<int> ReportIds { get; set; } = new();
+}
+
+public class ReportSummaryDto
+{
+    public int TotalCount { get; set; }
+    public int PendingCount { get; set; }
+    public int ResolvedCount { get; set; }
+    public int DismissedCount { get; set; }
+    public int NewContentCount { get; set; }
 }

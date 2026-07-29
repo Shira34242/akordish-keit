@@ -82,6 +82,11 @@ export interface HomeNewsBannersDto {
   regular: ArticleBanner[];
 }
 
+export interface HomeCategoryBannersDto {
+  categoryName: string;
+  banners: ArticleBanner[];
+}
+
 export interface ArticleNewsCleanupSettingsDto {
   autoDeleteEnabled: boolean;
   retentionDays: number;
@@ -226,6 +231,14 @@ export class ArticleService {
     const params = new HttpParams().set('limit', limit.toString());
 
     return this.http.get<ArticleBanner[]>(`${this.apiUrl}/home-content-banners`, { params });
+  }
+
+  getHomeCategoryBanners(limit = 12): Observable<HomeCategoryBannersDto> {
+    const params = new HttpParams()
+      .set('limit', limit.toString())
+      .set('version', '2');
+
+    return this.http.get<HomeCategoryBannersDto>(`${this.apiUrl}/home-category-banners`, { params });
   }
 
   getHomeViralBanners(limit = 10, offset = 0): Observable<ArticleBanner[]> {

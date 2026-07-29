@@ -16,6 +16,8 @@ export interface Report {
     reportedAt: Date;
     status: 'Pending' | 'Resolved' | 'Dismissed';
     reporterUsername?: string;
+    reporterUserId?: number;
+    reporterProfileImageUrl?: string;
     resolvedAt?: Date;
     resolvedByUsername?: string;
     adminNotes?: string;
@@ -25,6 +27,14 @@ export interface Report {
 export interface UpdateReportStatusDto {
     status: 'Resolved' | 'Dismissed';
     adminNotes?: string;
+}
+
+export interface ReportSummary {
+    totalCount: number;
+    pendingCount: number;
+    resolvedCount: number;
+    dismissedCount: number;
+    newContentCount: number;
 }
 
 export interface ChordRequest {

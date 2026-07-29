@@ -23,9 +23,15 @@ public interface IReportService
 
     Task<ReportDto?> GetReportByIdAsync(int id);
 
+    Task<ReportSummaryDto> GetReportSummaryAsync(string? status, string? contentType, string? reportType);
+
     Task<bool> UpdateReportStatusAsync(int id, UpdateReportStatusDto dto, int resolvedByUserId);
 
     Task<bool> DeleteReportAsync(int id);
+
+    Task<int> BulkUpdateReportStatusAsync(BulkReportActionDto dto, int resolvedByUserId);
+
+    Task<int> BulkDeleteReportsAsync(BulkReportDeleteDto dto);
 
     Task<(bool Success, string Message, int? ArtistId)> ApproveNewArtistAsync(int reportId, int adminUserId);
 

@@ -1450,6 +1450,39 @@
   aspect-ratio: 1.35 / 1;
 }
 
+.home-category-banners-row {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 4px;
+  direction: rtl;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+.home-category-banners-row::-webkit-scrollbar {
+  display: none;
+}
+
+.home-category-banners-track {
+  display: flex;
+  direction: rtl;
+  gap: var(--space-md);
+  width: max-content;
+}
+
+.home-category-banner-card {
+  flex: 0 0 19rem;
+  min-width: 0;
+  direction: rtl;
+}
+
+.home-category-banner-card ::ng-deep .news-banner {
+  aspect-ratio: 1.35 / 1;
+  border-radius: 24px;
+}
+
 .podcast-episode-card {
   min-width: 0;
   direction: rtl;
@@ -1922,6 +1955,7 @@
 
   .events-scroll-row,
   .podcast-episodes-row,
+  .home-category-banners-row,
   .podcasts-home-panel {
     overflow: visible;
     padding-bottom: 0;
@@ -1938,7 +1972,8 @@
 
   .home-section .events-scroll-track > app-event-card,
   .popular-episodes-section .podcast-episodes-track > .podcast-episode-card,
-  .podcasts-home-section .podcasts-home-track > .home-series-image-card {
+  .podcasts-home-section .podcasts-home-track > .home-series-image-card,
+  .home-category-banners-track > .home-category-banner-card {
     display: block;
     flex: 0 0 auto;
     width: 100%;
@@ -1951,6 +1986,10 @@
   .podcast-episodes-track .home-more-card--episode,
   .podcasts-home-track .home-more-card--podcast {
     display: none;
+  }
+
+  .home-category-banners-track > .home-category-banner-card {
+    width: 100%;
   }
 
   .popular-episodes-section .podcast-episodes-track {

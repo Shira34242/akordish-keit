@@ -223,6 +223,34 @@ public class ReportsController : ControllerBase
         }
     }
 
+    [HttpGet("summary")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<ReportSummaryDto>> GetReportSummary(
+        [FromQuery] string? status = null,
+        [FromQuery] string? contentType = null,
+        [FromQuery] string? reportType = null)
+    {
+        return Ok(await _reportService.GetReportSummaryAsync(status, contentType, reportType));
+    }
+
+    [HttpPatch("bulk/status")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> BulkUpdateReportStatus([FromBody] BulkReportActionDto dto)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!int.TryParse(userIdClaim, out var adminUserId)) return Unauthorized();
+        var count = await _reportService.BulkUpdateReportStatusAsync(dto, adminUserId);
+        return Ok(new { count, message = $"{count} reports updated" });
+    }
+
+    [HttpPost("bulk/delete")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> BulkDeleteReports([FromBody] BulkReportDeleteDto dto)
+    {
+        var count = await _reportService.BulkDeleteReportsAsync(dto);
+        return Ok(new { count, message = $"{count} reports deleted" });
+    }
+
     // DELETE: api/Reports/5
     [HttpDelete("{id}")]
     [Authorize(Roles = "Admin")]

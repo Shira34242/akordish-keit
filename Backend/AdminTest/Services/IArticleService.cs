@@ -32,6 +32,8 @@ public interface IArticleService
 
     Task<List<ArticleBannerDto>> GetHomeContentBannersAsync(int limit = 12);
 
+    Task<HomeCategoryBannersDto> GetHomeCategoryBannersAsync(int limit = 12);
+
     Task<List<ArticleBannerDto>> GetHomeViralBannersAsync(int limit = 10, int offset = 0);
     Task<PagedResult<ArticleBannerDto>> GetPublishedArticleBannersAsync(
         int contentType,
