@@ -456,7 +456,27 @@
         </div>
       </div>
       <div class="index-showcase-stack">
-        <div class="index-showcase-row" (scroll)="refreshCarouselControls('.index-showcase-row')">
+        <div *ngIf="!isMobile" class="index-showcase-row index-showcase-row--loop" appAutoScroll [autoScrollSpeed]="35" autoScrollDirection="right" [autoScrollCopies]="3" [autoScrollPaused]="isHomeAutoScrollPaused" (scroll)="refreshCarouselControls('.index-showcase-row')">
+          <div class="index-showcase-track">
+            <ng-container *ngFor="let copy of [0, 1, 2]">
+              <a class="person-card provider-showcase-card" *ngFor="let teacher of featuredTeachers; trackBy: trackById" [routerLink]="['/teacher', teacher.id]">
+                <div class="person-avatar">
+                  <app-profile-avatar [name]="teacher.displayName" [imageUrl]="teacher.profileImageUrl | cfImage:240:82" [identity]="'teacher-' + teacher.id" shape="rounded" size="fill"></app-profile-avatar>
+                </div>
+                <p class="person-name">{{ teacher.displayName }}</p>
+                <p class="person-sub">{{ teacher.primaryInstrument || ('home.default_teacher' | translate) }}</p>
+              </a>
+              <a class="person-card provider-showcase-card provider-showcase-card--provider" *ngFor="let pro of featuredProviders; trackBy: trackById" [routerLink]="['/professional', pro.id]" [attr.data-provider-city]="pro.cityName || ''">
+                <div class="person-avatar">
+                  <app-profile-avatar [name]="pro.displayName" [imageUrl]="pro.profileImageUrl | cfImage:240:82" [identity]="'provider-' + pro.id" shape="rounded" size="fill"></app-profile-avatar>
+                </div>
+                <p class="person-name">{{ pro.displayName }}</p>
+                <p class="person-sub">{{ pro.categoryName || ('home.default_pro' | translate) }}</p>
+              </a>
+            </ng-container>
+          </div>
+        </div>
+        <div *ngIf="isMobile" class="index-showcase-row" (scroll)="refreshCarouselControls('.index-showcase-row')">
           <div class="index-showcase-track">
             <a class="person-card provider-showcase-card" *ngFor="let teacher of featuredTeachers; trackBy: trackById" [routerLink]="['/teacher', teacher.id]">
               <div class="person-avatar">

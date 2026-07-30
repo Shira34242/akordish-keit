@@ -1074,6 +1074,11 @@
   display: none;
 }
 
+.index-showcase-row--loop,
+.index-showcase-row--loop .index-showcase-track {
+  direction: ltr;
+}
+
 .index-showcase-track {
   display: flex;
   direction: rtl;
