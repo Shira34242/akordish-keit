@@ -18,3 +18,9 @@ public class HomeNewsBannersDto
     public List<ArticleBannerDto> Featured { get; set; } = new();
     public List<ArticleBannerDto> Regular { get; set; } = new();
 }
+
+public class HomeCategoryBannersDto
+{
+    public string CategoryName { get; set; } = string.Empty;
+    public List<ArticleBannerDto> Banners { get; set; } = new();
+}

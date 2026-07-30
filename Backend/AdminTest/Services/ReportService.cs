@@ -313,6 +313,20 @@ public class ReportService : IReportService
         return await MapToDtoAsync(report);
     }
 
+    public async Task<ReportSummaryDto> GetReportSummaryAsync(string? status, string? contentType, string? reportType)
+    {
+        var query = BuildReportQuery(status, contentType, reportType);
+        var reports = await query.Select(r => new { r.Status, r.ReportType }).ToListAsync();
+        return new ReportSummaryDto
+        {
+            TotalCount = reports.Count,
+            PendingCount = reports.Count(r => r.Status == "Pending"),
+            ResolvedCount = reports.Count(r => r.Status == "Resolved"),
+            DismissedCount = reports.Count(r => r.Status == "Dismissed"),
+            NewContentCount = reports.Count(r => r.ReportType == "NewArtist" || r.ReportType == "NewGenre" || r.ReportType == "NewTag" || r.ReportType == "NewPerson")
+        };
+    }
+
     public async Task<bool> UpdateReportStatusAsync(int id, UpdateReportStatusDto dto, int resolvedByUserId)
     {
         var report = await _context.ContentReports.FindAsync(id);
@@ -340,6 +354,44 @@ public class ReportService : IReportService
         _context.ContentReports.Remove(report);
         await _context.SaveChangesAsync();
         return true;
+    }
+
+    public async Task<int> BulkUpdateReportStatusAsync(BulkReportActionDto dto, int resolvedByUserId)
+    {
+        var ids = dto.ReportIds.Distinct().ToList();
+        var reports = await _context.ContentReports.Where(r => ids.Contains(r.Id)).ToListAsync();
+        foreach (var report in reports)
+        {
+            report.Status = dto.Status;
+            report.AdminNotes = dto.AdminNotes;
+            report.ResolvedAt = DateTime.UtcNow;
+            report.ResolvedByUserId = resolvedByUserId;
+        }
+        await _context.SaveChangesAsync();
+        return reports.Count;
+    }
+
+    public async Task<int> BulkDeleteReportsAsync(BulkReportDeleteDto dto)
+    {
+        var ids = dto.ReportIds.Distinct().ToList();
+        var reports = await _context.ContentReports.Where(r => ids.Contains(r.Id)).ToListAsync();
+        _context.ContentReports.RemoveRange(reports);
+        await _context.SaveChangesAsync();
+        return reports.Count;
+    }
+
+    private IQueryable<ContentReport> BuildReportQuery(string? status, string? contentType, string? reportType)
+    {
+        var query = _context.ContentReports.AsQueryable();
+        if (!string.IsNullOrEmpty(status)) query = query.Where(r => r.Status == status);
+        if (!string.IsNullOrEmpty(contentType))
+        {
+            query = contentType == "NewContent"
+                ? query.Where(r => r.ContentType == "Genre" || r.ContentType == "Tag" || r.ContentType == "Person" || r.ReportType == "NewArtist")
+                : query.Where(r => r.ContentType == contentType);
+        }
+        if (!string.IsNullOrEmpty(reportType)) query = query.Where(r => r.ReportType == reportType);
+        return query;
     }
 
     public async Task<(bool Success, string Message, int? ArtistId)> ApproveNewArtistAsync(int reportId, int adminUserId)
@@ -448,6 +500,8 @@ public class ReportService : IReportService
             ReportedAt = report.ReportedAt,
             Status = report.Status,
             ReporterUsername = report.User?.Username,
+            ReporterUserId = report.User?.Id,
+            ReporterProfileImageUrl = report.User?.ProfileImageUrl,
             ResolvedAt = report.ResolvedAt,
             ResolvedByUsername = report.ResolvedByUser?.Username,
             AdminNotes = report.AdminNotes,

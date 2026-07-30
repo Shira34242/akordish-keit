@@ -4,6 +4,11 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, of } from 'rxjs';
 
 export interface AnalyticsDashboard {
+  trend: { date: string; articles: number; chords: number; events: number; clicks: number; podcasts: number }[];
+  comparison: {
+    contentViews: { current: number; previous: number };
+    clicks: { current: number; previous: number };
+  };
   events: {
     listPageViews: { total: number; last30Days: number; uniqueLast30Days: number };
     topEvents: { eventId: number | null; eventName: string; totalViews: number; viewsLast30: number }[];
@@ -28,6 +33,11 @@ export interface AnalyticsDashboard {
     totalViews: number;
     viewsLast30Days: number;
     topSongs: { songId: number; songTitle: string; views: number; totalViews: number }[];
+  };
+  podcasts: {
+    totalViews: number;
+    viewsLast30Days: number;
+    topEpisodes: { episodeId: number; episodeTitle: string; views: number; totalViews: number }[];
   };
   adBlock: {
     totalChecks: number;

@@ -1455,6 +1455,39 @@
   aspect-ratio: 1.35 / 1;
 }
 
+.home-category-banners-row {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 4px;
+  direction: rtl;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+.home-category-banners-row::-webkit-scrollbar {
+  display: none;
+}
+
+.home-category-banners-track {
+  display: flex;
+  direction: rtl;
+  gap: var(--space-md);
+  width: max-content;
+}
+
+.home-category-banner-card {
+  flex: 0 0 19rem;
+  min-width: 0;
+  direction: rtl;
+}
+
+.home-category-banner-card ::ng-deep .news-banner {
+  aspect-ratio: 1.35 / 1;
+  border-radius: 24px;
+}
+
 .podcast-episode-card {
   min-width: 0;
   direction: rtl;
@@ -1927,6 +1960,7 @@
 
   .events-scroll-row,
   .podcast-episodes-row,
+  .home-category-banners-row,
   .podcasts-home-panel {
     overflow: visible;
     padding-bottom: 0;
@@ -1934,7 +1968,8 @@
 
   .events-scroll-track,
   .podcast-episodes-track,
-  .podcasts-home-track {
+  .podcasts-home-track,
+  .home-category-banners-track {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     width: 100%;
@@ -1943,7 +1978,8 @@
 
   .home-section .events-scroll-track > app-event-card,
   .popular-episodes-section .podcast-episodes-track > .podcast-episode-card,
-  .podcasts-home-section .podcasts-home-track > .home-series-image-card {
+  .podcasts-home-section .podcasts-home-track > .home-series-image-card,
+  .home-category-banners-track > .home-category-banner-card {
     display: block;
     flex: 0 0 auto;
     width: 100%;
@@ -1952,17 +1988,30 @@
   .events-scroll-track > app-event-card:nth-child(n + 7),
   .podcast-episodes-track > .podcast-episode-card:nth-child(n + 7),
   .podcasts-home-track > .home-series-image-card:nth-child(n + 7),
+  .home-category-banners-track > .home-category-banner-card:nth-child(n + 7),
   .events-scroll-track .home-more-card--event,
   .podcast-episodes-track .home-more-card--episode,
   .podcasts-home-track .home-more-card--podcast {
     display: none;
   }
 
+  .home-category-banners-track > .home-category-banner-card {
+    width: 100%;
+  }
+
   .popular-episodes-section .podcast-episodes-track {
     grid-template-columns: 1fr;
   }
 
+  .home-category-banners-track {
+    grid-template-columns: 1fr;
+  }
+
   .popular-episodes-section .podcast-episodes-track > .podcast-episode-card:nth-child(n + 4) {
+    display: none;
+  }
+
+  .home-category-banners-track > .home-category-banner-card:nth-child(n + 4) {
     display: none;
   }
 }

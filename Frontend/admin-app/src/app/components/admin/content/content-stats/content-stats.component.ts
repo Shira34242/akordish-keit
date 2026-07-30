@@ -1,14 +1,14 @@
-import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ArticleFeedbackService, ArticleRank } from '../../../../services/article-feedback.service';
-import { AnalyticsService, AnalyticsDashboard } from '../../../../services/analytics.service';
-import { AgencyService, AgencyAnalyticsSummary } from '../../../../services/agency.service';
+import { AgencyAnalyticsSummary, AgencyService } from '../../../../services/agency.service';
+import { AnalyticsDashboard, AnalyticsService } from '../../../../services/analytics.service';
 import { getArticleLink } from '../../../../utils/article-route.utils';
 
-type Tab = 'articles' | 'chords' | 'events' | 'buttons' | 'ads' | 'adblock' | 'agencies';
-type Preset = '7' | '30' | '90' | '365';
+type Tab = 'overview' | 'articles' | 'chords' | 'events' | 'podcasts' | 'buttons' | 'ads' | 'adblock' | 'agencies';
+type Preset = 'today' | 'yesterday' | '7' | '30' | '90' | '365' | 'ytd' | 'all';
 
 @Component({
   selector: 'app-content-stats',
@@ -18,56 +18,85 @@ type Preset = '7' | '30' | '90' | '365';
   styleUrls: ['./content-stats.component.css']
 })
 export class ContentStatsComponent implements OnInit {
-  activeTab: Tab = 'articles';
+  readonly math = Math;
+  private readonly feedbackService = inject(ArticleFeedbackService);
+  private readonly analytics = inject(AnalyticsService);
+  private readonly agencyService = inject(AgencyService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
+  activeTab: Tab = 'overview';
+  selectedMetric: 'all' | 'articles' | 'chords' | 'events' | 'podcasts' | 'clicks' = 'all';
   articles: ArticleRank[] = [];
-  articlesLoading = true;
+  articleSearch = '';
+  articleTypeFilter: 'all' | 'news' | 'blog' = 'all';
   sortBy: 'views' | 'likes' | 'feedback' = 'views';
-
   dashboard: AnalyticsDashboard | null = null;
-  dashboardLoading = true;
-  dashboardError = false;
-
   agencySummary: AgencyAnalyticsSummary | null = null;
-  agencyLoading = false;
-
   dateFrom = '';
   dateTo = '';
   activePreset: Preset | '' = '30';
+  loading = true;
+  articleLoading = true;
+  agencyLoading = false;
+  error = false;
 
-  constructor(
-    private feedbackService: ArticleFeedbackService,
-    private analytics: AnalyticsService,
-    private agencyService: AgencyService,
-    private router: Router,
-    private route: ActivatedRoute
-  ) {}
+  readonly tabs: { key: Tab; label: string; icon: string }[] = [
+    { key: 'overview', label: 'סקירה', icon: 'dashboard' },
+    { key: 'articles', label: 'כתבות', icon: 'article' },
+    { key: 'chords', label: 'אקורדים', icon: 'music_note' },
+    { key: 'events', label: 'הופעות', icon: 'event' },
+    { key: 'podcasts', label: 'פודקאסטים', icon: 'podcasts' },
+    { key: 'buttons', label: 'פעולות', icon: 'touch_app' },
+    { key: 'ads', label: 'פרסום', icon: 'campaign' },
+    { key: 'agencies', label: 'סוכנויות', icon: 'business' },
+    { key: 'adblock', label: 'AdBlock', icon: 'shield' }
+  ];
+
+  readonly rangeOptions: { key: Preset; label: string }[] = [
+    { key: 'today', label: 'היום' },
+    { key: 'yesterday', label: 'אתמול' },
+    { key: '7', label: '7 ימים' },
+    { key: '30', label: '30 ימים' },
+    { key: '90', label: '90 ימים' },
+    { key: '365', label: 'שנה' },
+    { key: 'ytd', label: 'מתחילת השנה' },
+    { key: 'all', label: 'מההתחלה ועד היום' }
+  ];
+
+  get activeTabDefinition(): { key: Tab; label: string; icon: string } {
+    return this.tabs.find(item => item.key === this.activeTab) ?? this.tabs[0];
+  }
+
+  get trendMiddleIndex(): number { return Math.floor((this.dashboard?.trend.length ?? 1) / 2); }
 
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
       const tab = params['tab'] as Tab;
-      if (tab && ['articles', 'chords', 'events', 'buttons', 'ads', 'adblock', 'agencies'].includes(tab)) {
-        this.activeTab = tab;
-      }
+      if (this.tabs.some(item => item.key === tab)) this.activeTab = tab;
     });
     this.applyPreset('30');
   }
 
-  setTab(tab: Tab): void {
-    this.activeTab = tab;
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: { tab },
-      queryParamsHandling: 'merge'
-    });
-    if (tab === 'agencies') this.loadAgencyAnalytics();
-  }
-
   applyPreset(days: Preset): void {
     this.activePreset = days;
-    const to = new Date();
-    const from = new Date();
-    from.setDate(from.getDate() - parseInt(days));
+    const today = new Date();
+    const from = new Date(today);
+    const to = new Date(today);
+
+    if (days === 'today') {
+      // Same start/end day.
+    } else if (days === 'yesterday') {
+      from.setDate(today.getDate() - 1);
+      to.setDate(today.getDate() - 1);
+    } else if (days === 'ytd') {
+      from.setMonth(0, 1);
+    } else if (days === 'all') {
+      from.setFullYear(2000, 0, 1);
+    } else {
+      from.setDate(today.getDate() - Number(days));
+    }
+
     this.dateTo = this.toDateInput(to);
     this.dateFrom = this.toDateInput(from);
     this.loadAll();
@@ -78,58 +107,51 @@ export class ContentStatsComponent implements OnInit {
     this.loadAll();
   }
 
-  private toDateInput(d: Date): string {
-    return d.toISOString().substring(0, 10);
+  setTab(tab: Tab): void {
+    this.activeTab = tab;
+    this.router.navigate([], { relativeTo: this.route, queryParams: { tab }, queryParamsHandling: 'merge' });
+    if (tab === 'agencies') this.loadAgencyAnalytics();
   }
 
-  private loadAll(): void {
+  setMetric(metric: 'all' | 'articles' | 'chords' | 'events' | 'podcasts' | 'clicks'): void {
+    this.selectedMetric = metric;
+  }
+
+  get filteredArticles(): ArticleRank[] {
+    const query = this.articleSearch.trim().toLocaleLowerCase();
+    return this.articles.filter(article => {
+      const matchesText = !query || article.title.toLocaleLowerCase().includes(query);
+      const matchesType = this.articleTypeFilter === 'all'
+        || (this.articleTypeFilter === 'news' && article.contentType === 1)
+        || (this.articleTypeFilter === 'blog' && article.contentType !== 1);
+      return matchesText && matchesType;
+    });
+  }
+
+  loadAll(): void {
+    this.loading = true;
+    this.error = false;
     this.loadArticles();
-    this.loadDashboard();
+    this.analytics.getDashboard(this.dateFrom, this.dateTo).subscribe({
+      next: dashboard => { this.dashboard = dashboard; this.loading = false; },
+      error: () => { this.loading = false; this.error = true; }
+    });
     if (this.activeTab === 'agencies') this.loadAgencyAnalytics();
   }
 
   loadArticles(): void {
-    this.articlesLoading = true;
+    this.articleLoading = true;
     this.feedbackService.getTopContent(30).subscribe({
-      next: (data) => {
-        this.articles = data;
-        this.sortArticles();
-        this.articlesLoading = false;
-      },
-      error: () => { this.articlesLoading = false; }
+      next: data => { this.articles = data; this.sortArticles(); this.articleLoading = false; },
+      error: () => { this.articles = []; this.articleLoading = false; }
     });
-  }
-
-  loadDashboard(): void {
-    this.dashboardLoading = true;
-    this.dashboardError = false;
-    this.analytics.getDashboard(this.dateFrom, this.dateTo).subscribe({
-      next: (data) => {
-        this.dashboard = data;
-        this.dashboardLoading = false;
-      },
-      error: () => {
-        this.dashboardLoading = false;
-        this.dashboardError = true;
-      }
-    });
-  }
-
-  load(): void {
-    this.loadAll();
   }
 
   loadAgencyAnalytics(): void {
     this.agencyLoading = true;
     this.agencyService.getAnalytics(this.dateFrom, this.dateTo).subscribe({
-      next: (data) => {
-        this.agencySummary = data;
-        this.agencyLoading = false;
-      },
-      error: () => {
-        this.agencySummary = null;
-        this.agencyLoading = false;
-      }
+      next: data => { this.agencySummary = data; this.agencyLoading = false; },
+      error: () => { this.agencySummary = null; this.agencyLoading = false; }
     });
   }
 
@@ -140,41 +162,107 @@ export class ContentStatsComponent implements OnInit {
 
   private sortArticles(): void {
     this.articles = [...this.articles].sort((a, b) => {
-      if (this.sortBy === 'views') return b.viewCount - a.viewCount;
       if (this.sortBy === 'likes') return b.likeCount - a.likeCount;
-      return b.feedbackTotal - a.feedbackTotal;
+      if (this.sortBy === 'feedback') return b.feedbackTotal - a.feedbackTotal;
+      return b.viewCount - a.viewCount;
     });
   }
 
-  getContentTypeLabel(type: number): string {
-    return type === 1 ? 'חדשות' : 'בלוג';
-  }
-
-  navigateToArticle(article: ArticleRank): void {
-    this.router.navigate(getArticleLink(article as any));
-  }
+  navigateToArticle(article: ArticleRank): void { this.router.navigate(getArticleLink(article as any)); }
 
   get adsCtr(): number {
-    if (!this.dashboard) return 0;
-    const { totalViews, totalClicks } = this.dashboard.ads;
-    return totalViews > 0 ? Math.round(totalClicks / totalViews * 1000) / 10 : 0;
+    const ads = this.dashboard?.ads;
+    return ads && ads.totalViews > 0 ? Math.round(ads.totalClicks / ads.totalViews * 1000) / 10 : 0;
   }
 
-  get adBlockRate(): number {
-    return this.dashboard?.adBlock.detectionRate ?? 0;
+  get adBlockRate(): number { return this.dashboard?.adBlock.detectionRate ?? 0; }
+
+  get totalViews(): number {
+    const d = this.dashboard;
+    return d ? d.articles.viewsLast30Days + d.chords.viewsLast30Days + d.events.listPageViews.last30Days + d.podcasts.viewsLast30Days : 0;
   }
 
+  get trackedVisits(): number {
+    const d = this.dashboard;
+    return d ? d.articles.viewsLast30Days + d.chords.viewsLast30Days
+      + d.events.listPageViews.last30Days + d.podcasts.viewsLast30Days : 0;
+  }
+
+  get totalClicks(): number {
+    const b = this.dashboard?.buttons;
+    return b ? b.ticketClicks.last30Days + b.contactClicks.last30Days + b.notificationLinkClicks.last30Days : 0;
+  }
+
+  get trendMax(): number {
+    return Math.max(1, ...(this.dashboard?.trend ?? []).map(point => this.trendValue(point)));
+  }
+
+  percentChange(current: number, previous: number): number {
+    if (!previous) return current > 0 ? 100 : 0;
+    return Math.round((current - previous) / previous * 1000) / 10;
+  }
+
+  get contentChange(): number {
+    const comparison = this.dashboard?.comparison.contentViews;
+    return comparison ? this.percentChange(comparison.current, comparison.previous) : 0;
+  }
+
+  get clicksChange(): number {
+    const comparison = this.dashboard?.comparison.clicks;
+    return comparison ? this.percentChange(comparison.current, comparison.previous) : 0;
+  }
+
+  get primaryInsight(): string {
+    if (!this.dashboard) return '';
+    if (this.contentChange > 5) return `צפיות התוכן בעלייה של ${this.contentChange}% לעומת התקופה הקודמת.`;
+    if (this.contentChange < -5) return `צפיות התוכן ירדו ב־${Math.abs(this.contentChange)}% לעומת התקופה הקודמת.`;
+    if (this.dashboard.chords.viewsLast30Days > this.dashboard.articles.viewsLast30Days) return 'האקורדים הם ערוץ התוכן החזק ביותר בתקופה הנבחרת.';
+    return 'הפעילות יציבה בתקופה הנבחרת. כדאי לבדוק את התוכן המוביל לפי סוג.';
+  }
+
+  get trendPoints(): string {
+    const trend = this.dashboard?.trend ?? [];
+    if (!trend.length) return '';
+    const width = 720;
+    const height = 220;
+    return trend.map((point, index) => {
+      const x = trend.length === 1 ? width / 2 : index / (trend.length - 1) * width;
+      const y = height - (this.trendValue(point) / this.trendMax) * (height - 18) - 8;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(' ');
+  }
+
+  trendValue(point: { articles: number; chords: number; events: number; clicks: number; podcasts: number }): number {
+    if (this.selectedMetric === 'articles') return point.articles;
+    if (this.selectedMetric === 'chords') return point.chords;
+    if (this.selectedMetric === 'events') return point.events;
+    if (this.selectedMetric === 'podcasts') return point.podcasts;
+    if (this.selectedMetric === 'clicks') return point.clicks;
+    return point.articles + point.chords + point.events + point.podcasts;
+  }
+
+  get trendLabel(): string {
+    return ({ all: 'כל צפיות התוכן', articles: 'צפיות כתבות', chords: 'צפיות אקורדים', events: 'צפיות הופעות', podcasts: 'צפיות פודקאסטים', clicks: 'פעולות וקליקים' } as any)[this.selectedMetric];
+  }
+
+  get periodLabel(): string {
+    const labels: Record<string, string> = {
+      today: 'היום', yesterday: 'אתמול', '7': '7 ימים', '30': '30 ימים', '90': '90 ימים',
+      '365': 'שנה', ytd: 'מתחילת השנה', all: 'מההתחלה ועד היום'
+    };
+    return this.activePreset ? labels[this.activePreset] : `${this.dateFrom} — ${this.dateTo}`;
+  }
+
+  getContentTypeLabel(type: number): string { return type === 1 ? 'חדשות' : 'בלוג'; }
+  formatShortDate(value: string): string { return new Intl.DateTimeFormat('he-IL', { day: '2-digit', month: '2-digit' }).format(new Date(value)); }
   getAdBlockDailyWidth(value: number): number {
     const max = Math.max(...(this.dashboard?.adBlock.daily.map(day => day.checks) ?? [0]));
     return max > 0 ? Math.max(8, Math.round(value / max * 100)) : 8;
   }
-
-  formatShortDate(value: string): string {
-    return new Intl.DateTimeFormat('he-IL', { day: '2-digit', month: '2-digit' }).format(new Date(value));
-  }
-
-  get periodLabel(): string {
-    const presetMap: Record<string, string> = { '7': '7 ימים', '30': '30 יום', '90': '90 יום', '365': 'שנה' };
-    return this.activePreset ? presetMap[this.activePreset] : `${this.dateFrom} - ${this.dateTo}`;
+  toDateInput(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 }

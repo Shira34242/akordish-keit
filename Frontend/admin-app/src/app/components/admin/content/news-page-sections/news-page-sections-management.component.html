@@ -53,4 +53,35 @@
     </section>
   </div>
 
+  <section class="home-category-card">
+    <div class="home-category-heading">
+      <div class="page-title-group">
+        <span class="page-icon material-symbols-outlined">home</span>
+        <div>
+          <h2>באנר קטגוריה בדף הבית</h2>
+          <p>בחר קטגוריה אחת שתופיע בשורת באנרים נוספת בדף הבית.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="home-category-control">
+      <select
+        class="home-category-select"
+        [(ngModel)]="homeCategoryId"
+        [disabled]="homeCategoryLoading || homeCategorySaving">
+        <option [ngValue]="null">ללא באנר קטגוריה</option>
+        <option *ngFor="let category of homeCategoryOptions" [ngValue]="category.id">
+          {{ category.name }}
+        </option>
+      </select>
+
+      <button class="btn-save" (click)="saveHomeCategory()" [disabled]="homeCategoryLoading || homeCategorySaving">
+        <span class="material-symbols-outlined">{{ homeCategorySaving ? 'hourglass_empty' : 'save' }}</span>
+        {{ homeCategorySaving ? 'שומר...' : 'שמור לדף הבית' }}
+      </button>
+    </div>
+
+    <div class="home-category-summary">{{ selectedHomeCategoryName }}</div>
+  </section>
+
 </div>

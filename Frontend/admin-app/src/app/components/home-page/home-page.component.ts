@@ -113,6 +113,9 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
   mobileArtistRows: any[][] = [];
   blogArticles: ArticleBanner[] = [];
   blogArticlesLoaded = false;
+  homeCategoryArticles: ArticleBanner[] = [];
+  homeCategoryName = '';
+  homeCategoryArticlesLoaded = false;
   viralArticles: ArticleBanner[] = [];
   visibleViralArticles: ArticleBanner[] = [];
   viralRows: ViralRow[] = [];
@@ -178,7 +181,8 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
     '.popular-songs-row',
     '.index-showcase-row',
     '.events-scroll-row',
-    '.podcast-episodes-row'
+    '.podcast-episodes-row',
+    '.home-category-banners-row'
   ];
 
   constructor(
@@ -574,7 +578,13 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
         break;
       case 6:
         this.featuredSectionStarted = true;
-        this.loadFeaturedPeople(() => this.scheduleNextHomeStage());
+        let completedFeaturedStageLoads = 0;
+        const completeFeaturedStageLoad = () => {
+          completedFeaturedStageLoads++;
+          if (completedFeaturedStageLoads === 2) this.scheduleNextHomeStage();
+        };
+        this.loadFeaturedPeople(completeFeaturedStageLoad);
+        this.loadHomeCategoryArticles(completeFeaturedStageLoad);
         break;
       case 7:
         this.eventsSectionStarted = true;
@@ -1045,6 +1055,20 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
           this.mobileBlogRows = this.buildMobileNewsRows(this.blogArticles);
         },
         error: (err) => console.error('loadContent: home blog articles', err)
+      });
+  }
+
+  private loadHomeCategoryArticles(afterLoad?: () => void): void {
+    this.articleService.getHomeCategoryBanners(8)
+      .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+        this.homeCategoryArticlesLoaded = true;
+        afterLoad?.();
+      })).subscribe({
+        next: (result) => {
+          this.homeCategoryName = result?.categoryName || '';
+          this.homeCategoryArticles = this.uniqueArticles(result?.banners || []);
+        },
+        error: (err) => console.error('loadContent: home category articles', err)
       });
   }
 

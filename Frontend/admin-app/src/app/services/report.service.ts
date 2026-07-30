@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { ChordRequest, ChordRequestMatch, CreateReportDto, Report, UpdateChordRequestGroupDto, UpdateReportStatusDto } from '../models/report.model';
+import { ChordRequest, ChordRequestMatch, CreateReportDto, Report, ReportSummary, UpdateChordRequestGroupDto, UpdateReportStatusDto } from '../models/report.model';
 import { PagedResult } from '../models/pagination.model';
 
 @Injectable({
@@ -39,6 +39,14 @@ export class ReportService {
     return this.http.get<Report>(`${this.apiUrl}/${id}`);
   }
 
+  getReportSummary(status?: string, contentType?: string, reportType?: string): Observable<ReportSummary> {
+    let params = new HttpParams();
+    if (status) params = params.set('status', status);
+    if (contentType) params = params.set('contentType', contentType);
+    if (reportType) params = params.set('reportType', reportType);
+    return this.http.get<ReportSummary>(`${this.apiUrl}/summary`, { params });
+  }
+
   getChordRequests(pageNumber: number = 1, pageSize: number = 20): Observable<PagedResult<ChordRequest>> {
     const params = new HttpParams()
       .set('pageNumber', pageNumber.toString())
@@ -64,6 +72,14 @@ export class ReportService {
 
   deleteReport(id: number): Observable<{ message: string }> {
     return this.http.delete<{ message: string }>(`${this.apiUrl}/${id}`);
+  }
+
+  bulkUpdateStatus(reportIds: number[], status: 'Resolved' | 'Dismissed', adminNotes?: string): Observable<{ count: number; message: string }> {
+    return this.http.patch<{ count: number; message: string }>(`${this.apiUrl}/bulk/status`, { reportIds, status, adminNotes });
+  }
+
+  bulkDelete(reportIds: number[]): Observable<{ count: number; message: string }> {
+    return this.http.post<{ count: number; message: string }>(`${this.apiUrl}/bulk/delete`, { reportIds });
   }
 
   approveArtist(reportId: number): Observable<{ message: string; artistId: number }> {

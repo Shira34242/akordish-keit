@@ -140,6 +140,15 @@ public class ArticlesController : ControllerBase
         return HttpCacheRevalidation.Revalidate(this, banners!);
     }
 
+    // GET: api/Articles/home-category-banners
+    [HttpGet("home-category-banners")]
+    public async Task<ActionResult<HomeCategoryBannersDto>> GetHomeCategoryBanners([FromQuery] int limit = 12)
+    {
+        var normalizedLimit = Math.Clamp(limit, 1, 20);
+        var banners = await _articleService.GetHomeCategoryBannersAsync(normalizedLimit);
+        return HttpCacheRevalidation.Revalidate(this, banners);
+    }
+
     // GET: api/Articles/home-viral-banners
     [HttpGet("home-viral-banners")]
     public async Task<ActionResult<List<ArticleBannerDto>>> GetHomeViralBanners(

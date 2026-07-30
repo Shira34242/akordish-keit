@@ -1,9 +1,11 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { forkJoin, Observable, of } from 'rxjs';
 import { finalize, switchMap } from 'rxjs/operators';
 import { NewsPageSectionService } from '../../../../services/news-page-section.service';
 import { SystemTablesService, SystemItem } from '../../../../services/system-tables.service';
+import { SystemSettingsService } from '../../../../services/system-settings.service';
 
 import {
   NewsPageSection,
@@ -27,17 +29,23 @@ interface PageCategorySetting {
 @Component({
   selector: 'app-news-page-sections-management',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './news-page-sections-management.component.html',
   styleUrls: ['./news-page-sections-management.component.css']
 })
 export class NewsPageSectionsMangementComponent implements OnInit {
   private readonly service = inject(NewsPageSectionService);
   private readonly systemTablesService = inject(SystemTablesService);
+  private readonly settingsService = inject(SystemSettingsService);
+
+  readonly homeCategorySettingKey = 'home_category_banner_category_id';
 
   sections: NewsPageSection[] = [];
   categories: CategoryOption[] = [];
   loading = false;
+  homeCategoryId: number | null = null;
+  homeCategoryLoading = false;
+  homeCategorySaving = false;
 
   readonly pageSettings: PageCategorySetting[] = [
     {
@@ -59,6 +67,7 @@ export class NewsPageSectionsMangementComponent implements OnInit {
   ngOnInit(): void {
     this.loadCategories();
     this.loadSections();
+    this.loadHomeCategorySetting();
   }
 
   loadCategories(): void {
@@ -69,6 +78,39 @@ export class NewsPageSectionsMangementComponent implements OnInit {
       },
       error: (err) => console.error('Error loading article categories for page category settings', err)
     });
+  }
+
+  loadHomeCategorySetting(): void {
+    this.homeCategoryLoading = true;
+    this.settingsService.getAll().subscribe({
+      next: (settings) => {
+        const setting = settings.find(item => item.key === this.homeCategorySettingKey);
+        const parsed = Number(setting?.value);
+        this.homeCategoryId = Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+        this.homeCategoryLoading = false;
+      },
+      error: () => { this.homeCategoryLoading = false; }
+    });
+  }
+
+  saveHomeCategory(): void {
+    this.homeCategorySaving = true;
+    this.settingsService.update(this.homeCategorySettingKey, this.homeCategoryId ? String(this.homeCategoryId) : '')
+      .subscribe({
+        next: () => { this.homeCategorySaving = false; },
+        error: () => {
+          this.homeCategorySaving = false;
+          alert('שגיאה בשמירת קטגוריית הבאנר');
+        }
+      });
+  }
+
+  get homeCategoryOptions(): CategoryOption[] {
+    return this.categories.filter(category => category.section === 0 || category.section === 1);
+  }
+
+  get selectedHomeCategoryName(): string {
+    return this.homeCategoryOptions.find(category => category.id === this.homeCategoryId)?.name ?? 'לא נבחרה קטגוריה';
   }
 
   loadSections(): void {

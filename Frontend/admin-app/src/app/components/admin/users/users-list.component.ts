@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, OnDestroy, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { UserService } from '../../../services/user.service';
 import { AdminUpdateUserDto, AdminUserDetailDto, UserListDto, UserRole, UserContentTag } from '../../../models/user.model';
@@ -94,11 +94,16 @@ export class UsersListComponent implements OnInit, OnDestroy, AfterViewInit {
 
   constructor(
     private userService: UserService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) { }
 
   ngOnInit(): void {
     this.loadUsers();
+    this.route.queryParams.subscribe(params => {
+      const userId = Number(params['userId']);
+      if (userId > 0) this.viewUser(userId);
+    });
   }
 
   ngAfterViewInit(): void {

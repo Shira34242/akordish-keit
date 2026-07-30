@@ -67,6 +67,7 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
   articleContentHtml: SafeHtml | null = null;
   loading = true;
   safeVideoUrl: SafeResourceUrl | null = null;
+  isVideoActive = false;
   isFavorite = false;
   selectedReaction: string | null = null;
   reactionCounts: Record<string, number> = {};
@@ -199,6 +200,7 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
   loadArticleById(id: number): void {
     this.loading = true;
     this.safeVideoUrl = null;
+    this.isVideoActive = false;
     this.articleService.getArticle(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -214,6 +216,7 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
   loadArticle(slug: string): void {
     this.loading = true;
     this.safeVideoUrl = null;
+    this.isVideoActive = false;
     this.articleService.getArticleBySlug(slug, ArticleContentType.Blog)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -230,6 +233,7 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
 
   private handleLoadedArticle(article: Article): void {
     this.article = article;
+    this.isVideoActive = false;
     this.articleContentHtml = this.sanitizer.bypassSecurityTrustHtml(prepareArticleContentHtml(article.content));
     setTimeout(() => {
       attachArticleContentImageFallbacks(this.host.nativeElement);
@@ -365,6 +369,17 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
 
     // Return original URL if we couldn't parse it
     return url;
+  }
+
+  activateVideo(): void {
+    if (this.safeVideoUrl) {
+      this.isVideoActive = true;
+      if (this.article?.videoEmbedUrl) {
+        const embedUrl = this.convertToYouTubeEmbedUrl(this.article.videoEmbedUrl);
+        const separator = embedUrl.includes('?') ? '&' : '?';
+        this.safeVideoUrl = this.sanitizer.bypassSecurityTrustResourceUrl(`${embedUrl}${separator}autoplay=1`);
+      }
+    }
   }
 
   isAudioFileUrl(url: string | undefined): boolean {

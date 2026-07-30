@@ -412,6 +412,8 @@
       </ng-container>
     </section>
 
+    <ng-container *ngTemplateOutlet="homeCategorySection"></ng-container>
+
     <div class="content-slot content-slot--mid-banner" *ngIf="midAdStarted">
       <span class="content-slot__label">פרסומת</span>
       <app-media-item spotTechnicalId="home-mid-banner" [isMobile]="isMobile"></app-media-item>
@@ -713,6 +715,37 @@
         {{ 'blog.no_content' | translate }}
       </div>
     </section>
+
+    <ng-template #homeCategorySection>
+    <section class="home-section home-category-articles-section"
+      *ngIf="homeCategoryArticlesLoaded && homeCategoryArticles.length > 0">
+      <div class="section-header">
+        <a routerLink="/music-news" class="section-title section-title-link">{{ homeCategoryName }}</a>
+        <div class="section-scroll-controls" *ngIf="canScrollBySelector('.home-category-banners-row', 'right') || canScrollBySelector('.home-category-banners-row', 'left')">
+          <button type="button" class="section-scroll-btn" *ngIf="canScrollBySelector('.home-category-banners-row', 'right')" (click)="scrollCarouselBySelector('.home-category-banners-row', 'right')" aria-label="גלילה ימינה">
+            <span class="material-icons" aria-hidden="true">chevron_right</span>
+          </button>
+          <button type="button" class="section-scroll-btn" *ngIf="canScrollBySelector('.home-category-banners-row', 'left')" (click)="scrollCarouselBySelector('.home-category-banners-row', 'left')" aria-label="גלילה שמאלה">
+            <span class="material-icons" aria-hidden="true">chevron_left</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="home-category-banners-row" (scroll)="refreshCarouselControls('.home-category-banners-row')">
+        <div class="home-category-banners-track">
+          <app-news-banner
+            *ngFor="let article of homeCategoryArticles; trackBy: trackById"
+            class="home-category-banner-card"
+            [article]="article"
+            [imagePreset]="360"
+            [imageWidths]="[240, 320, 360, 480]"
+            imageSizes="(max-width: 480px) 17rem, 19rem"
+            [showDescription]="false">
+          </app-news-banner>
+        </div>
+      </div>
+    </section>
+    </ng-template>
 
     <section
       class="home-section viral-section"

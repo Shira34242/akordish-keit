@@ -14,6 +14,7 @@ public class ArticleService : IArticleService
     private const string NewsCleanupAutoEnabledKey = "article_news_cleanup_auto_enabled";
     private const string NewsCleanupRetentionDaysKey = "article_news_cleanup_retention_days";
     private const string NewsCleanupLastRunAtKey = "article_news_cleanup_last_run_at";
+    private const string HomeCategoryIdKey = "home_category_banner_category_id";
     private const int DefaultNewsCleanupRetentionDays = 365;
     private const int MinNewsCleanupRetentionDays = 30;
     private const int MaxNewsCleanupRetentionDays = 3650;
@@ -436,6 +437,62 @@ public class ArticleService : IArticleService
                 PublishDate = a.PublishDate
             })
             .ToListAsync();
+    }
+
+    public async Task<HomeCategoryBannersDto> GetHomeCategoryBannersAsync(int limit = 12)
+    {
+        var configuredCategory = await _systemSettings.GetValueAsync(HomeCategoryIdKey);
+        if (!int.TryParse(configuredCategory, out var categoryId) || categoryId <= 0)
+        {
+            return new HomeCategoryBannersDto();
+        }
+
+        var categoryName = await _context.ArticleCategories
+            .Where(category => category.Id == categoryId)
+            .Select(category => category.DisplayName)
+            .FirstOrDefaultAsync();
+
+        if (string.IsNullOrWhiteSpace(categoryName))
+        {
+            return new HomeCategoryBannersDto();
+        }
+
+        var banners = await _context.Articles
+            .AsNoTracking()
+            .Where(a => !a.IsDeleted
+                && a.Status == (int)ArticleStatus.Published
+                && a.PublishDate <= DateTime.UtcNow
+                && a.ArticleCategories.Any(ac => ac.CategoryId == categoryId))
+            .OrderByDescending(a => _context.ContentPromotions
+                .Where(p => p.TargetType == ContentPromotionTargetType.Article
+                    && p.TargetId == a.Id
+                    && p.IsActive
+                    && (!p.StartsAt.HasValue || p.StartsAt.Value <= DateTime.UtcNow)
+                    && (!p.EndsAt.HasValue || p.EndsAt.Value >= DateTime.UtcNow)
+                    && (p.Placement == ContentPromotionPlacement.Home || p.Placement == ContentPromotionPlacement.General || p.ShowOnHome))
+                .Select(p => (int?)p.Priority)
+                .Max() ?? -1)
+            .ThenByDescending(a => a.BumpedAt ?? a.CreatedAt)
+            .Take(Math.Clamp(limit, 1, 20))
+            .Select(a => new ArticleBannerDto
+            {
+                Id = a.Id,
+                Title = a.Title,
+                FeaturedImageUrl = a.FeaturedImageUrl,
+                Slug = a.Slug,
+                ShortDescription = a.ShortDescription,
+                ContentType = a.ContentType,
+                IsFeatured = a.IsFeatured,
+                DisplayOrder = a.DisplayOrder,
+                PublishDate = a.PublishDate
+            })
+            .ToListAsync();
+
+        return new HomeCategoryBannersDto
+        {
+            CategoryName = categoryName,
+            Banners = banners
+        };
     }
 
     public async Task<List<ArticleBannerDto>> GetHomeViralBannersAsync(int limit = 10, int offset = 0)
