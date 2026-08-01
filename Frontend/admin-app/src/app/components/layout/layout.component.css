@@ -1036,6 +1036,22 @@
     cursor: pointer;
     transition: background 0.2s;
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+}
+
+.btn-login-action {
+    appearance: none;
+    background: transparent;
+    color: inherit;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
+}
+
+.btn-login-separator {
+    margin-inline: var(--space-xs);
 }
 
 

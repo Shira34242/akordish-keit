@@ -738,8 +738,9 @@ export class LayoutComponent implements OnInit, AfterViewInit, OnDestroy {
     this.router.navigate(['/']);
   }
 
-  openAuthModal(): void {
+  openAuthModal(mode?: AuthModalMode): void {
     if (this.loggedIn) return;
+    if (mode) this.authModalMode = mode;
     this.showAuthModal = true;
   }
 

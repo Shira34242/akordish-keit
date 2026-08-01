@@ -63,7 +63,11 @@
                 <span class="notification-badge" *ngIf="unreadNotificationCount > 0">{{ unreadNotificationCount > 99 ? '99+' : unreadNotificationCount }}</span>
             </button>
             <ng-template #loginBtn>
-                <button class="btn-login header-desktop-only" (click)="openAuthModal()">{{ 'user.login' | translate }}</button>
+                <div class="btn-login header-desktop-only" role="group" aria-label="התחברות או הרשמה">
+                    <button type="button" class="btn-login-action" (click)="openAuthModal('login')">{{ 'auth.login_link' | translate }}</button>
+                    <span class="btn-login-separator" aria-hidden="true">/</span>
+                    <button type="button" class="btn-login-action" (click)="openAuthModal('register')">הרשמה</button>
+                </div>
             </ng-template>
             <button class="btn-lang-toggle header-desktop-only" (click)="langService.toggle()"   *ngIf="false">
                 <span [class.lang-active]="currentLang === 'he'">עב</span>

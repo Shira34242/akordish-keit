@@ -420,23 +420,36 @@
   line-height: var(--lh-body);
 }
 
+.media-login-actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-sm);
+  width: 100%;
+}
+
 .media-login-link {
+  min-height: 34px;
   border: 0;
-  padding: 0;
-  background: transparent;
+  border-radius: 999px;
+  padding: 0 var(--space-lg);
   color: #000000;
-  font: inherit;
-  text-decoration: underline;
-  text-decoration-color: #ddff53;
-  text-decoration-thickness: 4px;
-  text-underline-offset: 3px;
+  font-family: inherit;
+  font-size: var(--font-sm);
+  font-weight: 800;
   cursor: pointer;
+}
+
+.media-login-link--primary {
+  background: #ddff53;
+}
+
+.media-login-link--secondary {
+  background: #F2F2F2;
 }
 
 .media-login-link:hover,
 .media-login-link:focus-visible {
   background: #ddff53;
-  border-radius: 999px;
 }
 
 

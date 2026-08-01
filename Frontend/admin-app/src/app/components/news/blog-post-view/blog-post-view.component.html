@@ -281,10 +281,11 @@
       <span class="material-icons">close</span>
     </button>
     <p id="media-login-title" class="media-login-message">
-      להאזנה יש
-      <button type="button" class="media-login-link" (click)="continueToMediaAuth('login')">להתחבר</button>
-      או
-      <button type="button" class="media-login-link" (click)="continueToMediaAuth('register')">להירשם</button>
+      להאזנה יש להתחבר או להירשם
     </p>
+    <div class="media-login-actions">
+      <button type="button" class="media-login-link media-login-link--primary" (click)="continueToMediaAuth('login')">התחברות</button>
+      <button type="button" class="media-login-link media-login-link--secondary" (click)="continueToMediaAuth('register')">הרשמה</button>
+    </div>
   </div>
 </div>
