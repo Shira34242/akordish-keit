@@ -43,16 +43,17 @@
         <div class="video-section" *ngIf="safeVideoUrl">
           <div class="video-wrapper">
             <button
-              *ngIf="article.featuredImageUrl && !isVideoActive"
+              *ngIf="!isVideoActive"
               type="button"
               class="video-preview"
+              [class.video-preview--without-image]="!article.featuredImageUrl"
               (click)="activateVideo()"
               [attr.aria-label]="'הפעלת הסרטון: ' + article.title">
-              <img [src]="article.featuredImageUrl | cfImage:'content'" [alt]="article.title" class="video-preview-image" decoding="async">
+              <img *ngIf="article.featuredImageUrl" [src]="article.featuredImageUrl | cfImage:'content'" [alt]="article.title" class="video-preview-image" decoding="async">
               <span class="video-play-icon material-icons" aria-hidden="true">play_arrow</span>
             </button>
             <iframe
-              *ngIf="isVideoActive || !article.featuredImageUrl"
+              *ngIf="isVideoActive && isMediaAvailable"
               [src]="safeVideoUrl"
               frameborder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -74,9 +75,17 @@
           <ng-container *ngIf="isAudioFileUrl(article.audioEmbedUrl); else audioEmbed">
             <div class="audio-player-card">
               <audio class="audio-player" [src]="getAudioStreamUrl(article.audioEmbedUrl)" controls preload="metadata"></audio>
+              <button
+                *ngIf="!isMediaAvailable"
+                type="button"
+                class="media-control-lock"
+                (click)="openMediaLoginPrompt()"
+                aria-label="להאזנה יש להתחבר או להירשם">
+              </button>
             </div>
           </ng-container>
           <ng-template #audioEmbed>
+            <div class="audio-frame-wrapper">
             <iframe
               [src]="sanitizer.bypassSecurityTrustResourceUrl(article.audioEmbedUrl)"
               frameborder="0"
@@ -84,6 +93,14 @@
               loading="lazy"
               class="audio-frame">
             </iframe>
+              <button
+                *ngIf="!isMediaAvailable"
+                type="button"
+                class="media-control-lock"
+                (click)="openMediaLoginPrompt()"
+                aria-label="להאזנה יש להתחבר או להירשם">
+              </button>
+            </div>
           </ng-template>
         </div>
 
@@ -257,3 +274,17 @@
   [contentTitle]="article?.title"
   (close)="closeReportModal()">
 </app-report-modal>
+
+<div class="media-login-backdrop" *ngIf="showMediaLoginPrompt" (click)="closeMediaLoginPrompt()">
+  <div class="media-login-dialog" role="dialog" aria-modal="true" aria-labelledby="media-login-title" (click)="$event.stopPropagation()">
+    <button type="button" class="media-login-close" (click)="closeMediaLoginPrompt()" aria-label="סגירה">
+      <span class="material-icons">close</span>
+    </button>
+    <p id="media-login-title" class="media-login-message">
+      להאזנה יש
+      <button type="button" class="media-login-link" (click)="continueToMediaAuth('login')">להתחבר</button>
+      או
+      <button type="button" class="media-login-link" (click)="continueToMediaAuth('register')">להירשם</button>
+    </p>
+  </div>
+</div>

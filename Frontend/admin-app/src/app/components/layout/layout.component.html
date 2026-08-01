@@ -384,6 +384,7 @@
 @defer (when showAuthModal) {
 <app-auth-modal
     *ngIf="showAuthModal"
+    [initialMode]="authModalMode"
     (close)="closeAuthModal()"
     (authSuccess)="onAuthSuccess($event)"
     (forgotPassword)="onForgotPassword()">

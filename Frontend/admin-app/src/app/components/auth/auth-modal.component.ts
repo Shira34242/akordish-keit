@@ -1,4 +1,4 @@
-import { Component, EventEmitter, OnDestroy, Output, inject } from '@angular/core';
+import { Component, EventEmitter, Input, OnDestroy, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -20,6 +20,12 @@ export class AuthModalComponent implements OnDestroy {
   @Output() close = new EventEmitter<void>();
   @Output() authSuccess = new EventEmitter<any>();
   @Output() forgotPassword = new EventEmitter<void>();
+
+  @Input()
+  set initialMode(mode: 'login' | 'register') {
+    this.isLogin = mode === 'login';
+    this.registerStep = 'choice';
+  }
 
   isLogin = false; // true = login mode, false = register mode
   registerStep: 'choice' | 'manual' = 'choice';

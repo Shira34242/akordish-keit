@@ -63,6 +63,8 @@ export interface AuthResponse {
     requiresProfileCompletion?: boolean;
 }
 
+export type AuthModalMode = 'login' | 'register';
+
 @Injectable({
     providedIn: 'root'
 })
@@ -79,6 +81,7 @@ export class AuthService {
     // לבקשת הצגת מודל הלוגין
     private loginRequestSubject = new BehaviorSubject<boolean>(false);
     public loginRequest$ = this.loginRequestSubject.asObservable();
+    private requestedAuthMode: AuthModalMode = 'register';
 
     constructor(private http: HttpClient) {
         this.loadUserFromStorage();
@@ -327,9 +330,14 @@ export class AuthService {
      * מבקש הצגת מודל לוגין ושומר את ה-URL שהמשתמש רצה להגיע אליו
      * @param returnUrl - הדף שהמשתמש ינותב אליו אחרי לוגין מוצלח
      */
-    requestLogin(returnUrl: string = '/') {
+    requestLogin(returnUrl: string = '/', mode: AuthModalMode = 'register') {
+        this.requestedAuthMode = mode;
         this.returnUrlSubject.next(returnUrl);
         this.loginRequestSubject.next(true);
+    }
+
+    get authModalMode(): AuthModalMode {
+        return this.requestedAuthMode;
     }
 
     /**

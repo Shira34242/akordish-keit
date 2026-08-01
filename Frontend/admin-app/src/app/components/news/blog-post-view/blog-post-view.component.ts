@@ -68,6 +68,11 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
   loading = true;
   safeVideoUrl: SafeResourceUrl | null = null;
   isVideoActive = false;
+  showMediaLoginPrompt = false;
+
+  get isMediaAvailable(): boolean {
+    return this.authService.isLoggedIn;
+  }
   isFavorite = false;
   selectedReaction: string | null = null;
   reactionCounts: Record<string, number> = {};
@@ -372,6 +377,11 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
   }
 
   activateVideo(): void {
+    if (!this.authService.isLoggedIn) {
+      this.showMediaLoginPrompt = true;
+      return;
+    }
+
     if (this.safeVideoUrl) {
       this.isVideoActive = true;
       if (this.article?.videoEmbedUrl) {
@@ -380,6 +390,20 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
         this.safeVideoUrl = this.sanitizer.bypassSecurityTrustResourceUrl(`${embedUrl}${separator}autoplay=1`);
       }
     }
+  }
+
+  openMediaLoginPrompt(): void {
+    if (this.authService.isLoggedIn) return;
+    this.showMediaLoginPrompt = true;
+  }
+
+  closeMediaLoginPrompt(): void {
+    this.showMediaLoginPrompt = false;
+  }
+
+  continueToMediaAuth(mode: 'login' | 'register'): void {
+    this.showMediaLoginPrompt = false;
+    this.authService.requestLogin(this.router.url, mode);
   }
 
   isAudioFileUrl(url: string | undefined): boolean {

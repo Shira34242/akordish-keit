@@ -2,7 +2,7 @@ import { AfterViewInit, Component, HostListener, NgZone, OnDestroy, OnInit } fro
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { SocialAuthService, SocialUser } from '@abacritt/angularx-social-login';
-import { AuthResponse, AuthService, User } from '../../services/auth.service';
+import { AuthModalMode, AuthResponse, AuthService, User } from '../../services/auth.service';
 import { SongService } from '../../services/song.service';
 import { ModalService } from '../../services/modal.service';
 import { SessionTimeoutService } from '../../services/session-timeout.service';
@@ -81,6 +81,7 @@ export class LayoutComponent implements OnInit, AfterViewInit, OnDestroy {
   isPodcastViewerPage = false;
 
   showAuthModal = false;
+  authModalMode: AuthModalMode = 'register';
   showAdditionalDetailsModal = false;
   showSoftReminderModal = false;
   softReminderKind: ReminderKind = 'profile';
@@ -195,6 +196,7 @@ export class LayoutComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.authService.loginRequest$.subscribe(shouldShowLogin => {
       if (shouldShowLogin && !this.showAuthModal) {
+        this.authModalMode = this.authService.authModalMode;
         this.openAuthModal();
         this.authService.clearLoginRequest();
       }
