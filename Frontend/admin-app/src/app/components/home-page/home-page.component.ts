@@ -254,6 +254,14 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
     this.router.navigate([route]);
   }
 
+  navigatePromo(route: string, event: Event): void {
+    const target = event.target as HTMLElement | null;
+    if (target?.closest('a, button')) return;
+
+    event.preventDefault();
+    this.router.navigate([route]);
+  }
+
   scrollCarousel(target: HTMLElement | Array<HTMLElement | undefined>, direction: 'left' | 'right'): void {
     const targets = Array.isArray(target) ? target : [target];
     const sign = direction === 'left' ? -1 : 1;

@@ -69,6 +69,7 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
   safeVideoUrl: SafeResourceUrl | null = null;
   isVideoActive = false;
   showMediaLoginPrompt = false;
+  loginPromptContext: 'media' | 'feedback' = 'media';
 
   get isMediaAvailable(): boolean {
     return this.authService.isLoggedIn;
@@ -378,7 +379,7 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
 
   activateVideo(): void {
     if (!this.authService.isLoggedIn) {
-      this.showMediaLoginPrompt = true;
+      this.openMediaLoginPrompt();
       return;
     }
 
@@ -394,6 +395,13 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
 
   openMediaLoginPrompt(): void {
     if (this.authService.isLoggedIn) return;
+    this.loginPromptContext = 'media';
+    this.showMediaLoginPrompt = true;
+  }
+
+  openFeedbackLoginPrompt(): void {
+    if (this.authService.isLoggedIn) return;
+    this.loginPromptContext = 'feedback';
     this.showMediaLoginPrompt = true;
   }
 
@@ -579,6 +587,10 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
 
   giveFeedbackYes(): void {
     if (this.feedbackGiven || !this.article) return;
+    if (!this.authService.isLoggedIn) {
+      this.openFeedbackLoginPrompt();
+      return;
+    }
     const previousYesCount = this.feedbackYesCount;
     const previousNoCount = this.feedbackNoCount;
     this.feedbackGiven = true;
@@ -605,6 +617,10 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
 
   giveFeedbackNo(): void {
     if (this.feedbackGiven || !this.article) return;
+    if (!this.authService.isLoggedIn) {
+      this.openFeedbackLoginPrompt();
+      return;
+    }
     const previousYesCount = this.feedbackYesCount;
     const previousNoCount = this.feedbackNoCount;
     this.feedbackGiven = true;

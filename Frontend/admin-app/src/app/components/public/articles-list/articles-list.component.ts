@@ -13,6 +13,7 @@ import { LanguageService } from '../../../services/language.service';
 import { SystemTablesService } from '../../../services/system-tables.service';
 import { NewsPageSectionService } from '../../../services/news-page-section.service';
 import { SearchItem, SearchResults, SearchService } from '../../../services/search.service';
+import { AuthService } from '../../../services/auth.service';
 import { getArticleLink } from '../../../utils/article-route.utils';
 import { artistRoute, songSlug } from '../../../utils/slug';
 
@@ -32,6 +33,7 @@ export class ArticlesListComponent implements OnInit, OnDestroy {
   private readonly systemTablesService = inject(SystemTablesService);
   private readonly newsPageSectionService = inject(NewsPageSectionService);
   private readonly searchService = inject(SearchService);
+  private readonly authService = inject(AuthService);
   private readonly ngZone = inject(NgZone);
 
   articles: Article[] = [];
@@ -141,6 +143,13 @@ export class ArticlesListComponent implements OnInit, OnDestroy {
         }
 
         if (this.searchTerm.trim()) {
+          if (!this.authService.isLoggedIn) {
+            this.universalResults = null;
+            this.isLoading = false;
+            this.authService.requestLogin(this.router.url);
+            return;
+          }
+
           this.loadUniversalSearch();
         } else {
           this.universalResults = null;

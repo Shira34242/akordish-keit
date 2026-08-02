@@ -281,7 +281,7 @@
       <span class="material-icons">close</span>
     </button>
     <p id="media-login-title" class="media-login-message">
-      להאזנה יש להתחבר או להירשם
+      {{ loginPromptContext === 'feedback' ? 'כדי לתת משוב יש להתחבר או להירשם' : 'להאזנה יש להתחבר או להירשם' }}
     </p>
     <div class="media-login-actions">
       <button type="button" class="media-login-link media-login-link--primary" (click)="continueToMediaAuth('login')">התחברות</button>

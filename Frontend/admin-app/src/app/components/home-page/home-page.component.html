@@ -203,11 +203,17 @@
     <section class="home-section music-news-section" *ngIf="newsArticles.length > 0">
       <div class="section-header">
         <a routerLink="/music-news" class="section-title section-title-link">{{ 'home.news_title' | translate }}</a>
-        <button type="button" class="section-autoscroll-toggle" (click)="toggleHomeAutoScroll()"
-          [attr.aria-label]="isHomeAutoScrollPaused ? 'המשך תנועה אוטומטית' : 'עצירת תנועה אוטומטית'"
-          [attr.aria-pressed]="isHomeAutoScrollPaused">
-          <span class="material-icons" aria-hidden="true">{{ isHomeAutoScrollPaused ? 'play_arrow' : 'pause' }}</span>
-        </button>
+        <div class="section-header-actions">
+          <a routerLink="/music-news" class="section-all-link">
+            <span>לכל חדשות המוזיקה</span>
+            <span class="section-all-link__arrow" aria-hidden="true">&gt;</span>
+          </a>
+          <button type="button" class="section-autoscroll-toggle" (click)="toggleHomeAutoScroll()"
+            [attr.aria-label]="isHomeAutoScrollPaused ? 'המשך תנועה אוטומטית' : 'עצירת תנועה אוטומטית'"
+            [attr.aria-pressed]="isHomeAutoScrollPaused">
+            <span class="material-icons" aria-hidden="true">{{ isHomeAutoScrollPaused ? 'play_arrow' : 'pause' }}</span>
+          </button>
+        </div>
       </div>
 
       <div *ngIf="!useScrollingNewsBanner" class="news-grid">
@@ -307,6 +313,7 @@
         <p class="promo-subtitle">{{ 'home.promo_chords_sub' | translate }}</p>
         <div class="promo-actions" (click)="$event.stopPropagation()">
           <a routerLink="/chords" class="promo-arrow-link" [attr.aria-label]="'home.promo_chords_link' | translate">
+            <span>{{ 'home.promo_chords_link' | translate }}</span>
             <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none"
                  stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
                  aria-hidden="true">
@@ -373,11 +380,17 @@
     <section class="home-section" *ngIf="artistsSectionStarted && topArtists.length > 0">
       <div class="section-header">
         <a routerLink="/artists" class="section-title section-title-link">{{ 'home.popular_artists' | translate }}</a>
-        <button type="button" class="section-autoscroll-toggle" (click)="toggleHomeAutoScroll()"
-          [attr.aria-label]="isHomeAutoScrollPaused ? 'המשך תנועה אוטומטית' : 'עצירת תנועה אוטומטית'"
-          [attr.aria-pressed]="isHomeAutoScrollPaused">
-          <span class="material-icons" aria-hidden="true">{{ isHomeAutoScrollPaused ? 'play_arrow' : 'pause' }}</span>
-        </button>
+        <div class="section-header-actions">
+          <a routerLink="/artists" class="section-all-link">
+            <span>לכל האמנים</span>
+            <span class="section-all-link__arrow" aria-hidden="true">&gt;</span>
+          </a>
+          <button type="button" class="section-autoscroll-toggle" (click)="toggleHomeAutoScroll()"
+            [attr.aria-label]="isHomeAutoScrollPaused ? 'המשך תנועה אוטומטית' : 'עצירת תנועה אוטומטית'"
+            [attr.aria-pressed]="isHomeAutoScrollPaused">
+            <span class="material-icons" aria-hidden="true">{{ isHomeAutoScrollPaused ? 'play_arrow' : 'pause' }}</span>
+          </button>
+        </div>
       </div>
       <div *ngIf="!isMobile" class="artists-loop-row" appAutoScroll [autoScrollSpeed]="35" autoScrollDirection="left" [autoScrollCopies]="3" [autoScrollPaused]="isHomeAutoScrollPaused" (scroll)="refreshCarouselControls('.artists-loop-row')">
         <div class="artists-loop-track">
@@ -420,8 +433,8 @@
     </div>
 
     <div id="promo-index" class="promo-box promo-box--providers" [class.promo-box--mobile-link]="isMobile" *ngIf="promoIndexStarted"
-         [attr.role]="isMobile ? 'link' : null" [attr.tabindex]="isMobile ? 0 : null"
-         (click)="navigatePromoOnMobile('/professionals', $event)" (keydown.enter)="navigatePromoOnMobile('/professionals', $event)">
+         role="link" tabindex="0" [attr.aria-label]="'home.promo_index_link' | translate"
+         (click)="navigatePromo('/professionals', $event)" (keydown.enter)="navigatePromo('/professionals', $event)">
       <div class="promo-content">
         <h2 class="promo-title">
           {{ 'home.promo_index_title' | translate }}
@@ -430,6 +443,7 @@
         <p class="promo-subtitle">{{ 'home.promo_index_sub' | translate }}</p>
         <div class="promo-actions" (click)="$event.stopPropagation()">
           <a routerLink="/professionals" class="promo-arrow-link" [attr.aria-label]="'home.promo_index_link' | translate">
+            <span>{{ 'home.promo_index_link' | translate }}</span>
             <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none"
                  stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
                  aria-hidden="true">
@@ -506,13 +520,19 @@
     <section class="home-section" *ngIf="eventsSectionStarted && upcomingEvents.length > 0">
       <div class="section-header">
         <a routerLink="/events" class="section-title section-title-link">{{ 'home.upcoming_events' | translate }}</a>
-        <div class="section-scroll-controls" *ngIf="canScrollBySelector('.events-scroll-row', 'right') || canScrollBySelector('.events-scroll-row', 'left')">
-          <button type="button" class="section-scroll-btn" *ngIf="canScrollBySelector('.events-scroll-row', 'right')" (click)="scrollCarouselBySelector('.events-scroll-row', 'right')" aria-label="גלילה ימינה">
-            <span class="material-icons" aria-hidden="true">chevron_right</span>
-          </button>
-          <button type="button" class="section-scroll-btn" *ngIf="canScrollBySelector('.events-scroll-row', 'left')" (click)="scrollCarouselBySelector('.events-scroll-row', 'left')" aria-label="גלילה שמאלה">
-            <span class="material-icons" aria-hidden="true">chevron_left</span>
-          </button>
+        <div class="section-header-actions">
+          <a routerLink="/events" class="section-all-link">
+            <span>לכל ההופעות</span>
+            <span class="section-all-link__arrow" aria-hidden="true">&gt;</span>
+          </a>
+          <div class="section-scroll-controls" *ngIf="canScrollBySelector('.events-scroll-row', 'right') || canScrollBySelector('.events-scroll-row', 'left')">
+            <button type="button" class="section-scroll-btn" *ngIf="canScrollBySelector('.events-scroll-row', 'right')" (click)="scrollCarouselBySelector('.events-scroll-row', 'right')" aria-label="גלילה ימינה">
+              <span class="material-icons" aria-hidden="true">chevron_right</span>
+            </button>
+            <button type="button" class="section-scroll-btn" *ngIf="canScrollBySelector('.events-scroll-row', 'left')" (click)="scrollCarouselBySelector('.events-scroll-row', 'left')" aria-label="גלילה שמאלה">
+              <span class="material-icons" aria-hidden="true">chevron_left</span>
+            </button>
+          </div>
         </div>
       </div>
       <div class="events-scroll-row" (scroll)="refreshCarouselControls('.events-scroll-row')">
@@ -544,6 +564,7 @@
         <p class="promo-subtitle">השיחות, הראיונות והפרקים החמים בעולם המוזיקה היהודית</p>
         <div class="promo-actions">
           <a routerLink="/podcasts" class="promo-arrow-link" aria-label="לכל הפודקאסטים">
+            <span>לכל הפודקאסטים</span>
             <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none"
                  stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
                  aria-hidden="true">
@@ -630,11 +651,17 @@
     <section class="home-section content-articles-section" *ngIf="blogSectionStarted && blogArticlesLoaded">
       <div class="section-header">
         <a routerLink="/articles" class="section-title section-title-link">{{ 'home.content_title' | translate }}</a>
-        <button type="button" class="section-autoscroll-toggle" (click)="toggleHomeAutoScroll()"
-          [attr.aria-label]="isHomeAutoScrollPaused ? 'המשך תנועה אוטומטית' : 'עצירת תנועה אוטומטית'"
-          [attr.aria-pressed]="isHomeAutoScrollPaused">
-          <span class="material-icons" aria-hidden="true">{{ isHomeAutoScrollPaused ? 'play_arrow' : 'pause' }}</span>
-        </button>
+        <div class="section-header-actions">
+          <a routerLink="/articles" class="section-all-link">
+            <span>לכל הכתבות</span>
+            <span class="section-all-link__arrow" aria-hidden="true">&gt;</span>
+          </a>
+          <button type="button" class="section-autoscroll-toggle" (click)="toggleHomeAutoScroll()"
+            [attr.aria-label]="isHomeAutoScrollPaused ? 'המשך תנועה אוטומטית' : 'עצירת תנועה אוטומטית'"
+            [attr.aria-pressed]="isHomeAutoScrollPaused">
+            <span class="material-icons" aria-hidden="true">{{ isHomeAutoScrollPaused ? 'play_arrow' : 'pause' }}</span>
+          </button>
+        </div>
       </div>
 
       <div *ngIf="!useScrollingBlogBanner" class="news-grid content-articles-grid">
@@ -721,13 +748,19 @@
       *ngIf="homeCategoryArticlesLoaded && homeCategoryArticles.length > 0">
       <div class="section-header">
         <a routerLink="/music-news" class="section-title section-title-link">{{ homeCategoryName }}</a>
-        <div class="section-scroll-controls" *ngIf="canScrollBySelector('.home-category-banners-row', 'right') || canScrollBySelector('.home-category-banners-row', 'left')">
-          <button type="button" class="section-scroll-btn" *ngIf="canScrollBySelector('.home-category-banners-row', 'right')" (click)="scrollCarouselBySelector('.home-category-banners-row', 'right')" aria-label="גלילה ימינה">
-            <span class="material-icons" aria-hidden="true">chevron_right</span>
-          </button>
-          <button type="button" class="section-scroll-btn" *ngIf="canScrollBySelector('.home-category-banners-row', 'left')" (click)="scrollCarouselBySelector('.home-category-banners-row', 'left')" aria-label="גלילה שמאלה">
-            <span class="material-icons" aria-hidden="true">chevron_left</span>
-          </button>
+        <div class="section-header-actions">
+          <a routerLink="/music-news" class="section-all-link">
+            <span>לכל הלהיטים</span>
+            <span class="section-all-link__arrow" aria-hidden="true">&gt;</span>
+          </a>
+          <div class="section-scroll-controls" *ngIf="canScrollBySelector('.home-category-banners-row', 'right') || canScrollBySelector('.home-category-banners-row', 'left')">
+            <button type="button" class="section-scroll-btn" *ngIf="canScrollBySelector('.home-category-banners-row', 'right')" (click)="scrollCarouselBySelector('.home-category-banners-row', 'right')" aria-label="גלילה ימינה">
+              <span class="material-icons" aria-hidden="true">chevron_right</span>
+            </button>
+            <button type="button" class="section-scroll-btn" *ngIf="canScrollBySelector('.home-category-banners-row', 'left')" (click)="scrollCarouselBySelector('.home-category-banners-row', 'left')" aria-label="גלילה שמאלה">
+              <span class="material-icons" aria-hidden="true">chevron_left</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -753,6 +786,10 @@
       *ngIf="viralSectionStarted && viralArticles.length > 0">
       <div class="section-header">
         <a routerLink="/music-news" class="section-title section-title-link">ויראלי</a>
+        <a routerLink="/music-news" class="section-all-link">
+          <span>לכל מה שויראלי</span>
+          <span class="section-all-link__arrow" aria-hidden="true">&gt;</span>
+        </a>
       </div>
 
       <div *ngIf="viralArticlesLoaded && visibleViralArticles.length > 0" class="stream-grid">
