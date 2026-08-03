@@ -55,7 +55,7 @@
   font-optical-sizing: auto;
   font-weight: 800;
   font-variation-settings: "wdth" 100;
-  font-size: var(--font-base);
+  font-size: var(--font-xl);
   color: #ffffff;
   margin: 0;
   line-height: 1.35;
@@ -67,11 +67,11 @@
 
 /* מדרגות עדינות מפנות מקום לפני שנדרש קיטום. */
 .banner-title.title-medium {
-  font-size: var(--font-base) !important;
+  font-size: var(--font-lg) !important;
 }
 
 .banner-title.title-long {
-  font-size: var(--font-sm) !important;
+  font-size: var(--font-base) !important;
 }
 
 .banner-subtitle {
@@ -123,15 +123,15 @@
   }
 
   .banner-title {
-    font-size: var(--font-lg);
+    font-size: var(--font-xl);
   }
 
   .banner-title.title-medium {
-    font-size: var(--font-base) !important;
+    font-size: var(--font-lg) !important;
   }
 
   .banner-title.title-long {
-    font-size: var(--font-sm) !important;
+    font-size: var(--font-base) !important;
   }
 
   .banner-subtitle {

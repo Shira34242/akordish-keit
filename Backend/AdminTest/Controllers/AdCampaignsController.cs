@@ -502,38 +502,34 @@ namespace AkordishKeit.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> TrackView(int id)
         {
-            var campaign = await _context.AdCampaigns.FindAsync(id);
-            if (campaign == null) return NotFound();
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+            if (!await _context.AdCampaigns.AnyAsync(c => c.Id == id)) return NotFound();
 
             var (userId, ipAddress, userAgent, referrer) = GetRequestTrackingInfo();
-            var cutoffTime = DateTime.UtcNow.AddHours(-24);
-
-            bool isUnique;
-            if (userId.HasValue)
-                isUnique = !await _context.AdCampaignViews.AnyAsync(av =>
-                    av.AdCampaignId == id && av.UserId == userId && av.ViewedAt >= cutoffTime);
-            else if (!string.IsNullOrEmpty(ipAddress))
-                isUnique = !await _context.AdCampaignViews.AnyAsync(av =>
-                    av.AdCampaignId == id && av.IpAddress == ipAddress && av.UserAgent == userAgent && av.ViewedAt >= cutoffTime);
-            else
-                isUnique = true;
-
-            if (isUnique)
+            _context.AdCampaignViews.Add(new AdCampaignView
             {
-                _context.AdCampaignViews.Add(new AdCampaignView
-                {
-                    AdCampaignId = id,
-                    UserId = userId,
-                    IpAddress = ipAddress,
-                    UserAgent = userAgent,
-                    Referrer = referrer,
-                    ViewedAt = DateTime.UtcNow
-                });
-                campaign.ViewCount++;
-                await _context.SaveChangesAsync();
-            }
+                AdCampaignId = id,
+                UserId = userId,
+                IpAddress = ipAddress,
+                UserAgent = userAgent,
+                Referrer = referrer,
+                ViewedAt = DateTime.UtcNow
+            });
+            await _context.SaveChangesAsync();
 
-            return Ok(new { viewCount = campaign.ViewCount });
+            await _context.AdCampaigns
+                .Where(c => c.Id == id)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(c => c.ViewCount, c => c.ViewCount + 1));
+
+            await transaction.CommitAsync();
+
+            var viewCount = await _context.AdCampaigns
+                .Where(c => c.Id == id)
+                .Select(c => c.ViewCount)
+                .SingleAsync();
+
+            return Ok(new { viewCount });
         }
 
         // POST: api/AdCampaigns/5/track-click
@@ -542,38 +538,34 @@ namespace AkordishKeit.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> TrackClick(int id)
         {
-            var campaign = await _context.AdCampaigns.FindAsync(id);
-            if (campaign == null) return NotFound();
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+            if (!await _context.AdCampaigns.AnyAsync(c => c.Id == id)) return NotFound();
 
             var (userId, ipAddress, userAgent, referrer) = GetRequestTrackingInfo();
-            var cutoffTime = DateTime.UtcNow.AddHours(-24);
-
-            bool isUnique;
-            if (userId.HasValue)
-                isUnique = !await _context.AdCampaignClicks.AnyAsync(ac =>
-                    ac.AdCampaignId == id && ac.UserId == userId && ac.ClickedAt >= cutoffTime);
-            else if (!string.IsNullOrEmpty(ipAddress))
-                isUnique = !await _context.AdCampaignClicks.AnyAsync(ac =>
-                    ac.AdCampaignId == id && ac.IpAddress == ipAddress && ac.UserAgent == userAgent && ac.ClickedAt >= cutoffTime);
-            else
-                isUnique = true;
-
-            if (isUnique)
+            _context.AdCampaignClicks.Add(new AdCampaignClick
             {
-                _context.AdCampaignClicks.Add(new AdCampaignClick
-                {
-                    AdCampaignId = id,
-                    UserId = userId,
-                    IpAddress = ipAddress,
-                    UserAgent = userAgent,
-                    Referrer = referrer,
-                    ClickedAt = DateTime.UtcNow
-                });
-                campaign.ClickCount++;
-                await _context.SaveChangesAsync();
-            }
+                AdCampaignId = id,
+                UserId = userId,
+                IpAddress = ipAddress,
+                UserAgent = userAgent,
+                Referrer = referrer,
+                ClickedAt = DateTime.UtcNow
+            });
+            await _context.SaveChangesAsync();
 
-            return Ok(new { clickCount = campaign.ClickCount });
+            await _context.AdCampaigns
+                .Where(c => c.Id == id)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(c => c.ClickCount, c => c.ClickCount + 1));
+
+            await transaction.CommitAsync();
+
+            var clickCount = await _context.AdCampaigns
+                .Where(c => c.Id == id)
+                .Select(c => c.ClickCount)
+                .SingleAsync();
+
+            return Ok(new { clickCount });
         }
 
         private (int? userId, string? ipAddress, string userAgent, string referrer) GetRequestTrackingInfo()

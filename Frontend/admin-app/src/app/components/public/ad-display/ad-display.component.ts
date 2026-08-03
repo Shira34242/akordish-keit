@@ -43,10 +43,10 @@ interface AdSpotResponse {
                   class="media-asset"
                   loading="lazy"
                   decoding="async"
-                  (load)="trackView(campaign)" />
+                  (load)="trackView(campaign, $event)" />
               } @else if (getMediaType(getActiveMediaUrl(campaign)) === 'video') {
                 <video [src]="getActiveMediaUrl(campaign)" class="media-asset"
-                  autoplay loop muted playsinline preload="metadata" (loadeddata)="trackView(campaign)"></video>
+                  autoplay loop muted playsinline preload="metadata" (loadeddata)="trackView(campaign, $event)"></video>
               }
             </a>
           </div>
@@ -122,9 +122,11 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
   readonly srcsetWidths = [360, 600, 1000, 1600];
 
   private visibilityObserver?: IntersectionObserver;
+  private adViewObserver?: IntersectionObserver;
   private hasStartedLoading = false;
-  private readonly VIEWED_ADS_KEY = 'viewedAds';
-  private readonly CLICKED_ADS_KEY = 'clickedAds';
+  private readonly observedAdElements = new WeakSet<HTMLElement>();
+  private readonly visibleAdElements = new WeakSet<HTMLElement>();
+  private readonly campaignsByElement = new WeakMap<HTMLElement, AdCampaign>();
 
   @HostBinding('class.media-item') readonly hostClass = true;
   @HostBinding('class.media-item--ready') get isReady(): boolean {
@@ -140,6 +142,7 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.visibilityObserver?.disconnect();
+    this.adViewObserver?.disconnect();
   }
 
   private setupLazyLoading(): void {
@@ -240,57 +243,51 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
     return this.maxWidth ? `(max-width: ${this.maxWidth}) 100vw, ${this.maxWidth}` : '100vw';
   }
 
-  private readonly TRACKING_TTL_MS = 24 * 60 * 60 * 1000;
+  trackView(campaign: AdCampaign, event: Event) {
+    const mediaElement = event.currentTarget as HTMLElement | null;
+    const adElement = mediaElement?.closest<HTMLElement>('.media-wrapper');
 
-  private getTrackedIds(key: string): Record<number, number> {
-    try {
-      const stored = localStorage.getItem(key);
-      return stored ? JSON.parse(stored) : {};
-    } catch {
-      return {};
+    if (!adElement || typeof IntersectionObserver === 'undefined') {
+      this.sendView(campaign);
+      return;
     }
+
+    this.campaignsByElement.set(adElement, campaign);
+    if (this.observedAdElements.has(adElement)) return;
+
+    this.observedAdElements.add(adElement);
+    this.getAdViewObserver().observe(adElement);
   }
 
-  private isTrackedWithinTTL(key: string, adId: number): boolean {
-    const map = this.getTrackedIds(key);
-    const ts = map[adId];
-    return ts != null && Date.now() - ts < this.TRACKING_TTL_MS;
-  }
+  private getAdViewObserver(): IntersectionObserver {
+    if (!this.adViewObserver) {
+      this.adViewObserver = new IntersectionObserver(entries => {
+        for (const entry of entries) {
+          const adElement = entry.target as HTMLElement;
+          const isVisible = entry.isIntersecting && entry.intersectionRatio >= 0.01;
 
-  private markTracked(key: string, adId: number): void {
-    const map = this.getTrackedIds(key);
-    const cutoff = Date.now() - this.TRACKING_TTL_MS;
-    // prune expired entries to keep localStorage clean
-    for (const id in map) {
-      if (map[id] < cutoff) delete map[id];
+          if (!isVisible) {
+            this.visibleAdElements.delete(adElement);
+            continue;
+          }
+
+          if (this.visibleAdElements.has(adElement)) continue;
+
+          const campaign = this.campaignsByElement.get(adElement);
+          if (!campaign) continue;
+
+          this.visibleAdElements.add(adElement);
+          this.sendView(campaign);
+        }
+      }, { threshold: [0, 0.01] });
     }
-    map[adId] = Date.now();
-    localStorage.setItem(key, JSON.stringify(map));
+
+    return this.adViewObserver;
   }
 
-  private hasViewedAd(adId: number): boolean {
-    return this.isTrackedWithinTTL(this.VIEWED_ADS_KEY, adId);
-  }
-
-  private markAdAsViewed(adId: number): void {
-    this.markTracked(this.VIEWED_ADS_KEY, adId);
-  }
-
-  private hasClickedAd(adId: number): boolean {
-    return this.isTrackedWithinTTL(this.CLICKED_ADS_KEY, adId);
-  }
-
-  private markAdAsClicked(adId: number): void {
-    this.markTracked(this.CLICKED_ADS_KEY, adId);
-  }
-
-  trackView(campaign: AdCampaign) {
-    // Only track view once per ad per user session
-    if (!this.hasViewedAd(campaign.id)) {
-      this.markAdAsViewed(campaign.id);
-      this.http.post(`${this.apiUrl}/${campaign.id}/log-view`, {})
-        .subscribe({ next: () => {}, error: () => {} });
-    }
+  private sendView(campaign: AdCampaign): void {
+    this.http.post(`${this.apiUrl}/${campaign.id}/log-view`, {})
+      .subscribe({ next: () => {}, error: () => {} });
   }
 
   handleAdClick(event: MouseEvent, campaign: AdCampaign) {
@@ -303,11 +300,8 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
   }
 
   trackClick(campaign: AdCampaign) {
-    if (!this.hasClickedAd(campaign.id)) {
-      this.markAdAsClicked(campaign.id);
-      this.http.post(`${this.apiUrl}/${campaign.id}/log-click`, {})
-        .subscribe({ next: () => {}, error: () => {} });
-    }
+    this.http.post(`${this.apiUrl}/${campaign.id}/log-click`, {})
+      .subscribe({ next: () => {}, error: () => {} });
   }
 
   getMediaType(url: string | null | undefined): 'image' | 'video' | null {

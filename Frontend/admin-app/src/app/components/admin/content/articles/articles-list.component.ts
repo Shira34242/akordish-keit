@@ -98,7 +98,7 @@ export class ArticlesListComponent implements OnInit, OnDestroy, AfterViewInit {
   uploaderSearch = '';
   dateFrom = '';
   dateTo = '';
-  sortBy = 'date';
+  sortBy = 'publish';
   showFeaturedOnly = false;
 
   // Enums for template
@@ -326,7 +326,7 @@ export class ArticlesListComponent implements OnInit, OnDestroy, AfterViewInit {
     this.uploaderSearch = '';
     this.dateFrom = '';
     this.dateTo = '';
-    this.sortBy = 'date';
+    this.sortBy = 'publish';
     this.showFeaturedOnly = false;
     this.currentPage = 1;
     this.loadArticles();
@@ -339,7 +339,7 @@ export class ArticlesListComponent implements OnInit, OnDestroy, AfterViewInit {
       this.selectedArtistId !== undefined ||
       this.dateFrom ||
       this.dateTo ||
-      this.sortBy !== 'date' ||
+      this.sortBy !== 'publish' ||
       this.showFeaturedOnly
     );
   }
