@@ -137,7 +137,7 @@ export class SmartAddComponent {
   }
 
   openSongEditor(): void {
-    this.modalService.openAddSongModal({ flowMode: 'legacy' });
+    this.modalService.openAddSongModal({ flowMode: 'legacy', suppressTitleLengthWarning: true });
   }
 
   openDraftEditor(): void {
@@ -154,11 +154,11 @@ export class SmartAddComponent {
   }
 
   addArticle(): void {
-    this.router.navigate(['/admin/content/articles/new'], { queryParams: { type: 'blog' } });
+    this.router.navigate(['/admin/content/articles/new'], { queryParams: { type: 'blog', source: 'smart-add' } });
   }
 
   addMusicNews(): void {
-    this.router.navigate(['/admin/content/articles/new'], { queryParams: { type: 'news' } });
+    this.router.navigate(['/admin/content/articles/new'], { queryParams: { type: 'news', source: 'smart-add' } });
   }
 
   addEvent(): void {

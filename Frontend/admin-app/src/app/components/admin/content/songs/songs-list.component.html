@@ -195,6 +195,7 @@
           <th>סגנון</th>
           <th>צפיות</th>
           <th>תאריך העלאה</th>
+          <th>העלאה וקרדיט</th>
           <th>סטטוס</th>
           <th>דירוג</th>
           <th>פעולות</th>
@@ -253,6 +254,20 @@
           <!-- Date -->
           <td class="date-cell">
             <div>{{ formatDate(song.createdAt) }}</div>
+          </td>
+
+          <td class="upload-cell">
+            <div class="upload-attribution" *ngIf="getSubmittingUserId(song) as userId; else systemSongUpload">
+              <button type="button" class="uploader-user-link" (click)="openSubmittingUser(userId, $event)">
+                <span class="material-icons" aria-hidden="true">person</span>
+                משתמש #{{ userId }}
+              </button>
+              <span class="public-credit" [class.public-credit--enabled]="!!song.uploaderProfile || (!!song.uploaderProfileType && !!song.uploaderProfileId)">
+                <span class="material-icons" aria-hidden="true">{{ song.uploaderProfile || (song.uploaderProfileType && song.uploaderProfileId) ? 'visibility' : 'visibility_off' }}</span>
+                {{ getPublicCreditLabel(song) }}
+              </span>
+            </div>
+            <ng-template #systemSongUpload><span class="system-upload">העלאת מערכת</span></ng-template>
           </td>
 
           <!-- Status -->

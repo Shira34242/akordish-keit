@@ -1015,6 +1015,31 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
     return song.genres?.map(g => g.name).join(', ') || '';
   }
 
+  getSubmittingUserId(song: SongDto): number | null {
+    return song.uploadedByUserId ?? song.uploaderUserId ?? null;
+  }
+
+  getPublicCreditLabel(song: SongDto): string {
+    if (song.uploaderProfile?.name) {
+      return `${song.uploaderProfile.name} (${this.getUploaderTypeLabel(song.uploaderProfile.type)})`;
+    }
+    if (song.uploaderProfileType && song.uploaderProfileId) {
+      return `${this.getUploaderTypeLabel(song.uploaderProfileType)} #${song.uploaderProfileId}`;
+    }
+    return 'לא נבחר קרדיט ציבורי';
+  }
+
+  openSubmittingUser(userId: number, event: Event): void {
+    event.stopPropagation();
+    this.router.navigate(['/admin/users/clients'], { queryParams: { userId } });
+  }
+
+  private getUploaderTypeLabel(type: string): string {
+    if (type === 'artist') return 'אמן';
+    if (type === 'serviceProvider') return 'בעל מקצוע';
+    return 'משתמש';
+  }
+
   openBumpModal(): void {
     this.bumpModalOpen = true;
   }

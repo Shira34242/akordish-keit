@@ -95,6 +95,7 @@ export class AppComponent implements OnInit {
   songToEdit: any = null;
   songPrefill: any = null;
   songModalFlowMode: 'smart' | 'legacy' = 'smart';
+  suppressSongTitleLengthWarning = false;
   reportModal: ReportModalState = {
     isOpen: false,
     contentType: 'General',
@@ -180,6 +181,7 @@ export class AppComponent implements OnInit {
       this.songToEdit = state.songToEdit;
       this.songPrefill = state.songPrefill;
       this.songModalFlowMode = state.flowMode ?? 'smart';
+      this.suppressSongTitleLengthWarning = state.suppressTitleLengthWarning ?? false;
     });
 
     this.modalService.reportModalState$.subscribe(state => {

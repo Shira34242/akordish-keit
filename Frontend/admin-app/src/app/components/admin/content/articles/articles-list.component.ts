@@ -942,6 +942,31 @@ export class ArticlesListComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
+  getSubmittingUserId(article: Article): number | null {
+    return article.uploaderUserId ?? null;
+  }
+
+  getPublicCreditLabel(article: Article): string {
+    if (article.uploaderProfile?.name) {
+      return `${article.uploaderProfile.name} (${this.getUploaderTypeLabel(article.uploaderProfile.type)})`;
+    }
+    if (article.uploaderProfileType && article.uploaderProfileId) {
+      return `${this.getUploaderTypeLabel(article.uploaderProfileType)} #${article.uploaderProfileId}`;
+    }
+    return 'לא נבחר קרדיט ציבורי';
+  }
+
+  openSubmittingUser(userId: number, event: Event): void {
+    event.stopPropagation();
+    this.router.navigate(['/admin/users/clients'], { queryParams: { userId } });
+  }
+
+  private getUploaderTypeLabel(type: string): string {
+    if (type === 'artist') return 'אמן';
+    if (type === 'serviceProvider') return 'בעל מקצוע';
+    return 'משתמש';
+  }
+
   // Expose Math to template
   readonly Math = Math;
 }

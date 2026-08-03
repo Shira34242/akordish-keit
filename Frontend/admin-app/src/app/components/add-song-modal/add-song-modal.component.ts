@@ -92,6 +92,7 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
     @Input() initialSongRequest: InitialSongRequest | null = null;
     @Input() flowMode: 'smart' | 'legacy' = 'smart';
     @Input() standaloneContributionMode: boolean = false;
+    @Input() suppressTitleLengthWarning: boolean = false;
 
     currentStep: number = 1;
     isManualAddMode: boolean = false;
@@ -166,6 +167,19 @@ export class AddSongModalComponent implements OnInit, AfterViewInit, OnDestroy {
 
     get isAdminLongForm(): boolean {
         return this.flowMode === 'legacy';
+    }
+
+    get titleExcess(): number {
+        const title = this.songForm?.get('title')?.value ?? '';
+        return Math.max(0, String(title).trim().length - 45);
+    }
+
+    get showTitleLengthWarning(): boolean {
+        return this.isAdminLongForm
+            && !this.editMode
+            && !this.songPrefill
+            && !this.suppressTitleLengthWarning
+            && this.titleExcess > 0;
     }
 
     get totalSteps(): number {

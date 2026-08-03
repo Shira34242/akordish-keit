@@ -17,7 +17,7 @@
   <div class="banner-overlay"></div>
 
   <div class="banner-text">
-    <h3 class="banner-title">{{ article.title }}</h3>
+    <h3 class="banner-title" [ngClass]="titleLengthClass">{{ article.title }}</h3>
     <p class="banner-subtitle" *ngIf="showDescription && article.shortDescription">{{ article.shortDescription }}</p>
   </div>
 

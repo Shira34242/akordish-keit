@@ -7,6 +7,7 @@ export interface ModalState {
   songToEdit?: any;
   songPrefill?: any;
   flowMode?: 'smart' | 'legacy';
+  suppressTitleLengthWarning?: boolean;
 }
 
 export interface ReportModalState {
@@ -39,13 +40,14 @@ export class ModalService {
   songUpdated$ = this.songUpdated.asObservable();
   reportModalState$ = this.reportModalState.asObservable();
 
-  openAddSongModal(options: { flowMode?: 'smart' | 'legacy' } = {}) {
+  openAddSongModal(options: { flowMode?: 'smart' | 'legacy'; suppressTitleLengthWarning?: boolean } = {}) {
     this.modalState.next({
       isOpen: true,
       editMode: false,
       songToEdit: null,
       songPrefill: null,
-      flowMode: options.flowMode ?? 'smart'
+      flowMode: options.flowMode ?? 'smart',
+      suppressTitleLengthWarning: options.suppressTitleLengthWarning ?? false
     });
   }
 

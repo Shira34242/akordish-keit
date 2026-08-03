@@ -20,6 +20,13 @@ export class SongCardComponent {
 
     private readonly langService = inject(LanguageService);
 
+    get titleLengthClass(): string {
+        const length = this.song?.title?.trim().length ?? 0;
+        if (length > 45) return 'title-long';
+        if (length > 28) return 'title-medium';
+        return '';
+    }
+
     get songLink(): (string | number)[] {
         const slug = this.song?.slug || songSlug(this.song);
         return slug ? ['/song', this.song.id, slug] : ['/song', this.song.id];

@@ -4,7 +4,7 @@
     </div>
     <div class="song-card-info">
         <span class="song-card-label">{{ 'song_card.label' | translate }}</span>
-        <span class="song-card-title">{{ song.title }}</span>
+        <span class="song-card-title" [ngClass]="titleLengthClass">{{ song.title }}</span>
         <span class="song-card-artist">{{ song.artists && song.artists.length > 0 ? song.artists[0].name : ('song_card.unknown_artist' | translate) }}</span>
         <span class="song-card-match-badge"
               *ngIf="chordMatchText"

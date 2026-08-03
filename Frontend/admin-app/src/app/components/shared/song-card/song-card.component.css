@@ -112,7 +112,7 @@
     font-optical-sizing: auto;
     font-variation-settings: "wdth" 100;
     font-weight: 800;
-    font-size: var(--font-base);
+    font-size: var(--font-lg);
     color: #000000;
     line-height: 1.1;
     overflow: hidden;
@@ -120,6 +120,14 @@
     -webkit-line-clamp: 2;
     line-clamp: 2;
     -webkit-box-orient: vertical;
+}
+
+.song-card-title.title-medium {
+    font-size: var(--font-base) !important;
+}
+
+.song-card-title.title-long {
+    font-size: var(--font-sm) !important;
 }
 
 .song-card-artist {

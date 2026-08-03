@@ -33,6 +33,9 @@
             (input)="onTitleChange()"
             placeholder="כותרת הכתבה"
             required>
+          <small class="help-text" *ngIf="!isEditMode && !isSmartDraftCreate && titleExcess > 0">
+            הכותרת ארוכה ב־{{ titleExcess }} תווים מהאורך המומלץ לבאנר. עדיין אפשר לשמור אותה.
+          </small>
         </div>
       </div>
 
@@ -226,14 +229,17 @@
       </div>
 
       <div class="form-row">
-        <div class="form-group full-width">
-          <div class="compact-field-head">
+        <div class="form-group full-width category-selection-group">
+          <div class="compact-field-head form-label">
             <span>קטגוריות</span>
             <span class="selected-count" *ngIf="article.categoryIds.length > 0">נבחרו {{ article.categoryIds.length }}</span>
           </div>
 
           <div class="categories-checkboxes compact-category-row">
-            <label *ngFor="let cat of categories" class="category-checkbox">
+            <label
+              *ngFor="let cat of categories"
+              class="category-checkbox"
+              [class.selected]="isCategorySelected(cat.id)">
               <input
                 type="checkbox"
                 [checked]="isCategorySelected(cat.id)"

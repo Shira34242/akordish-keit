@@ -81,8 +81,7 @@ export class ArticleFormComponent implements OnInit {
   fetchingYouTube = false;
   youtubeMessage = '';
   advancedOpen = false;
-  private pendingSmartArticleType: 'news' | 'blog' | null = null;
-  private pendingCategoryId: number | null = null;
+  isSmartDraftCreate = false;
 
   // Uploader profile search state
   profileSearchQuery = '';
@@ -102,6 +101,10 @@ export class ArticleFormComponent implements OnInit {
 
   get isProfessionalNonAdmin(): boolean {
     return (this.authService.currentUserValue?.hasProfessionalProfile ?? false) && !this.isAdminUser;
+  }
+
+  get titleExcess(): number {
+    return Math.max(0, (this.article.title?.trim().length ?? 0) - 70);
   }
 
   get filteredProfileSearchResults(): UserWithProfileDto[] {
@@ -217,20 +220,15 @@ export class ArticleFormComponent implements OnInit {
     this.route.queryParams.subscribe(params => {
       if (this.isEditMode) return;
 
+      this.isSmartDraftCreate = !!params['smartDraft'] || params['source'] === 'smart-add';
+
       const requestedType = params['type'] === 'blog' ? 'blog' : 'news';
-      this.pendingSmartArticleType = requestedType;
-      const requestedCategoryId = Number(params['categoryId']);
-      this.pendingCategoryId = Number.isFinite(requestedCategoryId) && requestedCategoryId > 0
-        ? requestedCategoryId
-        : null;
       this.article.contentType = requestedType === 'blog' ? ArticleContentType.Blog : ArticleContentType.News;
 
       const draft = this.smartContentService.consumeDraft(params['smartDraft'] ?? null);
       if (draft) {
         this.applySmartDraft(draft);
       }
-
-      this.selectDefaultCategoryForRequestedType();
     });
   }
 
@@ -405,7 +403,6 @@ export class ArticleFormComponent implements OnInit {
     this.systemTablesService.getItems('article-categories', 1, 100).subscribe({
       next: (result) => {
         this.categories = result.items;
-        this.selectDefaultCategoryForRequestedType();
         this.syncContentTypeFromCategories();
       },
       error: (err) => console.error('Error loading categories', err)
@@ -753,7 +750,7 @@ export class ArticleFormComponent implements OnInit {
     this.saving = true;
     this.saveError = '';
 
-    return this.articleService.createArticle(this.buildDraftArticle()).pipe(
+    return this.articleService.createDraftArticle(this.buildDraftArticle()).pipe(
       map(() => {
         this.draftSaved = true;
         this.saving = false;
@@ -814,29 +811,6 @@ export class ArticleFormComponent implements OnInit {
 
   toggleAdvanced(): void {
     this.advancedOpen = !this.advancedOpen;
-  }
-
-  private selectDefaultCategoryForRequestedType(): void {
-    if (this.article.categoryIds.length > 0 || this.categories.length === 0) {
-      return;
-    }
-
-    if (this.pendingCategoryId && this.categories.some(item => item.id === this.pendingCategoryId)) {
-      this.article.categoryIds = [this.pendingCategoryId];
-      this.syncContentTypeFromCategories();
-      return;
-    }
-
-    if (!this.pendingSmartArticleType) {
-      return;
-    }
-
-    const wantedSection = this.pendingSmartArticleType === 'news' ? 0 : 1;
-    const category = this.categories.find(item => (item.section ?? 0) === wantedSection);
-    if (category) {
-      this.article.categoryIds = [category.id];
-      this.syncContentTypeFromCategories();
-    }
   }
 
   private shouldSaveDraftOnExit(): boolean {

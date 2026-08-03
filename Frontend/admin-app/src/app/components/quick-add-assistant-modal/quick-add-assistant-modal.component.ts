@@ -25,7 +25,7 @@ import { LanguageService } from '../../services/language.service';
 export type { QuickAddAction } from './quick-add-action.type';
 import type { QuickAddAction } from './quick-add-action.type';
 
-type AssistantStep = 'root' | 'content' | 'index' | 'artist' | 'podcast';
+type AssistantStep = 'root' | 'content' | 'index' | 'podcast';
 type AssistantMode = 'choices' | 'song' | 'article' | 'event' | 'podcast-series' | 'podcast-episode' | 'chord-request' | 'contact' | 'success';
 type MessageTone = 'question' | 'helper' | 'user';
 
@@ -1224,14 +1224,6 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
           ]
         };
       }
-      case 'artist':
-        return {
-          question: t('fab.artist_question'),
-          options: [
-            { id: 'artist-account', label: t('fab.opt_artist_account'), action: 'artist-account' },
-            { id: 'artist-community', label: t('fab.opt_artist_community'), action: 'artist-community' }
-          ]
-        };
       case 'podcast':
         return {
           question: t('fab.podcast_question'),
@@ -1257,7 +1249,6 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
           { id: 'event', label: t('fab.opt_event'), action: 'event' },
           { id: 'podcast', label: t('fab.opt_podcast'), nextStep: 'podcast' },
           { id: 'index', label: t('fab.opt_index'), nextStep: 'index' },
-          { id: 'artist', label: t('fab.opt_artist'), nextStep: 'artist' },
           { id: 'chord-request', label: t('fab.opt_chord_request'), action: 'chord-request', isSecondary: true },
           { id: 'contact-form', label: t('fab.opt_contact_form'), action: 'contact-form', isSecondary: true }
         );

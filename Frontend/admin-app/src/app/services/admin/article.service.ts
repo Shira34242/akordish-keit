@@ -301,6 +301,14 @@ export class ArticleService {
   }
 
   /**
+   * Save an unfinished article. The API enforces Draft status regardless of
+   * the status currently selected in the editor.
+   */
+  createDraftArticle(article: CreateArticleDto): Observable<Article> {
+    return this.http.post<Article>(`${this.apiUrl}/draft`, article);
+  }
+
+  /**
    * Submit article for approval (public user submission)
    */
   submitArticle(article: CreateArticleDto): Observable<Article> {

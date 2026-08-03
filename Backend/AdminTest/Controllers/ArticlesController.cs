@@ -237,6 +237,31 @@ public class ArticlesController : ControllerBase
         }
     }
 
+    // POST: api/Articles/draft - autosave from the admin editor
+    [HttpPost("draft")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<ArticleDto>> CreateArticleDraft([FromBody] CreateArticleDto dto)
+    {
+        try
+        {
+            // The editor may display Published as its default choice, but leaving
+            // without an explicit submit must never publish the article.
+            dto.Status = (int)ArticleStatus.Draft;
+            dto.ScheduledDate = null;
+
+            var article = await _articleService.CreateArticleAsync(dto, GetCurrentUserId());
+            InvalidatePublicArticleCaches();
+            _logger.LogInformation("Article draft autosaved (admin): ArticleId={ArticleId} Title={Title}",
+                article.Id, article.Title);
+            return CreatedAtAction(nameof(GetArticle), new { id = article.Id }, article);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning("Article draft autosave failed: {Error}", ex.Message);
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     // POST: api/Articles/submit - הגשת כתבה על-ידי משתמש רשום (ממתינה לאישור מנהל)
     [HttpPost("submit")]
     [Authorize]

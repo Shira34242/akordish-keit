@@ -23,6 +23,13 @@ export class NewsBannerComponent {
   @Input() imageLoading: 'eager' | 'lazy' = 'lazy';
   @Input() imageFetchPriority: 'high' | 'low' | 'auto' = 'auto';
 
+  get titleLengthClass(): string {
+    const length = this.article?.title?.trim().length ?? 0;
+    if (length > 70) return 'title-long';
+    if (length > 42) return 'title-medium';
+    return '';
+  }
+
   get articleRoute(): string {
     return this.routePrefix ?? getArticleRoute(this.article);
   }
