@@ -2415,54 +2415,20 @@ public class SongService : ISongService
             await CheckDailyLimitAsync(userId, ipAddress);
         }
 
-        // Check if this is a unique view (within last 24 hours)
-        var cutoffTime = DateTime.UtcNow.AddHours(-24);
-        bool isUniqueView = false;
-
-        if (userId.HasValue)
+        // Daily access limits remain based on distinct songs. Analytics, however,
+        // records every open so repeated views are visible alongside unique users.
+        _context.SongViews.Add(new SongView
         {
-            // For logged-in users: check by UserId
-            isUniqueView = !await _context.SongViews
-                .AnyAsync(sv => sv.SongId == id &&
-                               sv.UserId == userId &&
-                               sv.ViewedAt >= cutoffTime);
-        }
-        else if (!string.IsNullOrEmpty(ipAddress))
-        {
-            // For guest users: check by IP + UserAgent
-            isUniqueView = !await _context.SongViews
-                .AnyAsync(sv => sv.SongId == id &&
-                               sv.IpAddress == ipAddress &&
-                               sv.UserAgent == userAgent &&
-                               sv.ViewedAt >= cutoffTime);
-        }
-        else
-        {
-            // No tracking info available, count as unique
-            isUniqueView = true;
-        }
+            SongId = id,
+            UserId = userId,
+            IpAddress = ipAddress,
+            UserAgent = userAgent,
+            Referrer = referrer,
+            ViewedAt = DateTime.UtcNow
+        });
 
-        // Only increment if this is a unique view
-        if (isUniqueView)
-        {
-            // Record the view
-            var songView = new SongView
-            {
-                SongId = id,
-                UserId = userId,
-                IpAddress = ipAddress,
-                UserAgent = userAgent,
-                Referrer = referrer,
-                ViewedAt = DateTime.UtcNow
-            };
-
-            _context.SongViews.Add(songView);
-
-            // Increment the counter
-            song.ViewCount++;
-
-            await _context.SaveChangesAsync();
-        }
+        song.ViewCount++;
+        await _context.SaveChangesAsync();
 
         return song.ViewCount;
     }

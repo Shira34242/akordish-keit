@@ -641,7 +641,7 @@ public class ArticlesController : ControllerBase
             var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
 
             // Get User Agent
-            var userAgent = Request.Headers["User-Agent"].ToString();
+            var userAgent = AnalyticsIdentity.GetVisitorKey(Request);
 
             // Get Referrer
             var referrer = Request.Headers["Referer"].ToString();
@@ -709,6 +709,7 @@ public class ArticlesController : ControllerBase
 
     // GET: api/Articles/top-content (Admin)
     [HttpGet("top-content")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<List<ArticleRankDto>>> GetTopContent([FromQuery] int limit = 20)
     {
         var result = await _articleService.GetTopContentAsync(limit);

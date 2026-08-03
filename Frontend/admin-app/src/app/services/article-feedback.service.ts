@@ -20,6 +20,8 @@ export interface ArticleRank {
   featuredImageUrl?: string;
   contentType: number;
   viewCount: number;
+  uniqueVisitors: number;
+  totalViewCount: number;
   likeCount: number;
   feedbackYes: number;
   feedbackNo: number;

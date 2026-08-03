@@ -22,8 +22,10 @@ export interface AgencyAnalyticsSummary {
   period: { dateFrom: string; dateTo: string };
   totals: {
     pageViews: number;
+    uniqueVisitors: number;
     bannerClicks: number;
     contactClicks: number;
+    contactPanelOpens: number;
     profileClicks: number;
     contentClicks: number;
     totalInteractions: number;
@@ -33,8 +35,10 @@ export interface AgencyAnalyticsSummary {
     agencyName: string;
     agencySlug?: string;
     pageViews: number;
+    uniqueVisitors: number;
     bannerClicks: number;
     contactClicks: number;
+    contactPanelOpens: number;
     profileClicks: number;
     contentClicks: number;
     totalInteractions: number;
@@ -44,6 +48,7 @@ export interface AgencyAnalyticsSummary {
     itemId: number;
     itemLabel: string;
     count: number;
+    uniqueVisitors: number;
   }[];
 }
 

@@ -1201,54 +1201,20 @@ public class ArticleService : IArticleService
             throw new KeyNotFoundException("Article not found");
         }
 
-        // Check if this is a unique view (within last 24 hours)
-        var cutoffTime = DateTime.UtcNow.AddHours(-24);
-        bool isUniqueView = false;
-
-        if (userId.HasValue)
+        // Every real page open is a view. Unique visitors are calculated separately
+        // in analytics from UserId, or IP + User-Agent for guests.
+        _context.ArticleViews.Add(new ArticleView
         {
-            // For logged-in users: check by UserId
-            isUniqueView = !await _context.ArticleViews
-                .AnyAsync(av => av.ArticleId == id &&
-                               av.UserId == userId &&
-                               av.ViewedAt >= cutoffTime);
-        }
-        else if (!string.IsNullOrEmpty(ipAddress))
-        {
-            // For guest users: check by IP + UserAgent
-            isUniqueView = !await _context.ArticleViews
-                .AnyAsync(av => av.ArticleId == id &&
-                               av.IpAddress == ipAddress &&
-                               av.UserAgent == userAgent &&
-                               av.ViewedAt >= cutoffTime);
-        }
-        else
-        {
-            // No tracking info available, count as unique
-            isUniqueView = true;
-        }
+            ArticleId = id,
+            UserId = userId,
+            IpAddress = ipAddress,
+            UserAgent = userAgent,
+            Referrer = referrer,
+            ViewedAt = DateTime.UtcNow
+        });
 
-        // Only increment if this is a unique view
-        if (isUniqueView)
-        {
-            // Record the view
-            var articleView = new ArticleView
-            {
-                ArticleId = id,
-                UserId = userId,
-                IpAddress = ipAddress,
-                UserAgent = userAgent,
-                Referrer = referrer,
-                ViewedAt = DateTime.UtcNow
-            };
-
-            _context.ArticleViews.Add(articleView);
-
-            // Increment the counter
-            article.ViewCount++;
-
-            await _context.SaveChangesAsync();
-        }
+        article.ViewCount++;
+        await _context.SaveChangesAsync();
 
         return article.ViewCount;
     }

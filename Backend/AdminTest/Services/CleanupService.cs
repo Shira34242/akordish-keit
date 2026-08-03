@@ -11,7 +11,6 @@ public class CleanupService : BackgroundService
     private readonly ILogger<CleanupService> _logger;
     private readonly IServiceProvider _serviceProvider;
     private readonly TimeSpan _cleanupInterval = TimeSpan.FromHours(24); // Run once per day
-    private const int DAYS_TO_KEEP = 7; // Keep only last 7 days
 
     public CleanupService(
         ILogger<CleanupService> logger,
@@ -48,8 +47,8 @@ public class CleanupService : BackgroundService
                 // Wait until next run time
                 await Task.Delay(delay, stoppingToken);
 
-                // Perform cleanup
-                await CleanupOldViews(stoppingToken);
+                // Analytics history is intentionally retained. The admin analytics dashboard
+                // supports long date ranges, so view/click rows must never be removed here.
                 await CleanupExpiredSubscriptions(stoppingToken);
                 await CleanupOldNewsArticles(stoppingToken);
             }
@@ -79,83 +78,6 @@ public class CleanupService : BackgroundService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred during expired subscriptions cleanup.");
-        }
-    }
-
-    private async Task CleanupOldViews(CancellationToken stoppingToken)
-    {
-        using var scope = _serviceProvider.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<AkordishKeitDbContext>();
-
-        try
-        {
-            var cutoffDate = DateTime.UtcNow.AddDays(-DAYS_TO_KEEP);
-
-            _logger.LogInformation(
-                "Starting cleanup of views older than {CutoffDate} ({Days} days ago)",
-                cutoffDate,
-                DAYS_TO_KEEP);
-
-            // Delete old ArticleViews
-            var deletedArticleViewsCount = await context.ArticleViews
-                .Where(av => av.ViewedAt < cutoffDate)
-                .ExecuteDeleteAsync(stoppingToken);
-
-            _logger.LogInformation(
-                "Deleted {Count} old ArticleView records.",
-                deletedArticleViewsCount);
-
-            // Delete old SongViews
-            var deletedSongViewsCount = await context.SongViews
-                .Where(sv => sv.ViewedAt < cutoffDate)
-                .ExecuteDeleteAsync(stoppingToken);
-
-            _logger.LogInformation(
-                "Deleted {Count} old SongView records.",
-                deletedSongViewsCount);
-
-            // Delete old PodcastEpisodeViews
-            var deletedPodcastEpisodeViewsCount = await context.PodcastEpisodeViews
-                .Where(pv => pv.ViewedAt < cutoffDate)
-                .ExecuteDeleteAsync(stoppingToken);
-
-            _logger.LogInformation(
-                "Deleted {Count} old PodcastEpisodeView records.",
-                deletedPodcastEpisodeViewsCount);
-
-            // Delete old AdCampaignViews
-            var deletedAdViewsCount = await context.AdCampaignViews
-                .Where(av => av.ViewedAt < cutoffDate)
-                .ExecuteDeleteAsync(stoppingToken);
-
-            _logger.LogInformation(
-                "Deleted {Count} old AdCampaignView records.",
-                deletedAdViewsCount);
-
-            // Delete old AdCampaignClicks
-            var deletedAdClicksCount = await context.AdCampaignClicks
-                .Where(ac => ac.ClickedAt < cutoffDate)
-                .ExecuteDeleteAsync(stoppingToken);
-
-            _logger.LogInformation(
-                "Deleted {Count} old AdCampaignClick records.",
-                deletedAdClicksCount);
-
-            var totalDeleted = deletedArticleViewsCount + deletedSongViewsCount + deletedPodcastEpisodeViewsCount + deletedAdViewsCount + deletedAdClicksCount;
-
-            _logger.LogInformation(
-                "Cleanup completed. Total deleted: {Total} records ({Articles} ArticleViews + {Songs} SongViews + {PodcastEpisodes} PodcastEpisodeViews + {AdViews} AdCampaignViews + {AdClicks} AdCampaignClicks).",
-                totalDeleted,
-                deletedArticleViewsCount,
-                deletedSongViewsCount,
-                deletedPodcastEpisodeViewsCount,
-                deletedAdViewsCount,
-                deletedAdClicksCount);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error occurred during View cleanup.");
-            throw;
         }
     }
 

@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { EMPTY, forkJoin, of } from 'rxjs';
 import { catchError, expand, map, reduce } from 'rxjs/operators';
-import { AdminService, UserStats } from '../../../services/admin.service';
 import { AnalyticsService, AnalyticsDashboard } from '../../../services/analytics.service';
 import { ReportService } from '../../../services/report.service';
 import { Report } from '../../../models/report.model';
@@ -26,6 +25,16 @@ import { PodcastEpisode } from '../../../models/podcast.model';
 
 type PeriodKey = 'day' | 'week' | 'month';
 
+interface DashboardQueueItem {
+    id: string;
+    type: string;
+    title: string;
+    subtitle: string;
+    date: Date | string;
+    imageUrl?: string;
+    link: any[];
+}
+
 @Component({
     selector: 'app-admin-dashboard-placeholder',
     standalone: true,
@@ -39,7 +48,7 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
     selectedUserPeriod: PeriodKey = 'day';
     selectedAnalyticsPeriod: PeriodKey = 'day';
 
-    userStats: UserStats | null = null;
+    totalUsers = 0;
     recentUsers: UserListDto[] = [];
     dashboard: AnalyticsDashboard | null = null;
 
@@ -77,6 +86,144 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
                this.pendingSongsCount;
     }
 
+    get previousUserPeriodCount(): number {
+        const days = this.periodDays(this.selectedUserPeriod);
+        const currentStart = this.periodCutoff(this.selectedUserPeriod).getTime();
+        const previousStart = currentStart - days * 24 * 60 * 60 * 1000;
+        return this.recentUsers.filter(user => {
+            const created = new Date(user.createdAt).getTime();
+            return created >= previousStart && created < currentStart;
+        }).length;
+    }
+
+    get userComparisonPercent(): number {
+        if (!this.previousUserPeriodCount) return this.recentJoinCount ? 100 : 0;
+        return Math.round(((this.recentJoinCount - this.previousUserPeriodCount) / this.previousUserPeriodCount) * 100);
+    }
+
+    get userComparisonGaugeOffset(): number {
+        if (!this.recentJoinCount && !this.previousUserPeriodCount) return 251;
+        const relative = Math.min(100, (this.recentJoinCount / Math.max(1, this.previousUserPeriodCount)) * 100);
+        return 251 - (251 * relative / 100);
+    }
+
+    get currentUserPeriodLabel(): string {
+        return this.selectedUserPeriod === 'day' ? 'היום' : this.selectedUserPeriod === 'week' ? 'השבוע' : 'החודש';
+    }
+
+    get previousUserPeriodLabel(): string {
+        return this.selectedUserPeriod === 'day' ? 'אתמול' : this.selectedUserPeriod === 'week' ? 'שבוע שעבר' : 'חודש שעבר';
+    }
+
+    get userComparisonCaption(): string {
+        if (!this.recentJoinCount && !this.previousUserPeriodCount) return 'אין עדיין הצטרפויות בשתי התקופות';
+        if (this.userComparisonPercent === 0) return 'אותו מספר הצטרפויות כמו בתקופה הקודמת';
+        return `${Math.abs(this.userComparisonPercent)}% ${this.userComparisonPercent > 0 ? 'יותר' : 'פחות'} מהתקופה הקודמת`;
+    }
+
+    get approvalSegments(): { label: string; count: number; icon: string; link: string }[] {
+        return [
+            { label: 'מורים', count: this.pendingTeachersCount, icon: 'school', link: '/admin/users/teachers' },
+            { label: 'נותני שירות', count: this.pendingServiceProvidersCount, icon: 'business_center', link: '/admin/users/service-providers' },
+            { label: 'אמנים', count: this.pendingArtistsCount, icon: 'artist', link: '/admin/users/artists' }
+        ];
+    }
+
+    get contentQueue(): DashboardQueueItem[] {
+        return [
+            ...this.draftArticles.map(item => ({ id: `article-${item.id}`, type: 'כתבה', title: item.title, subtitle: 'טיוטת כתבה', date: this.contentDate(item), imageUrl: item.featuredImageUrl, link: ['/admin/content/articles/edit', item.id] })),
+            ...this.draftNews.map(item => ({ id: `news-${item.id}`, type: 'חדשות', title: item.title, subtitle: 'ידיעה לפני פרסום', date: this.contentDate(item), imageUrl: item.featuredImageUrl, link: ['/admin/content/articles/edit', item.id] })),
+            ...this.draftEvents.map(item => ({ id: `event-${item.id}`, type: 'הופעה', title: item.name, subtitle: item.location || 'אירוע לפני פרסום', date: this.contentDate(item), imageUrl: item.imageUrl, link: ['/admin/content/events/edit', item.id] })),
+            ...this.draftPodcastEpisodes.map(item => ({ id: `episode-${item.id}`, type: 'פודקאסט', title: item.title, subtitle: item.podcastName, date: this.contentDate(item), imageUrl: item.thumbnailUrl, link: ['/admin/content/podcasts/episodes/edit', item.id] })),
+            ...this.pendingSongs.map(item => ({ id: `song-${item.id}`, type: 'אקורד', title: item.title, subtitle: item.artists?.map(artist => artist.name).join(', ') || 'שיר לפני אישור', date: this.contentDate(item), imageUrl: item.imageUrl, link: ['/admin/content/songs'] }))
+        ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 10);
+    }
+
+    get trendPoints(): { x: number; y: number; clicksY: number; label: string; value: number }[] {
+        const trend = this.dashboard?.trend ?? [];
+        if (!trend.length) return [];
+        const totals = trend.map(point => point.articles + point.chords + point.events + point.podcasts + point.pages);
+        const maxValue = Math.max(1, ...totals, ...trend.map(point => point.clicks));
+        const width = 960;
+        return trend.map((point, index) => {
+            const x = 20 + (trend.length === 1 ? width / 2 : index * width / (trend.length - 1));
+            return {
+                x,
+                y: 210 - (totals[index] / maxValue) * 170,
+                clicksY: 210 - (point.clicks / maxValue) * 170,
+                label: this.fmtDate(point.date),
+                value: totals[index]
+            };
+        });
+    }
+
+    get trendLine(): string {
+        return this.trendPoints.map(point => `${point.x},${point.y}`).join(' ');
+    }
+
+    get clicksLine(): string {
+        return this.trendPoints.map(point => `${point.x},${point.clicksY}`).join(' ');
+    }
+
+    get trendArea(): string {
+        if (!this.trendPoints.length) return '';
+        return `20,210 ${this.trendLine} 980,210`;
+    }
+
+    get chartLabels(): { x: number; label: string }[] {
+        const points = this.trendPoints;
+        if (points.length <= 6) return points;
+        const step = Math.ceil(points.length / 6);
+        return points.filter((_, index) => index % step === 0 || index === points.length - 1);
+    }
+
+    get analyticsClickCount(): number {
+        const buttons = this.dashboard?.buttons;
+        return (buttons?.ticketClicks.last30Days ?? 0) +
+               (buttons?.contactClicks.last30Days ?? 0) +
+               (buttons?.notificationLinkClicks.last30Days ?? 0);
+    }
+
+    get popularContent(): { title: string; type: string; views: number; icon: string; link: any[] }[] {
+        const items = [
+            ...((this.dashboard?.chords.topSongs ?? []).map(item => ({ title: item.songTitle, type: 'אקורדים', views: item.views, icon: 'music_note', link: ['/admin/content/songs'] }))),
+            ...((this.dashboard?.events.topEvents ?? []).map(item => ({ title: item.eventName, type: 'הופעה', views: item.viewsLast30, icon: 'event', link: ['/admin/content/events'] }))),
+            ...((this.dashboard?.podcasts.topEpisodes ?? []).map(item => ({ title: item.episodeTitle, type: 'פודקאסט', views: item.views, icon: 'podcasts', link: ['/admin/content/podcasts/episodes/edit', item.episodeId] }))),
+            { title: 'כתבות ותוכן מגזין', type: 'כתבות', views: this.dashboard?.articles.viewsLast30Days ?? 0, icon: 'article', link: ['/admin/content/articles'] }
+        ];
+        return items.filter(item => item.views > 0).sort((a, b) => b.views - a.views).slice(0, 4);
+    }
+
+    get popularPeriodLabel(): string {
+        return this.selectedAnalyticsPeriod === 'day' ? 'ב־24 השעות האחרונות' : this.selectedAnalyticsPeriod === 'week' ? 'בשבוע האחרון' : 'בחודש האחרון';
+    }
+
+    get userJoinBuckets(): { label: string; count: number }[] {
+        const bucketCount = this.selectedUserPeriod === 'day' ? 12 : this.selectedUserPeriod === 'week' ? 7 : 10;
+        const start = this.periodCutoff(this.selectedUserPeriod).getTime();
+        const end = Date.now();
+        const bucketSize = (end - start) / bucketCount;
+        const buckets = Array.from({ length: bucketCount }, (_, index) => ({
+            label: this.selectedUserPeriod === 'day'
+                ? new Date(start + index * bucketSize).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
+                : new Date(start + index * bucketSize).toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit' }),
+            count: 0
+        }));
+
+        this.filteredRecentUsers.forEach(user => {
+            const created = new Date(user.createdAt).getTime();
+            const index = Math.min(bucketCount - 1, Math.max(0, Math.floor((created - start) / bucketSize)));
+            buckets[index].count++;
+        });
+
+        return buckets;
+    }
+
+    joinBarHeight(count: number): number {
+        const maxCount = Math.max(1, ...this.userJoinBuckets.map(bucket => bucket.count));
+        return count ? 16 + (count / maxCount) * 84 : 4;
+    }
+
     get periodOptions(): { key: PeriodKey; label: string }[] {
         return [
             { key: 'day', label: '24 שעות' },
@@ -93,6 +240,14 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
 
     get recentJoinCount(): number {
         return this.filteredRecentUsers.length;
+    }
+
+    get joinedLastDayCount(): number {
+        return this.usersSince(this.periodCutoff('day')).length;
+    }
+
+    get joinedLastWeekCount(): number {
+        return this.usersSince(this.periodCutoff('week')).length;
     }
 
     get displayedRecentUsers(): UserListDto[] {
@@ -132,7 +287,6 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
     }
 
     constructor(
-        private adminService: AdminService,
         private analyticsService: AnalyticsService,
         private reportService: ReportService,
         private userService: UserService,
@@ -154,7 +308,9 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
         const analyticsFrom = this.isoDate(this.periodCutoff(this.selectedAnalyticsPeriod));
         const analyticsTo = this.isoDate(new Date());
         forkJoin({
-            stats: this.adminService.getUserStats().pipe(catchError(() => of(null))),
+            usersTotal: this.userService
+                .getUsers(undefined, undefined, undefined, 1, 1, undefined, undefined, 'created_desc')
+                .pipe(catchError(() => of(null))),
             users: this.loadRecentUsersWindow().pipe(catchError(() => of([]))),
             dash: this.analyticsService.getDashboard(analyticsFrom, analyticsTo).pipe(catchError(() => of(null))),
             reports: this.reportService.getReports(1, 6, 'Pending').pipe(catchError(() => of(null))),
@@ -183,8 +339,8 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
             draftEpisodes: this.podcastService
                 .getEpisodes(1, 4, undefined, undefined, false, undefined, undefined, 'date')
                 .pipe(catchError(() => of(null)))
-        }).subscribe(({ stats, users, dash, reports, chordReqs, teachers, providers, artists, songs, draftArticles, draftNews, draftEvents, draftEpisodes }) => {
-            this.userStats = stats;
+        }).subscribe(({ usersTotal, users, dash, reports, chordReqs, teachers, providers, artists, songs, draftArticles, draftNews, draftEvents, draftEpisodes }) => {
+            this.totalUsers = usersTotal?.totalCount ?? 0;
             this.recentUsers = users as UserListDto[];
             this.dashboard = dash;
 
@@ -223,7 +379,8 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
     }
 
     private loadRecentUsersWindow() {
-        const cutoff = this.periodCutoff('month');
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - 60);
         const pageSize = 100;
 
         return this.userService.getUsers(undefined, undefined, undefined, 1, pageSize, undefined, undefined, 'created_desc').pipe(
@@ -283,9 +440,17 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
 
     private periodCutoff(period: PeriodKey): Date {
         const date = new Date();
-        const days = period === 'day' ? 1 : period === 'week' ? 7 : 30;
+        const days = this.periodDays(period);
         date.setDate(date.getDate() - days);
         return date;
+    }
+
+    private periodDays(period: PeriodKey): number {
+        return period === 'day' ? 1 : period === 'week' ? 7 : 30;
+    }
+
+    private usersSince(cutoff: Date): UserListDto[] {
+        return this.recentUsers.filter(user => new Date(user.createdAt).getTime() >= cutoff.getTime());
     }
 
     private isoDate(date: Date): string {
@@ -306,7 +471,7 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
         return map[t] ?? t;
     }
 
-    get userCount(): number { return this.userStats?.totalUsers ?? 0; }
+    get userCount(): number { return this.totalUsers; }
     get articlesViews30(): number { return this.dashboard?.articles?.viewsLast30Days ?? 0; }
     get activeCampaigns(): number { return this.dashboard?.ads?.activeCampaigns ?? 0; }
 }

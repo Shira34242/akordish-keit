@@ -69,6 +69,16 @@ builder.Services.AddMemoryCache();
 // Rate limiting — autocomplete: 40/min, songs endpoint: 60/min per IP
 builder.Services.AddRateLimiter(options =>
 {
+    options.AddPolicy("analytics-tracking", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 240,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            }));
     options.AddFixedWindowLimiter("autocomplete", limiterOptions =>
     {
         limiterOptions.PermitLimit = 40;

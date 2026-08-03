@@ -872,7 +872,7 @@ public class SongsController : ControllerBase
             }
 
             var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-            var userAgent = Request.Headers["User-Agent"].ToString();
+            var userAgent = AkordishKeit.Utilities.AnalyticsIdentity.GetVisitorKey(Request);
             var referrer = Request.Headers["Referer"].ToString();
 
             var viewCount = await _songService.IncrementViewCountAsync(id, userId, ipAddress, userAgent, referrer);

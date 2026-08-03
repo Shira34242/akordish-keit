@@ -581,7 +581,7 @@ namespace AkordishKeit.Controllers
             return (
                 userId,
                 HttpContext.Connection.RemoteIpAddress?.ToString(),
-                Request.Headers["User-Agent"].ToString(),
+                AkordishKeit.Utilities.AnalyticsIdentity.GetVisitorKey(Request),
                 Request.Headers["Referer"].ToString()
             );
         }

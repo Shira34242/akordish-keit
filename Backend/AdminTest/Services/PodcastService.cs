@@ -494,31 +494,6 @@ namespace AkordishKeit.Services
 
         private async Task TrackEpisodeViewAsync(PodcastEpisode episode, int? userId, string? ipAddress, string? userAgent, string? referrer)
         {
-            var cutoffTime = DateTime.UtcNow.AddHours(-24);
-            bool isUniqueView;
-
-            if (userId.HasValue)
-            {
-                isUniqueView = !await _context.PodcastEpisodeViews
-                    .AnyAsync(v => v.PodcastEpisodeId == episode.Id
-                        && v.UserId == userId
-                        && v.ViewedAt >= cutoffTime);
-            }
-            else if (!string.IsNullOrEmpty(ipAddress))
-            {
-                isUniqueView = !await _context.PodcastEpisodeViews
-                    .AnyAsync(v => v.PodcastEpisodeId == episode.Id
-                        && v.IpAddress == ipAddress
-                        && v.UserAgent == userAgent
-                        && v.ViewedAt >= cutoffTime);
-            }
-            else
-            {
-                isUniqueView = true;
-            }
-
-            if (!isUniqueView) return;
-
             _context.PodcastEpisodeViews.Add(new PodcastEpisodeView
             {
                 PodcastEpisodeId = episode.Id,

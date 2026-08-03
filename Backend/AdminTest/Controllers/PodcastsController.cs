@@ -120,7 +120,7 @@ namespace AkordishKeit.Controllers
                 episodeSlug,
                 userId: userId,
                 ipAddress: HttpContext.Connection.RemoteIpAddress?.ToString(),
-                userAgent: Request.Headers["User-Agent"].ToString(),
+                userAgent: AkordishKeit.Utilities.AnalyticsIdentity.GetVisitorKey(Request),
                 referrer: Request.Headers["Referer"].ToString());
             return episode == null ? NotFound(new { message = "הפרק לא נמצא" }) : Ok(episode);
         }

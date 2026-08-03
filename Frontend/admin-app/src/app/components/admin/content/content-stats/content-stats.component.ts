@@ -2,12 +2,12 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ArticleFeedbackService, ArticleRank } from '../../../../services/article-feedback.service';
+import { ArticleRank } from '../../../../services/article-feedback.service';
 import { AgencyAnalyticsSummary, AgencyService } from '../../../../services/agency.service';
 import { AnalyticsDashboard, AnalyticsService } from '../../../../services/analytics.service';
 import { getArticleLink } from '../../../../utils/article-route.utils';
 
-type Tab = 'overview' | 'articles' | 'chords' | 'events' | 'podcasts' | 'buttons' | 'ads' | 'adblock' | 'agencies';
+type Tab = 'overview' | 'traffic' | 'articles' | 'chords' | 'events' | 'podcasts' | 'buttons' | 'ads' | 'adblock' | 'agencies';
 type Preset = 'today' | 'yesterday' | '7' | '30' | '90' | '365' | 'ytd' | 'all';
 
 @Component({
@@ -19,14 +19,13 @@ type Preset = 'today' | 'yesterday' | '7' | '30' | '90' | '365' | 'ytd' | 'all';
 })
 export class ContentStatsComponent implements OnInit {
   readonly math = Math;
-  private readonly feedbackService = inject(ArticleFeedbackService);
   private readonly analytics = inject(AnalyticsService);
   private readonly agencyService = inject(AgencyService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
   activeTab: Tab = 'overview';
-  selectedMetric: 'all' | 'articles' | 'chords' | 'events' | 'podcasts' | 'clicks' = 'all';
+  selectedMetric: 'all' | 'pages' | 'articles' | 'chords' | 'events' | 'podcasts' | 'clicks' = 'all';
   articles: ArticleRank[] = [];
   articleSearch = '';
   articleTypeFilter: 'all' | 'news' | 'blog' = 'all';
@@ -43,6 +42,7 @@ export class ContentStatsComponent implements OnInit {
 
   readonly tabs: { key: Tab; label: string; icon: string }[] = [
     { key: 'overview', label: 'סקירה', icon: 'dashboard' },
+    { key: 'traffic', label: 'תנועה באתר', icon: 'language' },
     { key: 'articles', label: 'כתבות', icon: 'article' },
     { key: 'chords', label: 'אקורדים', icon: 'music_note' },
     { key: 'events', label: 'הופעות', icon: 'event' },
@@ -94,7 +94,7 @@ export class ContentStatsComponent implements OnInit {
     } else if (days === 'all') {
       from.setFullYear(2000, 0, 1);
     } else {
-      from.setDate(today.getDate() - Number(days));
+      from.setDate(today.getDate() - (Number(days) - 1));
     }
 
     this.dateTo = this.toDateInput(to);
@@ -113,7 +113,7 @@ export class ContentStatsComponent implements OnInit {
     if (tab === 'agencies') this.loadAgencyAnalytics();
   }
 
-  setMetric(metric: 'all' | 'articles' | 'chords' | 'events' | 'podcasts' | 'clicks'): void {
+  setMetric(metric: 'all' | 'pages' | 'articles' | 'chords' | 'events' | 'podcasts' | 'clicks'): void {
     this.selectedMetric = metric;
   }
 
@@ -141,8 +141,8 @@ export class ContentStatsComponent implements OnInit {
 
   loadArticles(): void {
     this.articleLoading = true;
-    this.feedbackService.getTopContent(30).subscribe({
-      next: data => { this.articles = data; this.sortArticles(); this.articleLoading = false; },
+    this.analytics.getArticleRanking(this.dateFrom, this.dateTo, this.sortBy).subscribe({
+      next: data => { this.articles = data; this.articleLoading = false; },
       error: () => { this.articles = []; this.articleLoading = false; }
     });
   }
@@ -157,22 +157,14 @@ export class ContentStatsComponent implements OnInit {
 
   setSort(by: 'views' | 'likes' | 'feedback'): void {
     this.sortBy = by;
-    this.sortArticles();
-  }
-
-  private sortArticles(): void {
-    this.articles = [...this.articles].sort((a, b) => {
-      if (this.sortBy === 'likes') return b.likeCount - a.likeCount;
-      if (this.sortBy === 'feedback') return b.feedbackTotal - a.feedbackTotal;
-      return b.viewCount - a.viewCount;
-    });
+    this.loadArticles();
   }
 
   navigateToArticle(article: ArticleRank): void { this.router.navigate(getArticleLink(article as any)); }
 
   get adsCtr(): number {
     const ads = this.dashboard?.ads;
-    return ads && ads.totalViews > 0 ? Math.round(ads.totalClicks / ads.totalViews * 1000) / 10 : 0;
+    return ads && ads.totalViews > 0 ? Math.round(ads.totalClicks / ads.totalViews * 10000) / 100 : 0;
   }
 
   get adBlockRate(): number { return this.dashboard?.adBlock.detectionRate ?? 0; }
@@ -183,10 +175,10 @@ export class ContentStatsComponent implements OnInit {
   }
 
   get trackedVisits(): number {
-    const d = this.dashboard;
-    return d ? d.articles.viewsLast30Days + d.chords.viewsLast30Days
-      + d.events.listPageViews.last30Days + d.podcasts.viewsLast30Days : 0;
+    return this.dashboard?.traffic.views ?? 0;
   }
+
+  get uniqueVisitors(): number { return this.dashboard?.traffic.uniqueVisitors ?? 0; }
 
   get totalClicks(): number {
     const b = this.dashboard?.buttons;
@@ -212,6 +204,41 @@ export class ContentStatsComponent implements OnInit {
     return comparison ? this.percentChange(comparison.current, comparison.previous) : 0;
   }
 
+  get trafficChange(): number {
+    const traffic = this.dashboard?.traffic;
+    return traffic ? this.percentChange(traffic.views, traffic.previousViews) : 0;
+  }
+
+  get averageViewsPerVisitor(): number {
+    const traffic = this.dashboard?.traffic;
+    return traffic?.uniqueVisitors ? Math.round(traffic.views / traffic.uniqueVisitors * 10) / 10 : 0;
+  }
+
+  get deviceItems(): { key: 'desktop' | 'tablet' | 'mobile'; label: string; icon: string; users: number; views: number; share: number }[] {
+    const devices = this.dashboard?.traffic.devices;
+    const total = devices ? devices.desktop.uniqueVisitors + devices.tablet.uniqueVisitors + devices.mobile.uniqueVisitors : 0;
+    const item = (key: 'desktop' | 'tablet' | 'mobile', label: string, icon: string) => ({
+      key,
+      label,
+      icon,
+      users: devices?.[key].uniqueVisitors ?? 0,
+      views: devices?.[key].views ?? 0,
+      share: total ? Math.round((devices?.[key].uniqueVisitors ?? 0) / total * 100) : 0
+    });
+    return [item('desktop', 'מחשב', 'desktop_windows'), item('mobile', 'מובייל', 'smartphone'), item('tablet', 'טאבלט', 'tablet_mac')];
+  }
+
+  get deviceDonutStyle(): string {
+    const [desktop, mobile] = this.deviceItems;
+    const desktopEnd = desktop.share;
+    const mobileEnd = desktop.share + mobile.share;
+    return `conic-gradient(#000 0 ${desktopEnd}%, #ddff53 ${desktopEnd}% ${mobileEnd}%, #b9b9b9 ${mobileEnd}% 100%)`;
+  }
+
+  trendBarHeight(point: { articles: number; chords: number; events: number; clicks: number; podcasts: number; pages: number }): number {
+    return Math.max(3, Math.round(this.trendValue(point) / this.trendMax * 100));
+  }
+
   get primaryInsight(): string {
     if (!this.dashboard) return '';
     if (this.contentChange > 5) return `צפיות התוכן בעלייה של ${this.contentChange}% לעומת התקופה הקודמת.`;
@@ -232,7 +259,8 @@ export class ContentStatsComponent implements OnInit {
     }).join(' ');
   }
 
-  trendValue(point: { articles: number; chords: number; events: number; clicks: number; podcasts: number }): number {
+  trendValue(point: { articles: number; chords: number; events: number; clicks: number; podcasts: number; pages: number }): number {
+    if (this.selectedMetric === 'pages') return point.pages;
     if (this.selectedMetric === 'articles') return point.articles;
     if (this.selectedMetric === 'chords') return point.chords;
     if (this.selectedMetric === 'events') return point.events;
@@ -242,7 +270,7 @@ export class ContentStatsComponent implements OnInit {
   }
 
   get trendLabel(): string {
-    return ({ all: 'כל צפיות התוכן', articles: 'צפיות כתבות', chords: 'צפיות אקורדים', events: 'צפיות הופעות', podcasts: 'צפיות פודקאסטים', clicks: 'פעולות וקליקים' } as any)[this.selectedMetric];
+    return ({ all: 'כל צפיות התוכן', pages: 'צפיות באתר', articles: 'צפיות כתבות', chords: 'צפיות אקורדים', events: 'צפיות הופעות', podcasts: 'צפיות פודקאסטים', clicks: 'פעולות וקליקים' } as any)[this.selectedMetric];
   }
 
   get periodLabel(): string {

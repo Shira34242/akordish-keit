@@ -1,78 +1,161 @@
-<div class="analytics-shell" dir="rtl">
-  <section class="filter-bar">
-    <div class="filter-heading"><span class="material-icons">date_range</span><div><strong>טווח נתונים</strong><small>{{ periodLabel }}</small></div></div>
-    <div class="preset-group" aria-label="בחירת טווח"><button *ngFor="let option of rangeOptions" [class.active]="activePreset === option.key" (click)="applyPreset(option.key)">{{ option.label }}</button></div>
+<section class="analytics-page" dir="rtl">
+  <header class="analytics-header">
+    <div>
+      <span class="eyebrow">מרכז נתונים</span>
+      <h1>אנליטיקס</h1>
+      <p>תמונה מדויקת של תנועה, תוכן ופעולות באתר</p>
+    </div>
+    <div class="date-summary">
+      <span class="material-symbols-outlined">calendar_month</span>
+      <div><small>טווח פעיל</small><strong>{{ periodLabel }}</strong></div>
+    </div>
+  </header>
+
+  <section class="filter-panel">
+    <div class="preset-group" aria-label="בחירת טווח">
+      <button *ngFor="let option of rangeOptions" type="button" [class.active]="activePreset === option.key" (click)="applyPreset(option.key)">{{ option.label }}</button>
+    </div>
     <div class="custom-range">
-      <label>מ־<input type="date" [(ngModel)]="dateFrom"></label>
-      <label>עד־<input type="date" [(ngModel)]="dateTo"></label>
-      <button class="apply-button" (click)="applyCustomRange()">החל</button>
+      <label><span>מ־</span><input type="date" [(ngModel)]="dateFrom"></label>
+      <label><span>עד־</span><input type="date" [(ngModel)]="dateTo"></label>
+      <button type="button" class="primary-button" (click)="applyCustomRange()">החל טווח</button>
     </div>
   </section>
 
   <nav class="analytics-tabs" aria-label="סוגי אנליטיקס">
-    <button *ngFor="let tab of tabs" [class.active]="activeTab === tab.key" (click)="setTab(tab.key)">
-      <span class="material-icons">{{ tab.icon }}</span><span>{{ tab.label }}</span>
+    <button *ngFor="let tab of tabs" type="button" [class.active]="activeTab === tab.key" (click)="setTab(tab.key)">
+      <span class="material-symbols-outlined">{{ tab.icon }}</span><span>{{ tab.label }}</span>
     </button>
   </nav>
 
   <div *ngIf="loading && !dashboard" class="state-card"><span class="spinner"></span><p>טוען את נתוני האנליטיקס...</p></div>
-  <div *ngIf="error" class="state-card error"><span class="material-icons">error_outline</span><p>לא הצלחנו לטעון את הנתונים. נסה לרענן.</p><button (click)="loadAll()">נסה שוב</button></div>
+  <div *ngIf="error" class="state-card error"><span class="material-symbols-outlined">error</span><p>לא הצלחנו לטעון את הנתונים.</p><button type="button" (click)="loadAll()">נסה שוב</button></div>
 
-  <ng-container *ngIf="dashboard && !error">
+  <div *ngIf="dashboard && (!dashboard.traffic || !dashboard.dataQuality) && !error" class="state-card">
+    <span class="spinner"></span><p>מעדכן את מבנה נתוני האנליטיקס...</p>
+  </div>
+
+  <ng-container *ngIf="dashboard && dashboard.traffic && dashboard.dataQuality && !error">
+    <aside *ngIf="dashboard.dataQuality.isHistoricalDataPartial" class="quality-note">
+      <span class="material-symbols-outlined">info</span>
+      <p><strong>שקיפות נתונים</strong>{{ dashboard.dataQuality.note }}</p>
+    </aside>
+
     <ng-container *ngIf="activeTab === 'overview'">
       <section class="kpi-grid">
-        <article class="kpi-card featured"><div class="kpi-top"><span>צפיות תוכן</span><span class="kpi-icon"><span class="material-icons">visibility</span></span></div><strong>{{ totalViews | number }}</strong><small>{{ periodLabel }} · כתבות, אקורדים והופעות</small><div class="kpi-accent-line"></div></article>
-        <article class="kpi-card"><div class="kpi-top"><span>צפיות כתבות</span><span class="kpi-icon"><span class="material-icons">article</span></span></div><strong>{{ dashboard.articles.viewsLast30Days | number }}</strong><small>מתוך {{ dashboard.articles.totalViews | number }} צפיות מצטברות</small></article>
-        <article class="kpi-card"><div class="kpi-top"><span>צפיות מתועדות</span><span class="kpi-icon"><span class="material-icons">login</span></span></div><strong>{{ trackedVisits | number }}</strong><small>תוכן, פודקאסטים והופעות · {{ periodLabel }}</small></article>
-        <article class="kpi-card"><div class="kpi-top"><span>פעולות וקליקים</span><span class="kpi-icon"><span class="material-icons">ads_click</span></span></div><strong>{{ totalClicks | number }}</strong><small>כרטיסים, יצירת קשר והתראות</small><span class="change-chip" [class.negative]="clicksChange < 0">{{ clicksChange >= 0 ? '+' : '' }}{{ clicksChange }}% מול תקופה קודמת</span></article>
-        <article class="kpi-card"><div class="kpi-top"><span>CTR פרסום</span><span class="kpi-icon"><span class="material-icons">campaign</span></span></div><strong>{{ adsCtr }}%</strong><small>{{ dashboard.ads.totalClicks | number }} קליקים · {{ dashboard.ads.totalViews | number }} חשיפות</small></article>
-      </section>
-
-      <section class="dashboard-grid">
-        <article class="panel trend-panel">
-          <div class="panel-heading"><div><span class="panel-kicker">מגמה לאורך זמן</span><h2>{{ trendLabel }}</h2></div><span class="period-chip">{{ periodLabel }}</span></div>
-          <div class="metric-switcher">
-            <button [class.active]="selectedMetric === 'all'" (click)="setMetric('all')">הכול</button><button [class.active]="selectedMetric === 'articles'" (click)="setMetric('articles')">כתבות</button><button [class.active]="selectedMetric === 'chords'" (click)="setMetric('chords')">אקורדים</button><button [class.active]="selectedMetric === 'events'" (click)="setMetric('events')">הופעות</button><button [class.active]="selectedMetric === 'podcasts'" (click)="setMetric('podcasts')">פודקאסטים</button><button [class.active]="selectedMetric === 'clicks'" (click)="setMetric('clicks')">קליקים</button>
-          </div>
-          <div class="chart-wrap" *ngIf="dashboard.trend.length; else noTrend">
-            <svg class="line-chart" viewBox="0 0 720 240" preserveAspectRatio="none" role="img" aria-label="גרף מגמה">
-              <line x1="0" y1="45" x2="720" y2="45" class="chart-gridline"/><line x1="0" y1="110" x2="720" y2="110" class="chart-gridline"/><line x1="0" y1="175" x2="720" y2="175" class="chart-gridline"/>
-              <polyline [attr.points]="trendPoints" class="chart-line"></polyline>
-              <polyline [attr.points]="'0,220 ' + trendPoints + ' 720,220'" class="chart-area"></polyline>
-            </svg>
-            <div class="chart-labels"><span>{{ formatShortDate(dashboard.trend[0].date) }}</span><span>{{ formatShortDate(dashboard.trend[trendMiddleIndex].date) }}</span><span>{{ formatShortDate(dashboard.trend[dashboard.trend.length - 1].date) }}</span></div>
-          </div>
-          <ng-template #noTrend><div class="empty-inline">אין מספיק נתונים להצגת מגמה</div></ng-template>
+        <article class="kpi-card">
+          <div class="kpi-heading"><span>משתמשים ייחודיים</span><span class="material-symbols-outlined">group</span></div>
+          <div class="kpi-value"><strong>{{ uniqueVisitors | number }}</strong><span class="trend-chip" [class.negative]="trafficChange < 0">{{ trafficChange >= 0 ? '+' : '' }}{{ trafficChange }}%</span></div>
+          <small>כל גולש נספר פעם אחת בטווח</small>
         </article>
-
-        <article class="panel activity-panel"><div class="panel-heading"><div><span class="panel-kicker">פעילות מרכזית</span><h2>מה קורה עכשיו?</h2></div><span class="more-dots">•••</span></div><div class="activity-list"><div class="activity-row"><span class="activity-marker blue"></span><div><strong>אקורדים</strong><small>{{ dashboard.chords.viewsLast30Days | number }} צפיות בתקופה</small></div><b>{{ dashboard.chords.topSongs.length }}</b></div><div class="activity-row"><span class="activity-marker lime"></span><div><strong>הופעות</strong><small>{{ dashboard.events.topEvents.length }} הופעות מובילות</small></div><b>{{ dashboard.events.listPageViews.last30Days | number }}</b></div><div class="activity-row"><span class="activity-marker orange"></span><div><strong>פודקאסטים</strong><small>{{ dashboard.podcasts.viewsLast30Days | number }} צפיות בתקופה</small></div><b>{{ dashboard.podcasts.topEpisodes.length }}</b></div></div><button class="text-link" (click)="setTab('podcasts')">לכל הפעילות <span class="material-icons">arrow_back</span></button></article>
-
-        <article class="panel ranking-panel"><div class="panel-heading"><div><span class="panel-kicker">תוכן מוביל</span><h2>הכתבות הנצפות ביותר</h2></div><button class="text-link" (click)="setTab('articles')">הכול</button></div><div class="ranking-list" *ngIf="articles.length; else noArticles"><div class="ranking-row" *ngFor="let article of articles | slice:0:5; let i = index" (click)="navigateToArticle(article)"><span class="rank-number">{{ i + 1 }}</span><div class="rank-copy"><strong>{{ article.title }}</strong><small>{{ getContentTypeLabel(article.contentType) }} · {{ article.likeCount | number }} לייקים</small></div><b>{{ article.viewCount | number }}</b></div></div><ng-template #noArticles><div class="empty-inline">אין נתוני כתבות להצגה</div></ng-template></article>
-
-        <article class="panel distribution-panel"><div class="panel-heading"><div><span class="panel-kicker">חלוקת תשומת לב</span><h2>תוכן לפי קטגוריה</h2></div></div><div class="distribution"><div class="distribution-row"><div><span class="legend-dot lime"></span><span>כתבות</span><b>{{ dashboard.articles.viewsLast30Days | number }}</b></div><div class="progress"><span class="lime-fill" [style.width.%]="totalViews ? dashboard.articles.viewsLast30Days / totalViews * 100 : 0"></span></div></div><div class="distribution-row"><div><span class="legend-dot blue"></span><span>אקורדים</span><b>{{ dashboard.chords.viewsLast30Days | number }}</b></div><div class="progress"><span class="blue-fill" [style.width.%]="totalViews ? dashboard.chords.viewsLast30Days / totalViews * 100 : 0"></span></div></div><div class="distribution-row"><div><span class="legend-dot orange"></span><span>הופעות</span><b>{{ dashboard.events.listPageViews.last30Days | number }}</b></div><div class="progress"><span class="orange-fill" [style.width.%]="totalViews ? dashboard.events.listPageViews.last30Days / totalViews * 100 : 0"></span></div></div><div class="distribution-row"><div><span class="legend-dot purple"></span><span>פודקאסטים</span><b>{{ dashboard.podcasts.viewsLast30Days | number }}</b></div><div class="progress"><span class="purple-fill" [style.width.%]="totalViews ? dashboard.podcasts.viewsLast30Days / totalViews * 100 : 0"></span></div></div></div></article>
-        <article class="panel insight-panel"><div class="panel-heading"><div><span class="panel-kicker">תובנה אוטומטית</span><h2>מה כדאי לדעת?</h2></div><span class="material-icons insight-icon">lightbulb</span></div><p class="insight-copy">{{ primaryInsight }}</p><div class="insight-change"><span>צפיות תוכן מול תקופה קודמת</span><strong [class.negative]="contentChange < 0">{{ contentChange >= 0 ? '+' : '' }}{{ contentChange }}%</strong></div></article>
+        <article class="kpi-card featured">
+          <div class="kpi-heading"><span>צפיות בדפים</span><span class="material-symbols-outlined">visibility</span></div>
+          <div class="kpi-value"><strong>{{ trackedVisits | number }}</strong><span>{{ averageViewsPerVisitor }} לגולש</span></div>
+          <small>כולל פתיחות חוזרות של אותו דף</small>
+        </article>
+        <article class="kpi-card">
+          <div class="kpi-heading"><span>צפיות תוכן</span><span class="material-symbols-outlined">article</span></div>
+          <div class="kpi-value"><strong>{{ totalViews | number }}</strong><span>{{ dashboard.contentUniqueVisitors | number }} ייחודיים</span></div>
+          <small>כתבות, אקורדים, הופעות ופודקאסטים</small>
+        </article>
+        <article class="kpi-card">
+          <div class="kpi-heading"><span>פעולות וקליקים</span><span class="material-symbols-outlined">ads_click</span></div>
+          <div class="kpi-value"><strong>{{ totalClicks | number }}</strong><span class="trend-chip" [class.negative]="clicksChange < 0">{{ clicksChange >= 0 ? '+' : '' }}{{ clicksChange }}%</span></div>
+          <small>{{ dashboard.buttons.uniqueVisitors | number }} משתמשים ביצעו פעולה</small>
+        </article>
       </section>
+
+      <section class="panel analytics-chart-panel">
+        <div class="panel-heading">
+          <div><span class="eyebrow">מגמה לאורך זמן</span><h2>{{ trendLabel }}</h2><p>{{ periodLabel }} · {{ dashboard.period.trendGranularity === 'month' ? 'חלוקה חודשית' : 'חלוקה יומית' }}</p></div>
+          <div class="segmented-control">
+            <button type="button" [class.active]="selectedMetric === 'all'" (click)="setMetric('all')">תוכן</button>
+            <button type="button" [class.active]="selectedMetric === 'pages'" (click)="setMetric('pages')">אתר</button>
+            <button type="button" [class.active]="selectedMetric === 'articles'" (click)="setMetric('articles')">כתבות</button>
+            <button type="button" [class.active]="selectedMetric === 'chords'" (click)="setMetric('chords')">אקורדים</button>
+            <button type="button" [class.active]="selectedMetric === 'podcasts'" (click)="setMetric('podcasts')">פודקאסטים</button>
+            <button type="button" [class.active]="selectedMetric === 'clicks'" (click)="setMetric('clicks')">קליקים</button>
+          </div>
+        </div>
+        <div class="bar-chart" *ngIf="dashboard.trend.length; else noTrend">
+          <div class="bar-column" *ngFor="let point of dashboard.trend; let first = first; let last = last" [title]="formatShortDate(point.date) + ' · ' + trendValue(point)">
+            <span class="bar-value">{{ trendValue(point) | number }}</span>
+            <i [style.height.%]="trendBarHeight(point)"></i>
+            <small *ngIf="first || last || dashboard.trend.length <= 12">{{ formatShortDate(point.date) }}</small>
+          </div>
+        </div>
+        <ng-template #noTrend><div class="empty-inline">אין עדיין נתונים להצגת מגמה</div></ng-template>
+      </section>
+
+      <div class="insights-grid">
+        <section class="panel device-panel">
+          <div class="panel-heading"><div><span class="eyebrow">סוג מכשיר</span><h2>גולשים לפי מכשיר</h2><p>משתמשים ייחודיים בתקופה</p></div><span class="material-symbols-outlined heading-menu">more_vert</span></div>
+          <div class="device-content">
+            <div class="device-donut" [style.background]="deviceDonutStyle"><div><strong>{{ uniqueVisitors | number }}</strong><small>גולשים</small></div></div>
+            <div class="device-list">
+              <div *ngFor="let device of deviceItems" class="device-row" [ngClass]="device.key">
+                <span class="device-icon material-symbols-outlined">{{ device.icon }}</span>
+                <span><strong>{{ device.label }}</strong><small>{{ device.views | number }} צפיות</small></span>
+                <b>{{ device.users | number }}</b><em>{{ device.share }}%</em>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel top-pages-panel">
+          <div class="panel-heading"><div><span class="eyebrow">עמודים מובילים</span><h2>הכי נצפים באתר</h2><p>צפיות לעומת גולשים ייחודיים</p></div><button type="button" class="text-button" (click)="setTab('traffic')">הצג הכול</button></div>
+          <div class="compact-list">
+            <div *ngFor="let page of dashboard.traffic.topPages | slice:0:5; let i = index" class="compact-row">
+              <span class="row-rank">0{{ i + 1 }}</span><span><strong>{{ page.pagePath }}</strong><small>{{ page.uniqueVisitors | number }} גולשים</small></span><b>{{ page.views | number }}</b>
+            </div>
+            <div *ngIf="!dashboard.traffic.topPages.length" class="empty-inline compact-empty">נתוני הדפים יופיעו לאחר כניסות חדשות</div>
+          </div>
+        </section>
+
+        <section class="panel content-share-panel">
+          <div class="panel-heading"><div><span class="eyebrow">חלוקת תשומת לב</span><h2>צפיות לפי סוג תוכן</h2><p>{{ totalViews | number }} צפיות תוכן</p></div></div>
+          <div class="share-list">
+            <div><span><i class="dot black"></i>כתבות</span><b>{{ dashboard.articles.viewsLast30Days | number }}</b><progress [value]="dashboard.articles.viewsLast30Days" [max]="totalViews || 1"></progress></div>
+            <div><span><i class="dot lime"></i>אקורדים</span><b>{{ dashboard.chords.viewsLast30Days | number }}</b><progress [value]="dashboard.chords.viewsLast30Days" [max]="totalViews || 1"></progress></div>
+            <div><span><i class="dot gray"></i>הופעות</span><b>{{ dashboard.events.listPageViews.last30Days | number }}</b><progress [value]="dashboard.events.listPageViews.last30Days" [max]="totalViews || 1"></progress></div>
+            <div><span><i class="dot dark-gray"></i>פודקאסטים</span><b>{{ dashboard.podcasts.viewsLast30Days | number }}</b><progress [value]="dashboard.podcasts.viewsLast30Days" [max]="totalViews || 1"></progress></div>
+          </div>
+        </section>
+
+        <section class="panel top-content-panel">
+          <div class="panel-heading"><div><span class="eyebrow">תוכן מוביל</span><h2>הכתבות הנצפות ביותר</h2><p>לפי הטווח שנבחר</p></div><button type="button" class="text-button" (click)="setTab('articles')">לדוח המלא</button></div>
+          <div class="compact-list">
+            <div *ngFor="let article of articles | slice:0:5; let i = index" class="compact-row clickable" (click)="navigateToArticle(article)">
+              <span class="row-rank">0{{ i + 1 }}</span><span><strong>{{ article.title }}</strong><small>{{ article.uniqueVisitors | number }} גולשים ייחודיים</small></span><b>{{ article.viewCount | number }}</b>
+            </div>
+          </div>
+        </section>
+      </div>
     </ng-container>
 
-    <ng-container *ngIf="activeTab !== 'overview' && activeTab !== 'agencies'">
-      <section class="detail-hero"><div><span class="panel-kicker">{{ activeTabDefinition.label }}</span><h2>{{ activeTabDefinition.label }} · ביצועים</h2><p>פירוט ממוקד לפי {{ periodLabel }}</p></div><span class="detail-icon material-icons">{{ activeTabDefinition.icon }}</span></section>
-      <div class="detail-kpis" [ngSwitch]="activeTab"><div class="mini-stat" *ngSwitchCase="'chords'"><small>צפיות בתקופה</small><strong>{{ dashboard.chords.viewsLast30Days | number }}</strong></div><div class="mini-stat" *ngSwitchCase="'events'"><small>צפיות בדף</small><strong>{{ dashboard.events.listPageViews.last30Days | number }}</strong></div><div class="mini-stat" *ngSwitchCase="'podcasts'"><small>צפיות פרקים</small><strong>{{ dashboard.podcasts.viewsLast30Days | number }}</strong></div><div class="mini-stat" *ngSwitchCase="'buttons'"><small>כל הקליקים</small><strong>{{ totalClicks | number }}</strong></div><div class="mini-stat" *ngSwitchCase="'ads'"><small>CTR</small><strong>{{ adsCtr }}%</strong></div><div class="mini-stat" *ngSwitchCase="'adblock'"><small>שיעור חסימה</small><strong>{{ adBlockRate }}%</strong></div></div>
+    <ng-container *ngIf="activeTab !== 'overview'">
+      <section class="detail-header panel">
+        <div><span class="eyebrow">{{ activeTabDefinition.label }}</span><h2>{{ activeTabDefinition.label }} · {{ periodLabel }}</h2><p>צפיות כוללות ומשתמשים ייחודיים מוצגים בנפרד</p></div>
+        <span class="detail-icon material-symbols-outlined">{{ activeTabDefinition.icon }}</span>
+      </section>
+
+      <section *ngIf="activeTab === 'traffic'" class="report-panel panel"><div class="panel-heading"><div><h2>דפים מובילים</h2><p>כל פתיחה נספרת כצפייה; כל גולש נספר פעם אחת</p></div></div><div class="table-scroll"><table><thead><tr><th>#</th><th>דף</th><th>צפיות</th><th>משתמשים ייחודיים</th></tr></thead><tbody><tr *ngFor="let page of dashboard.traffic.topPages; let i = index"><td><span class="row-rank">0{{ i + 1 }}</span></td><td><strong>{{ page.pagePath }}</strong></td><td class="number-cell">{{ page.views | number }}</td><td class="number-cell">{{ page.uniqueVisitors | number }}</td></tr></tbody></table></div></section>
+
+      <section *ngIf="activeTab === 'articles'" class="report-panel panel"><div class="panel-heading table-heading"><div><h2>ביצועי כתבות</h2><p>צפיות לפי התקופה; לייקים ופידבק מצטברים</p></div><div class="table-controls"><label class="search-field"><span class="material-symbols-outlined">search</span><input type="search" [(ngModel)]="articleSearch" placeholder="חיפוש כתבה"></label><select [(ngModel)]="articleTypeFilter"><option value="all">כל הסוגים</option><option value="news">חדשות</option><option value="blog">בלוג</option></select><div class="segmented-control"><button [class.active]="sortBy === 'views'" (click)="setSort('views')">צפיות</button><button [class.active]="sortBy === 'likes'" (click)="setSort('likes')">לייקים</button><button [class.active]="sortBy === 'feedback'" (click)="setSort('feedback')">פידבק</button></div></div></div><div class="table-scroll"><table><thead><tr><th>#</th><th>כתבה</th><th>סוג</th><th>צפיות</th><th>ייחודיים</th><th>מצטבר</th><th>לייקים</th><th>פידבק</th></tr></thead><tbody><tr *ngFor="let article of filteredArticles; let i = index" class="clickable" (click)="navigateToArticle(article)"><td><span class="row-rank">{{ i + 1 }}</span></td><td class="content-cell"><img *ngIf="article.featuredImageUrl" [src]="article.featuredImageUrl" alt=""><strong>{{ article.title }}</strong></td><td>{{ getContentTypeLabel(article.contentType) }}</td><td class="number-cell">{{ article.viewCount | number }}</td><td class="number-cell">{{ article.uniqueVisitors | number }}</td><td>{{ article.totalViewCount | number }}</td><td>{{ article.likeCount | number }}</td><td>{{ article.feedbackTotal | number }}</td></tr></tbody></table></div></section>
+
+      <section *ngIf="activeTab === 'chords'" class="report-panel panel"><div class="panel-heading"><div><h2>אקורדים מובילים</h2><p>דירוג לפי צפיות בתקופה</p></div></div><div class="table-scroll"><table><thead><tr><th>#</th><th>שיר</th><th>צפיות</th><th>ייחודיים</th><th>מצטבר</th></tr></thead><tbody><tr *ngFor="let song of dashboard.chords.topSongs; let i = index"><td><span class="row-rank">0{{ i + 1 }}</span></td><td><strong>{{ song.songTitle }}</strong></td><td class="number-cell">{{ song.views | number }}</td><td>{{ song.uniqueVisitors | number }}</td><td>{{ song.totalViews | number }}</td></tr></tbody></table></div></section>
+
+      <section *ngIf="activeTab === 'podcasts'" class="report-panel panel"><div class="panel-heading"><div><h2>פרקי פודקאסט מובילים</h2><p>דירוג לפי צפיות בתקופה</p></div></div><div class="table-scroll"><table><thead><tr><th>#</th><th>פרק</th><th>צפיות</th><th>ייחודיים</th><th>מצטבר</th></tr></thead><tbody><tr *ngFor="let episode of dashboard.podcasts.topEpisodes; let i = index"><td><span class="row-rank">0{{ i + 1 }}</span></td><td><strong>{{ episode.episodeTitle }}</strong></td><td class="number-cell">{{ episode.views | number }}</td><td>{{ episode.uniqueVisitors | number }}</td><td>{{ episode.totalViews | number }}</td></tr></tbody></table></div></section>
+
+      <section *ngIf="activeTab === 'events'" class="report-panel panel"><div class="panel-heading"><div><h2>הופעות מובילות</h2><p>צפיות ועניין לפי הופעה</p></div></div><div class="table-scroll"><table><thead><tr><th>#</th><th>הופעה</th><th>צפיות</th><th>ייחודיים</th><th>מצטבר</th></tr></thead><tbody><tr *ngFor="let event of dashboard.events.topEvents; let i = index"><td><span class="row-rank">0{{ i + 1 }}</span></td><td><strong>{{ event.eventName }}</strong></td><td class="number-cell">{{ event.viewsLast30 | number }}</td><td>{{ event.uniqueVisitors | number }}</td><td>{{ event.totalViews | number }}</td></tr></tbody></table></div></section>
+
+      <section *ngIf="activeTab === 'buttons'" class="report-panel panel"><div class="panel-heading"><div><h2>פעולות וקליקים</h2><p>{{ dashboard.buttons.uniqueVisitors | number }} משתמשים ייחודיים ביצעו פעולה</p></div></div><div class="mini-kpis"><div><small>כרטיסים</small><strong>{{ dashboard.buttons.ticketClicks.last30Days | number }}</strong></div><div><small>יצירת קשר</small><strong>{{ dashboard.buttons.contactClicks.last30Days | number }}</strong></div><div><small>קישורי התראות</small><strong>{{ dashboard.buttons.notificationLinkClicks.last30Days | number }}</strong></div></div><div class="table-scroll"><table><thead><tr><th>#</th><th>הופעה</th><th>קליקים</th><th>ייחודיים</th><th>מצטבר</th></tr></thead><tbody><tr *ngFor="let item of dashboard.buttons.topTicketEvents; let i = index"><td><span class="row-rank">0{{ i + 1 }}</span></td><td><strong>{{ item.itemLabel || 'ללא תווית' }}</strong></td><td class="number-cell">{{ item.clicksLast30 | number }}</td><td>{{ item.uniqueVisitors | number }}</td><td>{{ item.totalClicks | number }}</td></tr></tbody></table></div></section>
+
+      <section *ngIf="activeTab === 'ads'" class="report-panel panel"><div class="panel-heading"><div><h2>ביצועי פרסום</h2><p>נתוני הקמפיינים בתקופה שנבחרה</p></div></div><div class="mini-kpis"><div><small>חשיפות</small><strong>{{ dashboard.ads.totalViews | number }}</strong></div><div><small>קליקים</small><strong>{{ dashboard.ads.totalClicks | number }}</strong></div><div><small>CTR</small><strong>{{ adsCtr | number:'1.2-2' }}%</strong></div><div><small>משתמשים</small><strong>{{ dashboard.ads.uniqueVisitors | number }}</strong></div></div><div class="table-scroll"><table><thead><tr><th>#</th><th>קמפיין</th><th>לקוח</th><th>חשיפות</th><th>קליקים</th><th>CTR</th></tr></thead><tbody><tr *ngFor="let campaign of dashboard.ads.topCampaigns; let i = index"><td><span class="row-rank">0{{ i + 1 }}</span></td><td><strong>{{ campaign.name }}</strong></td><td>{{ campaign.clientName }}</td><td>{{ campaign.viewCount | number }}</td><td>{{ campaign.clickCount | number }}</td><td class="number-cell">{{ campaign.ctr | number:'1.2-2' }}%</td></tr></tbody></table></div></section>
+
+      <section *ngIf="activeTab === 'adblock'" class="report-panel panel"><div class="panel-heading"><div><h2>AdBlock ובדיקות דפדפן</h2><p>ניטור טכני לפי דפים</p></div></div><div class="mini-kpis"><div><small>בדיקות</small><strong>{{ dashboard.adBlock.totalChecks | number }}</strong></div><div><small>זוהו חוסמים</small><strong>{{ dashboard.adBlock.detectedCount | number }}</strong></div><div><small>שיעור חסימה</small><strong>{{ adBlockRate }}%</strong></div></div><div class="table-scroll"><table><thead><tr><th>#</th><th>דף</th><th>בדיקות</th><th>זיהויים</th><th>שיעור</th></tr></thead><tbody><tr *ngFor="let page of dashboard.adBlock.topPages; let i = index"><td><span class="row-rank">0{{ i + 1 }}</span></td><td><strong>{{ page.pagePath }}</strong></td><td>{{ page.checks | number }}</td><td>{{ page.detected | number }}</td><td class="number-cell">{{ page.rate }}%</td></tr></tbody></table></div></section>
+
+      <section *ngIf="activeTab === 'agencies'" class="report-panel panel"><div *ngIf="agencyLoading" class="state-card"><span class="spinner"></span><p>טוען נתוני סוכנויות...</p></div><ng-container *ngIf="!agencyLoading && agencySummary"><div class="panel-heading"><div><h2>ביצועי סוכנויות</h2><p>צפיות, משתמשים ופעולות בפועל</p></div></div><div class="mini-kpis"><div><small>צפיות</small><strong>{{ agencySummary.totals.pageViews | number }}</strong></div><div><small>ייחודיים</small><strong>{{ agencySummary.totals.uniqueVisitors | number }}</strong></div><div><small>פניות בפועל</small><strong>{{ agencySummary.totals.contactClicks | number }}</strong></div><div><small>פתיחות פאנל</small><strong>{{ agencySummary.totals.contactPanelOpens | number }}</strong></div></div><div class="table-scroll"><table><thead><tr><th>#</th><th>סוכנות</th><th>צפיות</th><th>ייחודיים</th><th>באנר</th><th>פניות</th><th>פאנל</th><th>פרופילים</th><th>תוכן</th></tr></thead><tbody><tr *ngFor="let agency of agencySummary.byAgency; let i = index"><td><span class="row-rank">0{{ i + 1 }}</span></td><td><strong>{{ agency.agencyName }}</strong></td><td>{{ agency.pageViews | number }}</td><td>{{ agency.uniqueVisitors | number }}</td><td>{{ agency.bannerClicks | number }}</td><td>{{ agency.contactClicks | number }}</td><td>{{ agency.contactPanelOpens | number }}</td><td>{{ agency.profileClicks | number }}</td><td>{{ agency.contentClicks | number }}</td></tr></tbody></table></div></ng-container></section>
     </ng-container>
-
-    <section *ngIf="activeTab === 'articles'" class="table-panel"><div class="table-toolbar"><div><h2>כתבות לפי ביצועים</h2><p>הנתונים הקיימים במערכת, מסודרים לפי המדד שנבחר</p></div><div class="table-controls"><label class="search-field"><span class="material-icons">search</span><input type="search" [(ngModel)]="articleSearch" placeholder="חיפוש כתבה"></label><select [(ngModel)]="articleTypeFilter"><option value="all">כל הסוגים</option><option value="news">חדשות</option><option value="blog">בלוג</option></select><div class="sort-tabs"><button [class.active]="sortBy === 'views'" (click)="setSort('views')">צפיות</button><button [class.active]="sortBy === 'likes'" (click)="setSort('likes')">לייקים</button><button [class.active]="sortBy === 'feedback'" (click)="setSort('feedback')">פידבק</button></div></div></div><div class="table-scroll"><table><thead><tr><th>#</th><th>כתבה</th><th>סוג</th><th>צפיות</th><th>לייקים</th><th>פידבק</th><th>חיובי</th></tr></thead><tbody><tr *ngFor="let article of filteredArticles; let i = index" (click)="navigateToArticle(article)"><td><span class="rank-number">{{ i + 1 }}</span></td><td class="content-cell"><img *ngIf="article.featuredImageUrl" [src]="article.featuredImageUrl" alt=""><strong>{{ article.title }}</strong></td><td><span class="soft-tag">{{ getContentTypeLabel(article.contentType) }}</span></td><td class="number-cell">{{ article.viewCount | number }}</td><td class="number-cell">{{ article.likeCount | number }}</td><td class="number-cell">{{ article.feedbackTotal | number }}</td><td><span *ngIf="article.feedbackTotal" class="score" [class.low]="article.yesPct < 40">{{ article.yesPct }}%</span><span *ngIf="!article.feedbackTotal">—</span></td></tr><tr *ngIf="!filteredArticles.length"><td colspan="7" class="empty-cell">לא נמצאו כתבות מתאימות</td></tr></tbody></table></div></section>
-
-    <section *ngIf="activeTab === 'chords'" class="table-panel"><div class="table-toolbar"><div><h2>האקורדים הנצפים ביותר</h2><p>דירוג שירים לפי צפיות בתקופה הנבחרת</p></div></div><div class="table-scroll"><table><thead><tr><th>#</th><th>שיר</th><th>צפיות בתקופה</th><th>צפיות מצטברות</th></tr></thead><tbody><tr *ngFor="let song of dashboard.chords.topSongs; let i = index"><td><span class="rank-number">{{ i + 1 }}</span></td><td><strong>{{ song.songTitle }}</strong></td><td class="number-cell">{{ song.views | number }}</td><td class="number-cell">{{ song.totalViews | number }}</td></tr><tr *ngIf="!dashboard.chords.topSongs.length"><td colspan="4" class="empty-cell">אין נתונים להצגה</td></tr></tbody></table></div></section>
-
-    <section *ngIf="activeTab === 'podcasts'" class="table-panel"><div class="table-toolbar"><div><h2>פרקי הפודקאסט הנצפים ביותר</h2><p>נתוני צפייה מהיסטוריית הפרקים הקיימת במערכת</p></div></div><div class="table-scroll"><table><thead><tr><th>#</th><th>פרק</th><th>צפיות בתקופה</th><th>צפיות מצטברות</th></tr></thead><tbody><tr *ngFor="let episode of dashboard.podcasts.topEpisodes; let i = index"><td><span class="rank-number">{{ i + 1 }}</span></td><td><strong>{{ episode.episodeTitle }}</strong></td><td class="number-cell">{{ episode.views | number }}</td><td class="number-cell">{{ episode.totalViews | number }}</td></tr><tr *ngIf="!dashboard.podcasts.topEpisodes.length"><td colspan="4" class="empty-cell">אין נתונים להצגה</td></tr></tbody></table></div></section>
-
-    <section *ngIf="activeTab === 'events'" class="table-panel"><div class="table-toolbar"><div><h2>הופעות מובילות</h2><p>צפיות ועניין לפי הופעה</p></div></div><div class="table-scroll"><table><thead><tr><th>#</th><th>הופעה</th><th>סה״כ צפיות</th><th>בתקופה</th></tr></thead><tbody><tr *ngFor="let event of dashboard.events.topEvents; let i = index"><td><span class="rank-number">{{ i + 1 }}</span></td><td><strong>{{ event.eventName }}</strong></td><td class="number-cell">{{ event.totalViews | number }}</td><td class="number-cell">{{ event.viewsLast30 | number }}</td></tr><tr *ngIf="!dashboard.events.topEvents.length"><td colspan="4" class="empty-cell">אין נתונים להצגה</td></tr></tbody></table></div></section>
-
-    <section *ngIf="activeTab === 'buttons'" class="table-panel"><div class="table-toolbar"><div><h2>פעולות וקליקים</h2><p>הפעולות שהמבקרים ביצעו באתר</p></div></div><div class="action-cards"><div><span>כרטיסים</span><strong>{{ dashboard.buttons.ticketClicks.last30Days | number }}</strong><small>{{ dashboard.buttons.ticketClicks.total | number }} מצטבר</small></div><div><span>יצירת קשר</span><strong>{{ dashboard.buttons.contactClicks.last30Days | number }}</strong><small>{{ dashboard.buttons.contactClicks.total | number }} מצטבר</small></div><div><span>קישורי התראות</span><strong>{{ dashboard.buttons.notificationLinkClicks.last30Days | number }}</strong><small>{{ dashboard.buttons.notificationLinkClicks.total | number }} מצטבר</small></div></div><div class="table-scroll"><table><thead><tr><th>#</th><th>הופעה</th><th>סה״כ קליקים</th><th>בתקופה</th></tr></thead><tbody><tr *ngFor="let item of dashboard.buttons.topTicketEvents; let i = index"><td><span class="rank-number">{{ i + 1 }}</span></td><td><strong>{{ item.itemLabel || 'ללא תווית' }}</strong></td><td class="number-cell">{{ item.totalClicks | number }}</td><td class="number-cell">{{ item.clicksLast30 | number }}</td></tr></tbody></table></div></section>
-
-    <section *ngIf="activeTab === 'ads'" class="table-panel"><div class="table-toolbar"><div><h2>ביצועי פרסום</h2><p>הנתונים המצטברים הזמינים עבור הקמפיינים</p></div></div><div class="action-cards"><div><span>קמפיינים פעילים</span><strong>{{ dashboard.ads.activeCampaigns | number }}</strong></div><div><span>חשיפות</span><strong>{{ dashboard.ads.totalViews | number }}</strong></div><div><span>קליקים</span><strong>{{ dashboard.ads.totalClicks | number }}</strong></div></div><div class="table-scroll"><table><thead><tr><th>#</th><th>קמפיין</th><th>לקוח</th><th>חשיפות</th><th>קליקים</th><th>CTR</th></tr></thead><tbody><tr *ngFor="let campaign of dashboard.ads.topCampaigns; let i = index"><td><span class="rank-number">{{ i + 1 }}</span></td><td><strong>{{ campaign.name }}</strong></td><td>{{ campaign.clientName }}</td><td class="number-cell">{{ campaign.viewCount | number }}</td><td class="number-cell">{{ campaign.clickCount | number }}</td><td><span class="score">{{ campaign.ctr }}%</span></td></tr></tbody></table></div></section>
-
-    <section *ngIf="activeTab === 'adblock'" class="table-panel"><div class="table-toolbar"><div><h2>AdBlock ובדיקות דפדפן</h2><p>ניטור טכני לפי ימים ודפים</p></div></div><div class="action-cards"><div><span>בדיקות</span><strong>{{ dashboard.adBlock.totalChecks | number }}</strong></div><div><span>זוהו חוסמים</span><strong>{{ dashboard.adBlock.detectedCount | number }}</strong></div><div><span>שיעור חסימה</span><strong>{{ adBlockRate }}%</strong></div></div><div class="table-scroll"><table><thead><tr><th>#</th><th>דף</th><th>בדיקות</th><th>זיהויים</th><th>שיעור</th></tr></thead><tbody><tr *ngFor="let page of dashboard.adBlock.topPages; let i = index"><td><span class="rank-number">{{ i + 1 }}</span></td><td><strong>{{ page.pagePath }}</strong></td><td class="number-cell">{{ page.checks | number }}</td><td class="number-cell">{{ page.detected | number }}</td><td><span class="score" [class.low]="page.rate >= 20">{{ page.rate }}%</span></td></tr></tbody></table></div></section>
-
-    <section *ngIf="activeTab === 'agencies'" class="table-panel"><div *ngIf="agencyLoading" class="state-card"><span class="spinner"></span><p>טוען נתוני סוכנויות...</p></div><ng-container *ngIf="!agencyLoading && agencySummary"><div class="table-toolbar"><div><h2>ביצועי סוכנויות</h2><p>צפיות, קליקים ואינטראקציות לפי התקופה</p></div></div><div class="action-cards"><div><span>צפיות בדפים</span><strong>{{ agencySummary.totals.pageViews | number }}</strong></div><div><span>קליקים בבאנר</span><strong>{{ agencySummary.totals.bannerClicks | number }}</strong></div><div><span>אינטראקציות</span><strong>{{ agencySummary.totals.totalInteractions | number }}</strong></div></div><div class="table-scroll"><table><thead><tr><th>#</th><th>סוכנות</th><th>צפיות</th><th>באנר</th><th>יצירת קשר</th><th>פרופילים</th><th>תוכן</th><th>סה״כ</th></tr></thead><tbody><tr *ngFor="let agency of agencySummary.byAgency; let i = index"><td><span class="rank-number">{{ i + 1 }}</span></td><td><strong>{{ agency.agencyName }}</strong></td><td class="number-cell">{{ agency.pageViews | number }}</td><td class="number-cell">{{ agency.bannerClicks | number }}</td><td class="number-cell">{{ agency.contactClicks | number }}</td><td class="number-cell">{{ agency.profileClicks | number }}</td><td class="number-cell">{{ agency.contentClicks | number }}</td><td class="number-cell">{{ agency.totalInteractions | number }}</td></tr></tbody></table></div></ng-container></section>
   </ng-container>
-</div>
+</section>
