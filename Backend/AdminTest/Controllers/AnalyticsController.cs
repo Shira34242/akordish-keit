@@ -142,12 +142,10 @@ public class AnalyticsController : ControllerBase
             {
                 EventId = g.Key,
                 Views = g.Count(),
-                UniqueVisitors = g.Select(v => new
-                {
-                    v.UserId,
-                    IpAddress = v.UserId.HasValue ? null : v.IpAddress,
-                    UserAgent = v.UserId.HasValue ? null : v.UserAgent
-                }).Distinct().Count()
+                UniqueVisitors = g.Select(v => v.UserId.HasValue
+                    ? "user:" + v.UserId.Value.ToString()
+                    : "visitor:" + (v.IpAddress ?? "") + "|" + (v.UserAgent ?? ""))
+                    .Distinct().Count()
             })
             .OrderByDescending(x => x.Views).Take(10).ToListAsync();
         var eventIds = topEvents.Where(x => x.EventId.HasValue).Select(x => x.EventId!.Value).ToList();
@@ -180,12 +178,10 @@ public class AnalyticsController : ControllerBase
                 g.Key.ItemId,
                 g.Key.ItemLabel,
                 Clicks = g.Count(),
-                UniqueVisitors = g.Select(v => new
-                {
-                    v.UserId,
-                    IpAddress = v.UserId.HasValue ? null : v.IpAddress,
-                    UserAgent = v.UserId.HasValue ? null : v.UserAgent
-                }).Distinct().Count()
+                UniqueVisitors = g.Select(v => v.UserId.HasValue
+                    ? "user:" + v.UserId.Value.ToString()
+                    : "visitor:" + (v.IpAddress ?? "") + "|" + (v.UserAgent ?? ""))
+                    .Distinct().Count()
             }).OrderByDescending(x => x.Clicks).Take(10).ToListAsync();
         var ticketItemIds = topTicketEvents.Where(x => x.ItemId.HasValue).Select(x => x.ItemId!.Value).ToList();
         var ticketTotals = await _context.ButtonClicks.AsNoTracking()
@@ -206,24 +202,20 @@ public class AnalyticsController : ControllerBase
             {
                 PagePath = g.Key,
                 Views = g.Count(),
-                UniqueVisitors = g.Select(v => new
-                {
-                    v.UserId,
-                    IpAddress = v.UserId.HasValue ? null : v.IpAddress,
-                    UserAgent = v.UserId.HasValue ? null : v.UserAgent
-                }).Distinct().Count()
+                UniqueVisitors = g.Select(v => v.UserId.HasValue
+                    ? "user:" + v.UserId.Value.ToString()
+                    : "visitor:" + (v.IpAddress ?? "") + "|" + (v.UserAgent ?? ""))
+                    .Distinct().Count()
             }).OrderByDescending(x => x.Views).Take(15).ToListAsync();
         var deviceRows = await pageViewsQuery.GroupBy(v => v.ButtonType)
             .Select(g => new
             {
                 Type = g.Key,
                 Views = g.Count(),
-                UniqueVisitors = g.Select(v => new
-                {
-                    v.UserId,
-                    IpAddress = v.UserId.HasValue ? null : v.IpAddress,
-                    UserAgent = v.UserId.HasValue ? null : v.UserAgent
-                }).Distinct().Count()
+                UniqueVisitors = g.Select(v => v.UserId.HasValue
+                    ? "user:" + v.UserId.Value.ToString()
+                    : "visitor:" + (v.IpAddress ?? "") + "|" + (v.UserAgent ?? ""))
+                    .Distinct().Count()
             }).ToListAsync();
         var desktopDevice = deviceRows.FirstOrDefault(x => x.Type == "page_view_desktop");
         var tabletDevice = deviceRows.FirstOrDefault(x => x.Type == "page_view_tablet");
@@ -264,12 +256,10 @@ public class AnalyticsController : ControllerBase
             {
                 SongId = g.Key,
                 Views = g.Count(),
-                UniqueVisitors = g.Select(v => new
-                {
-                    v.UserId,
-                    IpAddress = v.UserId.HasValue ? null : v.IpAddress,
-                    UserAgent = v.UserId.HasValue ? null : v.UserAgent
-                }).Distinct().Count()
+                UniqueVisitors = g.Select(v => v.UserId.HasValue
+                    ? "user:" + v.UserId.Value.ToString()
+                    : "visitor:" + (v.IpAddress ?? "") + "|" + (v.UserAgent ?? ""))
+                    .Distinct().Count()
             }).OrderByDescending(x => x.Views).Take(10).ToListAsync();
         var chordSongIds = topChordSongs.Select(x => x.SongId).ToList();
         var chordSongs = await _context.Songs.AsNoTracking().Where(s => chordSongIds.Contains(s.Id))
@@ -290,12 +280,10 @@ public class AnalyticsController : ControllerBase
             {
                 EpisodeId = g.Key,
                 Views = g.Count(),
-                UniqueVisitors = g.Select(v => new
-                {
-                    v.UserId,
-                    IpAddress = v.UserId.HasValue ? null : v.IpAddress,
-                    UserAgent = v.UserId.HasValue ? null : v.UserAgent
-                }).Distinct().Count()
+                UniqueVisitors = g.Select(v => v.UserId.HasValue
+                    ? "user:" + v.UserId.Value.ToString()
+                    : "visitor:" + (v.IpAddress ?? "") + "|" + (v.UserAgent ?? ""))
+                    .Distinct().Count()
             }).OrderByDescending(x => x.Views).Take(10).ToListAsync();
         var podcastEpisodeIds = topPodcastEpisodes.Select(x => x.EpisodeId).ToList();
         var podcastEpisodes = await _context.PodcastEpisodes.AsNoTracking().Where(e => podcastEpisodeIds.Contains(e.Id))
@@ -620,12 +608,10 @@ public class AnalyticsController : ControllerBase
             {
                 ArticleId = g.Key,
                 Views = g.Count(),
-                UniqueVisitors = g.Select(v => new
-                {
-                    v.UserId,
-                    IpAddress = v.UserId.HasValue ? null : v.IpAddress,
-                    UserAgent = v.UserId.HasValue ? null : v.UserAgent
-                }).Distinct().Count()
+                UniqueVisitors = g.Select(v => v.UserId.HasValue
+                    ? "user:" + v.UserId.Value.ToString()
+                    : "visitor:" + (v.IpAddress ?? "") + "|" + (v.UserAgent ?? ""))
+                    .Distinct().Count()
             }).ToDictionaryAsync(x => x.ArticleId);
 
         var articles = await _context.Articles.AsNoTracking()
