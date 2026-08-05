@@ -218,6 +218,11 @@
         <p class="feedback-error" *ngIf="feedbackErrorMessage">{{ feedbackErrorMessage }}</p>
       </div>
 
+      <!-- Mid-article Banner Ad — full width outside content container -->
+      <div class="mid-banner-area">
+        <app-media-item spotTechnicalId="blog-post-mid-banner"></app-media-item>
+      </div>
+
       <!-- More content banner -->
       <section class="related-content-section" *ngIf="relatedArticles.length > 0" aria-label="תוכן נוסף שיכול לעניין אותך">
         <div class="related-content-header">
@@ -251,11 +256,6 @@
     <aside class="sidebar sidebar-left">
       <app-media-item spotTechnicalId="blog-post-left"></app-media-item>
     </aside>
-  </div>
-
-  <!-- Mid-article Banner Ad — full width outside content container -->
-  <div class="mid-banner-area">
-    <app-media-item spotTechnicalId="blog-post-mid-banner"></app-media-item>
   </div>
 
 </div>
