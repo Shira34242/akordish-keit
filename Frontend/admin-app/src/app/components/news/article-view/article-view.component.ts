@@ -13,6 +13,7 @@ import { ReportModalComponent } from '../../shared/report-modal/report-modal.com
 import { ContentPageService } from '../../../services/content-page.service';
 import { ArticleFeedbackService } from '../../../services/article-feedback.service';
 import { ContentUploaderBadgeComponent } from '../../shared/content-uploader-badge/content-uploader-badge.component';
+import { BreadcrumbItem, BreadcrumbsComponent } from '../../shared/breadcrumbs/breadcrumbs.component';
 import { SeoService } from '../../../services/seo.service';
 import { LanguageService } from '../../../services/language.service';
 import { environment } from '../../../../environments/environment';
@@ -24,7 +25,7 @@ import { artistRoute } from '../../../utils/slug';
 @Component({
   selector: 'app-article-view',
   standalone: true,
-  imports: [CommonModule, RouterLink, AdDisplayComponent, NewsBannerComponent, ReportModalComponent, ContentUploaderBadgeComponent, CloudflareImagePipe],
+  imports: [CommonModule, RouterLink, AdDisplayComponent, NewsBannerComponent, ReportModalComponent, ContentUploaderBadgeComponent, BreadcrumbsComponent, CloudflareImagePipe],
   templateUrl: './article-view.component.html',
   styleUrls: ['./article-view.component.css']
 })
@@ -166,6 +167,15 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
 
   getArtistLink(artist: { artistId: number; artistName: string }): (string | number)[] {
     return artistRoute({ id: artist.artistId, name: artist.artistName });
+  }
+
+  get breadcrumbItems(): BreadcrumbItem[] {
+    if (!this.article) return [];
+    return [
+      { label: 'דף הבית', route: '/' },
+      { label: 'חדשות מוזיקה', route: '/music-news' },
+      { label: this.article.title }
+    ];
   }
 
   get hasMoreRelatedArticles(): boolean {

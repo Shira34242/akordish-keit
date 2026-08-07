@@ -3,6 +3,7 @@ using AkordishKeit.Services;
 using AkordishKeit.Services.EmailPipeline;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace AkordishKeit.Controllers;
 
@@ -41,7 +42,17 @@ public class EmailV2Controller : ControllerBase
         }
         catch (InvalidOperationException ex)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (DbUpdateException ex)
+        {
+            var msg = UnwrapException(ex);
+            return StatusCode(500, new { message = msg });
+        }
+        catch (Exception ex)
+        {
+            var msg = UnwrapException(ex);
+            return StatusCode(500, new { message = msg });
         }
     }
 
@@ -155,5 +166,19 @@ public class EmailV2Controller : ControllerBase
         {
             return NotFound(ex.Message);
         }
+    }
+
+    private static string UnwrapException(Exception ex)
+    {
+        var parts = new List<string>();
+        var current = ex;
+        while (current != null)
+        {
+            var msg = current.Message;
+            if (parts.Count == 0 || msg != parts[^1])
+                parts.Add(msg);
+            current = current.InnerException;
+        }
+        return string.Join(" → ", parts);
     }
 }

@@ -4,8 +4,8 @@ import { ContentItem } from '../types';
 
 export const EVENTS_BLOCK: CustomBlockDefinition = {
   type: 'events',
-  name: 'הופעות קרובות',
-  icon: 'event',
+  name: 'הופעות',
+  icon: 'calendar_month',
   description: 'הצגת הופעות נבחרות',
   fields: [
     {
@@ -163,6 +163,6 @@ export const EVENTS_BLOCK: CustomBlockDefinition = {
     }
   `,
   defaultStyles: {
-    padding: { top: 0, right: 0, bottom: 0, left: 0 },
+    padding: { top: 12, right: 0, bottom: 12, left: 0 },
   },
 };

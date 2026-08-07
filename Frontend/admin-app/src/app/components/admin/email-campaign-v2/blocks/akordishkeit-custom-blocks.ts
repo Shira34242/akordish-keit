@@ -3,7 +3,7 @@ import { openArticleSelector } from './content-selector-bridge.service';
 
 export const ARTICLES_BLOCK: CustomBlockDefinition = {
   type: 'articles',
-  name: 'כתבות מאקורדישקייט',
+  name: 'כתבות',
   icon: 'newspaper',
   description: 'הצגת כתבות נבחרות בבאנרים מעוצבים',
   fields: [
@@ -41,6 +41,12 @@ export const ARTICLES_BLOCK: CustomBlockDefinition = {
       default: true,
     },
     {
+      key: 'showDescription',
+      label: 'הצגת תקציר',
+      type: 'boolean',
+      default: false,
+    },
+    {
       key: 'borderRadius',
       label: 'פינות מעוגלות (px)',
       type: 'number',
@@ -73,7 +79,11 @@ export const ARTICLES_BLOCK: CustomBlockDefinition = {
         publishDate: i.publishDate || '',
         altText: i.altText || i.title || '',
       }));
-      const result = await openArticleSelector(existingItems);
+      const result = await openArticleSelector(
+        existingItems,
+        context.fieldValues['showCategory'] as boolean | undefined,
+        context.fieldValues['showDescription'] as boolean | undefined
+      );
       if (!result) return null;
       return {
         items: result.items.map((item) => ({
@@ -87,6 +97,7 @@ export const ARTICLES_BLOCK: CustomBlockDefinition = {
           altText: item.altText,
         })),
         showCategory: result.showCategory,
+        showDescription: result.showDescription,
         borderRadius: result.borderRadius,
         cardGap: result.spacing,
       };
@@ -145,10 +156,17 @@ export const ARTICLES_BLOCK: CustomBlockDefinition = {
                       </table>
                     </td>
                   </tr>
-                  {% if item.categoryName and item.categoryName != '' %}
+                  {% if showCategory and item.categoryName and item.categoryName != '' %}
                   <tr>
                     <td style="padding:0;text-align:right;">
                       <span style="font-family:'Open Sans',Arial,sans-serif;font-size:12px;font-weight:300;color:rgba(255,255,255,0.85);line-height:1.3;">{{ item.categoryName }}</span>
+                    </td>
+                  </tr>
+                  {% endif %}
+                  {% if showDescription and item.shortDescription and item.shortDescription != '' %}
+                  <tr>
+                    <td style="padding:2px 0 0;text-align:right;">
+                      <span style="font-family:'Open Sans',Arial,sans-serif;font-size:11px;font-weight:300;color:rgba(255,255,255,0.75);line-height:1.3;">{{ item.shortDescription }}</span>
                     </td>
                   </tr>
                   {% endif %}
@@ -170,9 +188,14 @@ export const ARTICLES_BLOCK: CustomBlockDefinition = {
                           </table>
                         </td>
                       </tr>
-                      {% if item.categoryName and item.categoryName != '' %}
+                      {% if showCategory and item.categoryName and item.categoryName != '' %}
                       <tr>
                         <td style="padding:0;text-align:right;font-family:'Open Sans',Arial,sans-serif;font-size:12px;font-weight:300;color:rgba(255,255,255,0.85);line-height:1.3;">{{ item.categoryName }}</td>
+                      </tr>
+                      {% endif %}
+                      {% if showDescription and item.shortDescription and item.shortDescription != '' %}
+                      <tr>
+                        <td style="padding:2px 0 0;text-align:right;font-family:'Open Sans',Arial,sans-serif;font-size:11px;font-weight:300;color:rgba(255,255,255,0.75);line-height:1.3;">{{ item.shortDescription }}</td>
                       </tr>
                       {% endif %}
                     </table>
@@ -206,6 +229,6 @@ export const ARTICLES_BLOCK: CustomBlockDefinition = {
     }
   `,
   defaultStyles: {
-    padding: { top: 0, right: 0, bottom: 0, left: 0 },
+    padding: { top: 12, right: 0, bottom: 12, left: 0 },
   },
 };

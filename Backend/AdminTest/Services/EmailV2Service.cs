@@ -529,9 +529,12 @@ public class EmailV2Service : IEmailV2Service
         return mjml[..(idx + openingTag.Length)] + " direction=\"rtl\"" + mjml[(idx + openingTag.Length)..];
     }
 
-    private static string InjectUnsubscribeFooter(string mjml)
-    {
-        var footer = @"
+        private static string InjectUnsubscribeFooter(string mjml)
+        {
+            if (mjml.Contains("אקורדישקייט — כל הזכויות שמורות", StringComparison.Ordinal))
+                return mjml;
+
+            var footer = @"
 <mj-section background-color=""#F2F2F2"" padding=""18px 32px"" text-align=""center"">
   <mj-column>
     <mj-text font-size=""12px"" color=""#404040"" align=""center"" direction=""rtl"">
@@ -545,6 +548,13 @@ public class EmailV2Service : IEmailV2Service
     </mj-text>
   </mj-column>
 </mj-section>";
+
+        var bodyClosingTag = "</mj-body>";
+        var bodyIdx = mjml.LastIndexOf(bodyClosingTag, StringComparison.OrdinalIgnoreCase);
+        if (bodyIdx >= 0)
+        {
+            return mjml[..bodyIdx] + footer + "\n" + mjml[bodyIdx..];
+        }
 
         var closingTag = "</mjml>";
         var lastIndex = mjml.LastIndexOf(closingTag, StringComparison.OrdinalIgnoreCase);

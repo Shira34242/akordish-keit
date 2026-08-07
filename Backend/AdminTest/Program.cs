@@ -240,27 +240,18 @@ using (var scope = app.Services.CreateScope())
         app.Logger.LogError(ex, "Cannot connect to database. App will start but DB features will fail.");
         pendingMigrations = [];
     }
-    const string fullTextMigrationId = "20260413000001_AddFullTextIndexOnSongsTitle";
 
     if (pendingMigrations.Count > 0)
     {
-        var migrationsBeforeFullText = pendingMigrations
-            .Where(migrationId => string.CompareOrdinal(migrationId, fullTextMigrationId) < 0)
-            .ToList();
-
-        if (migrationsBeforeFullText.Count > 0)
-        {
-            dbContext.Database.Migrate(migrationsBeforeFullText.Last());
-        }
-        else
+        foreach (var migrationId in pendingMigrations)
         {
             try
             {
-                dbContext.Database.Migrate();
+                dbContext.Database.Migrate(migrationId);
             }
             catch (Exception ex)
             {
-                app.Logger.LogWarning(ex, "Migration skipped (some tables may already exist). Continuing with startup.");
+                app.Logger.LogWarning(ex, "Migration {MigrationId} skipped. Continuing with startup.", migrationId);
             }
         }
     }

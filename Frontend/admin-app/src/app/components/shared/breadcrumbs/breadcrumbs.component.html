@@ -1,0 +1,12 @@
+<nav class="breadcrumbs" aria-label="ניווט היררכי">
+  <ng-container *ngFor="let item of items; let last = last">
+    <a
+      *ngIf="item.route; else currentLabel"
+      [routerLink]="item.route"
+      class="breadcrumb-link">{{ item.label }}</a>
+    <ng-template #currentLabel>
+      <span class="breadcrumb-current">{{ item.label }}</span>
+    </ng-template>
+    <span class="breadcrumb-separator" *ngIf="!last" aria-hidden="true">›</span>
+  </ng-container>
+</nav>

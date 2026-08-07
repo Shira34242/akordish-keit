@@ -1,4 +1,4 @@
-import { Component, signal, inject, viewChild, type OnInit, type OnDestroy, HostListener } from '@angular/core';
+import { Component, signal, computed, inject, viewChild, type OnInit, type OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
@@ -16,11 +16,12 @@ import { firstValueFrom } from 'rxjs';
   styles: [`
     :host {
       position: fixed;
-      inset: 52px 0 0 0;
-      z-index: 1;
+      inset: 0;
+      z-index: 1001;
       display: flex;
       flex-direction: column;
       background: #ffffff;
+      overflow: visible;
     }
 
     .workspace-header {
@@ -78,7 +79,7 @@ import { firstValueFrom } from 'rxjs';
     .btn-primary { background: #1a1a1a; color: #ddff53; border: none; font-weight: 600; }
     .btn-primary:hover:not(:disabled) { background: #333; }
 
-    .editor-area { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    .editor-area { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: visible; }
 
     .unsaved-dialog-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 300; }
     .unsaved-dialog { background: #fff; border-radius: 12px; padding: 24px 28px; max-width: 400px; width: 100%; box-shadow: 0 8px 32px rgba(0,0,0,0.18); }
@@ -129,7 +130,7 @@ import { firstValueFrom } from 'rxjs';
           } @else if (saveState() === 'saved') {
             <span class="save-status-saved">&#10003; נשמר</span>
           } @else if (saveState() === 'failed') {
-            <span class="save-status-failed">השמירה נכשלה</span>
+            <span class="save-status-failed" [title]="saveError()">{{ saveError() || 'השמירה נכשלה' }}</span>
             <button class="save-retry-btn" (click)="manualSave()">נסה שוב</button>
           } @else if (saveState() === 'dirty') {
             <span class="save-status-dirty">לא נשמר</span>
@@ -140,8 +141,8 @@ import { firstValueFrom } from 'rxjs';
           <span class="material-symbols-outlined" style="font-size:16px">save</span> שמור
         </button>
         <button class="btn" (click)="preview()" [disabled]="!editorComponent()?.editor">תצוגה מקדימה</button>
-        <button class="btn" (click)="openTestDialog()" [disabled]="!campaignId()">שלח בדיקה</button>
-        <button class="btn btn-primary" (click)="goToSend()" [disabled]="!campaignId() || saveState() === 'saving'">
+        <button class="btn" (click)="openTestDialog()" [disabled]="!effectiveCampaignId()">שלח בדיקה</button>
+        <button class="btn btn-primary" (click)="goToSend()" [disabled]="!effectiveCampaignId() || saveState() === 'saving'">
           המשך לבחירת נמענים
         </button>
       </div>
@@ -235,6 +236,8 @@ export class V2DesignStepComponent implements OnInit, OnDestroy {
   private _offline = false;
 
   readonly saveState = this.autosave.saveState;
+  readonly saveError = this.autosave.saveError;
+  effectiveCampaignId = computed(() => this.campaignId() || this.autosave.getCampaignId());
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -242,6 +245,7 @@ export class V2DesignStepComponent implements OnInit, OnDestroy {
       const num = parseInt(id, 10);
       if (!isNaN(num)) {
         this.campaignId.set(num);
+        this.autosave.setCampaignId(num);
         this.service.getTemplate(num).subscribe(t => {
           if (t) {
             this.subject.set(t.subject);
@@ -323,6 +327,7 @@ export class V2DesignStepComponent implements OnInit, OnDestroy {
         this._editorContentDirty = false;
         const editor = this.editorComponent();
         editor?.markSaved();
+        this._syncCampaignId();
       }
     });
   }
@@ -415,7 +420,7 @@ export class V2DesignStepComponent implements OnInit, OnDestroy {
   }
 
   async goToSend(): Promise<void> {
-    if (!this.campaignId()) return;
+    if (!this.campaignId() && !this.autosave.getCampaignId()) return;
 
     if (this._hasUnsavedChanges()) {
       const snapshot = this._buildSnapshot();
@@ -429,10 +434,12 @@ export class V2DesignStepComponent implements OnInit, OnDestroy {
         this._editorContentDirty = false;
         const editor = this.editorComponent();
         editor?.markSaved();
+        this._syncCampaignId();
       }
     }
 
-    this.router.navigate(['../', this.campaignId()!.toString(), 'send'], { relativeTo: this.route });
+    const cid = this.campaignId() || this.autosave.getCampaignId();
+    this.router.navigate(['../', cid!.toString(), 'send'], { relativeTo: this.route });
   }
 
   cancelExit(): void {
@@ -465,6 +472,7 @@ export class V2DesignStepComponent implements OnInit, OnDestroy {
       this._editorContentDirty = false;
       const editor = this.editorComponent();
       editor?.markSaved();
+      this._syncCampaignId();
     }
     this.unsavedSaving.set(false);
     this.showUnsavedDialog.set(false);
@@ -491,13 +499,14 @@ export class V2DesignStepComponent implements OnInit, OnDestroy {
     if (!editor) return null;
     const content = editor.getContent();
     if (!content) return null;
+    const cid = this.campaignId() || this.autosave.getCampaignId();
     return {
       subject: this.subject(),
       designJson: JSON.stringify(content),
       mjml: this.currentMjml(),
       previewText: '',
       fromName: 'אקורדישקייט',
-      campaignId: this.campaignId(),
+      campaignId: cid,
     };
   }
 
@@ -519,14 +528,15 @@ export class V2DesignStepComponent implements OnInit, OnDestroy {
       this.autosave.saveState.set('dirty');
     }
 
-    this._debounceTimer = setTimeout(() => {
+    this._debounceTimer = setTimeout(async () => {
       const snapshot = this._buildSnapshot();
       if (!snapshot) return;
       if (!this.autosave.isChanged(snapshot)) {
         this.autosave.saveState.set('idle');
         return;
       }
-      this.autosave.scheduleSave(snapshot);
+      await this.autosave.flush(snapshot);
+      this._syncCampaignId();
     }, autosaveDelay);
   }
 
@@ -534,6 +544,13 @@ export class V2DesignStepComponent implements OnInit, OnDestroy {
     if (this._debounceTimer !== null) {
       clearTimeout(this._debounceTimer);
       this._debounceTimer = null;
+    }
+  }
+
+  private _syncCampaignId(): void {
+    const savedCid = this.autosave.getCampaignId();
+    if (savedCid && !this.campaignId()) {
+      this.campaignId.set(savedCid);
     }
   }
 

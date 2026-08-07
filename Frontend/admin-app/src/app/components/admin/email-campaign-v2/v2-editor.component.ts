@@ -31,6 +31,7 @@ import { ComponentLibraryService } from '../../../services/component-library.ser
       flex: 1;
       min-height: 0;
       display: block;
+      overflow: visible;
 
       direction: rtl;
       --tpl-user-primary: #ddff53;
@@ -55,7 +56,7 @@ import { ComponentLibraryService } from '../../../services/component-library.ser
       --tpl-user-shadow-md: 0 4px 12px rgba(0,0,0,0.1);
       --tpl-user-overlay: rgba(0,0,0,0.35);
     }
-    .editor-host { width: 100%; height: 100%; }
+    .editor-host { width: 100%; height: 100%; overflow: visible; }
     .editor-error { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 8px; color: #dc2626; font-size: 15px; padding: 32px; }
     .editor-error .material-symbols-outlined { font-size: 48px; }
     .editor-error button { margin-top: 12px; padding: 8px 24px; border: 1px solid #dc2626; border-radius: 6px; background: #fef2f2; color: #dc2626; cursor: pointer; font-size: 14px; }
@@ -121,11 +122,7 @@ export class V2EditorComponent implements AfterViewInit, OnDestroy {
     if (!this._editor) return;
     try {
       const content = this._editor.getContent();
-      const newBlock = createCustomBlock({
-        ...blockDef,
-        type: blockDef.type,
-        fields: [],
-      } as CustomBlockDefinition);
+      const newBlock = createCustomBlock({ type: blockDef.type } as any);
       newBlock.id = generateId();
       content.blocks.push(newBlock as any);
       this._editor.setContent(content);

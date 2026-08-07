@@ -542,6 +542,17 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
                   }
                 </select>
               }
+              <div style="display:flex;gap:3px;flex-wrap:wrap;">
+                @for (qk of quickOptions(); track qk.value) {
+                  <button
+                    style="padding:3px 8px;border:1px solid #d1d5db;border-radius:999px;font-size:11px;cursor:pointer;white-space:nowrap;"
+                    [style.background]="activeQuick() === qk.value ? '#1a1a1a' : '#fff'"
+                    [style.color]="activeQuick() === qk.value ? '#ddff53' : '#6b7280'"
+                    [style.borderColor]="activeQuick() === qk.value ? '#1a1a1a' : '#d1d5db'"
+                    (click)="applyQuick(qk.value)"
+                  >{{ qk.label }}</button>
+                }
+              </div>
               <select
                 [ngModel]="sortBy()"
                 (ngModelChange)="onSortChange($event)"
@@ -756,6 +767,9 @@ export class ContentSelectorDialogComponent implements OnInit, OnDestroy {
   gridView = signal(true);
   sortBy = signal('');
   selectedSourceIndex = signal(0);
+  activeQuick = signal('');
+
+  quickOptions = signal<{ label: string; value: string }[]>([]);
 
   private apiService = inject(ContentApiService);
   private searchSubject = new Subject<string>();
@@ -764,6 +778,8 @@ export class ContentSelectorDialogComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.selectedItems.set([...this.existingItems]);
+
+    this._buildQuickOptions();
 
     this.searchSub = this.searchSubject.pipe(
       debounceTime(300),
@@ -849,7 +865,7 @@ export class ContentSelectorDialogComponent implements OnInit, OnDestroy {
         items,
         layout: 'two-column',
         showDescription: this.showDescription(),
-        showCategory: false,
+        showCategory: this.showCategory(),
         borderRadius: 8,
         spacing: 8,
         cardBackground: '#ffffff',
@@ -874,6 +890,46 @@ export class ContentSelectorDialogComponent implements OnInit, OnDestroy {
     img.src = 'data:image/svg+xml,' + encodeURIComponent(
       '<svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 56 56"><rect fill="#e5e7eb" width="56" height="56"/><text x="28" y="32" text-anchor="middle" fill="#9ca3af" font-size="12" font-family="Arial">תמונה</text></svg>'
     );
+  }
+
+  applyQuick(value: string): void {
+    this.activeQuick.set(this.activeQuick() === value ? '' : value);
+    if (this.activeQuick()) {
+      switch (value) {
+        case 'latest': this.sortBy.set('publishDate_desc'); break;
+        case 'popular': this.sortBy.set('viewCount_desc'); break;
+        case 'upcoming': this.sortBy.set('eventDate_asc'); break;
+      }
+    } else {
+      this.sortBy.set('');
+    }
+    this.page.set(1);
+    this.loadResults();
+  }
+
+  private _buildQuickOptions(): void {
+    const type = this.config?.type;
+    const opts: { label: string; value: string }[] = [];
+    switch (type) {
+      case 'articles':
+        opts.push({ label: 'האחרונות', value: 'latest' }, { label: 'הפופולריות', value: 'popular' });
+        break;
+      case 'chords':
+        opts.push({ label: 'החדשים', value: 'latest' }, { label: 'הפופולריים', value: 'popular' });
+        break;
+      case 'podcasts':
+        opts.push({ label: 'האחרונים', value: 'latest' }, { label: 'הפופולריים', value: 'popular' });
+        break;
+      case 'events':
+        opts.push({ label: 'הקרובות', value: 'upcoming' });
+        break;
+      case 'profiles':
+      case 'providers':
+      case 'teachers':
+        opts.push({ label: 'החדשים', value: 'latest' }, { label: 'מומלצים', value: 'featured' });
+        break;
+    }
+    this.quickOptions.set(opts);
   }
 
   private loadResults(): void {

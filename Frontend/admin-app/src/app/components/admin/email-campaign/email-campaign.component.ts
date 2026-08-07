@@ -655,7 +655,7 @@ export class EmailCampaignComponent implements OnInit {
     this.imageUrl = image.src;
     this.imageAlt = image.alt;
     const wrapper = image.closest('table[role="presentation"], div[style*="text-align"]') as HTMLElement | null;
-    this.imageWidth = Math.min(100, Math.max(30, parseInt(wrapper?.getAttribute('width') || image.style.width, 10) || 100));
+    this.imageWidth = Math.min(200, Math.max(30, parseInt(wrapper?.getAttribute('width') || image.style.width, 10) || 100));
     const align = wrapper?.getAttribute('align') || wrapper?.style.textAlign;
     this.imageAlign = align === 'right' || align === 'left' ? align : 'center';
     this.imageLink = image.closest('a')?.href || '';
@@ -666,7 +666,7 @@ export class EmailCampaignComponent implements OnInit {
   insertImage() {
     const url   = this.imageUrl;
     const alt   = this.imageAlt;
-    const width = Math.min(100, Math.max(30, Number(this.imageWidth) || 100));
+    const width = Math.min(200, Math.max(30, Number(this.imageWidth) || 100));
     const align = this.imageAlign;
     const caption = this.escapeHtml(this.imageCaption);
     const link = this.safeUrl(this.imageLink);
@@ -691,7 +691,7 @@ export class EmailCampaignComponent implements OnInit {
     const image = `<img src="${this.escapeHtml(url)}" alt="${this.escapeHtml(alt)}" width="${pixelWidth}" style="width:100%;max-width:${pixelWidth}px;height:auto;display:block;border:0;" />`;
     const linkedImage = link ? `<a href="${link}" target="_blank" rel="noopener noreferrer">${image}</a>` : image;
     const tableAlign = align === 'left' ? 'left' : align === 'right' ? 'right' : 'center';
-    return `<table role="presentation" class="email-img-table" cellpadding="0" cellspacing="0" border="0" width="${width}%" align="${tableAlign}" style="width:${width}%;max-width:520px;margin:16px ${align === 'center' ? 'auto' : '0'};"><tr><td align="${tableAlign}">${linkedImage}${caption ? `<div style="font-size:13px;color:#404040;margin-top:6px;text-align:${align};">${caption}</div>` : ''}</td></tr></table>`;
+    return `<table role="presentation" class="email-img-table" cellpadding="0" cellspacing="0" border="0" width="${width}%" align="${tableAlign}" style="width:${width}%;max-width:${pixelWidth}px;margin:16px ${align === 'center' ? 'auto' : '0'};"><tr><td align="${tableAlign}">${linkedImage}${caption ? `<div style="font-size:13px;color:#404040;margin-top:6px;text-align:${align};">${caption}</div>` : ''}</td></tr></table>`;
   }
 
   openVideoDialog() {

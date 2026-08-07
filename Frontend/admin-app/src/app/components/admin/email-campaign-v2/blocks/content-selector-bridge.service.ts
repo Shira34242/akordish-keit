@@ -5,12 +5,12 @@ import { ContentApiService } from './content-api.service';
 
 let _bridge: ContentSelectorBridgeService | null = null;
 
-export function openArticleSelector(existingItems: unknown[] = []): Promise<ArticleSelectionResult | null> {
+export function openArticleSelector(existingItems: unknown[] = [], showCategory?: boolean, showDescription?: boolean): Promise<ArticleSelectionResult | null> {
   if (!_bridge) {
     console.error('[ContentSelectorBridge] Bridge not initialized');
     return Promise.resolve(null);
   }
-  return _bridge.selectArticles(existingItems as ContentItem[]);
+  return _bridge.selectArticles(existingItems as ContentItem[], showCategory, showDescription);
 }
 
 export function openChordsSelector(existingItems: unknown[] = []): Promise<ContentSelectionResult | null> {
@@ -68,7 +68,7 @@ export class ContentSelectorBridgeService {
     console.log('[ContentSelectorBridge] Initialized');
   }
 
-  selectArticles(existingItems: ContentItem[]): Promise<ArticleSelectionResult | null> {
+  selectArticles(existingItems: ContentItem[], showCategory?: boolean, showDescription?: boolean): Promise<ArticleSelectionResult | null> {
     console.log('[ContentSelectorBridge] Opening article selector dialog...');
     return new Promise((resolve) => {
       if (this.dialogRef) {
@@ -93,6 +93,8 @@ export class ContentSelectorBridgeService {
         searchFn: (search, page, pageSize) => this.apiService.searchArticles(search, page, pageSize),
       };
       component.existingItems = existingItems;
+      if (showCategory !== undefined) component.showCategory.set(showCategory);
+      if (showDescription !== undefined) component.showDescription.set(showDescription);
 
       component.confirmed.subscribe((result: ArticleSelectionResult) => {
         resolve(result);

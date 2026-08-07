@@ -13,6 +13,7 @@ import { filter, Subscription } from 'rxjs';
 })
 export class AdminLayoutComponent implements OnInit, OnDestroy {
     pendingReportsCount = 0;
+    isDesignStep = false;
     private routerSub?: Subscription;
 
     constructor(
@@ -22,15 +23,22 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
 
     ngOnInit() {
         this.refreshPendingReportsCount();
+        this.checkDesignStepRoute();
         this.routerSub = this.router.events
             .pipe(filter(event => event instanceof NavigationEnd))
             .subscribe(() => {
                 this.refreshPendingReportsCount();
+                this.checkDesignStepRoute();
             });
     }
 
     ngOnDestroy() {
         this.routerSub?.unsubscribe();
+    }
+
+    checkDesignStepRoute() {
+        const url = this.router.url;
+        this.isDesignStep = /\/email-v2\/(new|\d+\/edit)/.test(url);
     }
 
     refreshPendingReportsCount() {

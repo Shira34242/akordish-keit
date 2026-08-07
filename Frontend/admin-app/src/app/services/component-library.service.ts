@@ -5,8 +5,8 @@ import {
   type ComponentCategory,
   type SaveComponentData,
   COMPONENT_CATEGORIES,
-} from '../blocks/component-library.types';
-import { ALL_SYSTEM_BLOCKS } from '../blocks/system-blocks';
+} from '../components/admin/email-campaign-v2/blocks/component-library.types';
+import { ALL_SYSTEM_BLOCKS } from '../components/admin/email-campaign-v2/blocks/system-blocks';
 
 const USER_BLOCKS_KEY = 'akd_email_v2_user_blocks';
 

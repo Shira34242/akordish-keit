@@ -586,7 +586,7 @@
         <label class="field-label">טקסט חלופי (alt)</label>
         <input class="field-input" type="text" [(ngModel)]="imageAlt" placeholder="תיאור התמונה" />
         <label class="field-label">גודל: {{ imageWidth }}%</label>
-        <input class="image-size-range" type="range" min="30" max="100" step="5" [(ngModel)]="imageWidth" />
+        <input class="image-size-range" type="range" min="30" max="200" step="5" [(ngModel)]="imageWidth" />
         <label class="field-label">יישור</label>
         <div class="choice-row">
           <button type="button" [class.active]="imageAlign === 'right'" (click)="imageAlign = 'right'">ימין</button>

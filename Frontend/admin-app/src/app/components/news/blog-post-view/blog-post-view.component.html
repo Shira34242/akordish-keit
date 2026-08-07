@@ -9,22 +9,28 @@
     <span class="featured-image-credit hero-image-credit" *ngIf="article.featuredImageUrl && article.featuredImageCredit?.trim()">{{ article.featuredImageCredit }}</span>
     <div class="hero-content">
       <span class="category-badge">{{ getCategoryName() }}</span>
+
+      <app-breadcrumbs [items]="breadcrumbItems" />
+
       <h1 class="article-title">{{ article.title }}</h1>
       <p class="article-subtitle" *ngIf="article.subtitle">{{ article.subtitle }}</p>
-      <div class="article-meta">
-        <span class="meta-item" *ngIf="article.authorName">{{ article.authorName }} • </span>
-        <span class="meta-item">{{ formatDate(article.publishDate) }}</span>
-      </div>
 
-      <!-- Share and Favorite Icons -->
+      <!-- Share Button -->
       <div class="article-actions">
-          <span class="material-icons" (click)="shareArticle()" title="שתף">share</span>
-          <span class="material-icons" (click)="openReportModal()" title="דווח על טעות">report</span>
+        <button class="share-button" (click)="shareArticle()">
+          <span class="material-icons">share</span>
+          <span>שתפו את הכתבה</span>
+        </button>
       </div>
 
       <!-- Uploader Badge -->
       <div *ngIf="article.uploaderProfile" class="hero-uploader-badge">
         <app-content-uploader-badge [profile]="article.uploaderProfile" />
+      </div>
+
+      <div class="article-meta">
+        <span class="meta-item" *ngIf="article.authorName">{{ article.authorName }} • </span>
+        <span class="meta-item">{{ formatDate(article.publishDate) }}</span>
       </div>
 
     </div>
@@ -217,6 +223,8 @@
         <p class="feedback-thanks" *ngIf="feedbackGiven">תודה על המשוב!</p>
         <p class="feedback-error" *ngIf="feedbackErrorMessage">{{ feedbackErrorMessage }}</p>
       </div>
+
+      <p class="report-link" (click)="openReportModal()">מצאתם טעות או בעיה בתוכן? <span class="report-link-action">דווחו לנו!</span></p>
 
       <!-- Mid-article Banner Ad — full width outside content container -->
       <div class="mid-banner-area">

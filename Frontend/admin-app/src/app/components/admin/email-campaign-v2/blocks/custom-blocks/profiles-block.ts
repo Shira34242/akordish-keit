@@ -4,8 +4,8 @@ import { ContentItem } from '../types';
 
 export const PROFILES_BLOCK: CustomBlockDefinition = {
   type: 'profiles',
-  name: 'פרופילים מאינדקס עולם המוזיקה',
-  icon: 'person',
+  name: 'פרופילים',
+  icon: 'group',
   description: 'הצגת פרופילים נבחרים מנותני שירות ומורים',
   fields: [
     {
@@ -105,7 +105,7 @@ export const PROFILES_BLOCK: CustomBlockDefinition = {
 
       <a href="{{ item.publicUrl }}" target="_blank" style="text-decoration:none;display:block;direction:rtl;">
 
-        <table width="100%" cellpadding="0" cellspacing="0" border="0" dir="rtl" style="border-radius:{{ card_radius }}px;overflow:hidden;background-color:#F2F2F2;">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" dir="rtl" style="height:100%;border-radius:{{ card_radius }}px;overflow:hidden;background-color:#F2F2F2;">
           <tr>
             <td style="padding:8px;">
               <table width="100%" cellpadding="0" cellspacing="0" border="0" style="aspect-ratio:1/1;border-radius:{{ img_radius }}px;overflow:hidden;background-color:#ffffff;">
@@ -170,6 +170,6 @@ export const PROFILES_BLOCK: CustomBlockDefinition = {
     }
   `,
   defaultStyles: {
-    padding: { top: 0, right: 0, bottom: 0, left: 0 },
+    padding: { top: 12, right: 0, bottom: 12, left: 0 },
   },
 };

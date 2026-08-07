@@ -640,6 +640,8 @@
 .editor-body img {
   max-width: 100%;
   height: auto;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .editor-body table {
@@ -652,6 +654,8 @@
   border-collapse: collapse !important;
   border-spacing: 0 !important;
   outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .editor-body .email-img-table tr {
@@ -662,6 +666,8 @@
   background: transparent !important;
   padding: 0 !important;
   border-radius: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .editor-body table[role="presentation"]:not(.email-img-table) {

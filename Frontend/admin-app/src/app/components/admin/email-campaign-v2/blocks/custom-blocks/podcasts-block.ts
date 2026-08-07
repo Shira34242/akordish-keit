@@ -4,8 +4,8 @@ import { ContentItem } from '../types';
 
 export const PODCASTS_BLOCK: CustomBlockDefinition = {
   type: 'podcasts',
-  name: 'פודקאסטים מאקורדישקייט',
-  icon: 'podcasts',
+  name: 'פודקאסטים',
+  icon: 'headphones',
   description: 'הצגת פרקי פודקאסט נבחרים',
   fields: [
     {
@@ -187,6 +187,6 @@ export const PODCASTS_BLOCK: CustomBlockDefinition = {
     }
   `,
   defaultStyles: {
-    padding: { top: 0, right: 0, bottom: 0, left: 0 },
+    padding: { top: 12, right: 0, bottom: 12, left: 0 },
   },
 };

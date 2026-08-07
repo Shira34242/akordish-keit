@@ -26,11 +26,20 @@ export class AutosaveService {
   readonly lastSavedAt = signal<Date | null>(null);
   readonly saveError = signal<string | null>(null);
 
+  private _lastSavedCampaignId: number | null = null;
   private _lastSavedHash: string | null = null;
   private _saveInProgress = false;
   private _pendingSnapshot: SaveSnapshot | null = null;
   private _retryCount = 0;
   private readonly _maxRetries = 3;
+
+  getCampaignId(): number | null {
+    return this._lastSavedCampaignId;
+  }
+
+  setCampaignId(id: number): void {
+    this._lastSavedCampaignId = id;
+  }
 
   setBaseline(snapshot: SaveSnapshot): void {
     if (this._lastSavedHash === null) {
@@ -95,6 +104,7 @@ export class AutosaveService {
   }
 
   reset(): void {
+    this._lastSavedCampaignId = null;
     this._lastSavedHash = null;
     this._saveInProgress = false;
     this._pendingSnapshot = null;
@@ -136,6 +146,7 @@ export class AutosaveService {
 
         if (result?.campaignId) {
           snapshot.campaignId = result.campaignId;
+          this._lastSavedCampaignId = result.campaignId;
         }
 
         this._lastSavedHash = hash;
@@ -160,21 +171,46 @@ export class AutosaveService {
           this._lastSavedHash = null;
           this.saveState.set('failed');
 
+          const errorBody = error?.error;
+
+          const detail =
+            errorBody?.message ||
+            errorBody?.detail ||
+            errorBody?.title ||
+            (typeof errorBody === 'string' ? errorBody : '') ||
+            error?.message ||
+            '';
+
           let message = 'השמירה נכשלה';
-          if (error?.error?.message) {
-            message = error.error.message;
-          } else if (status === 0 || !status) {
+          if (status === 0 || !status) {
             message = 'אין חיבור לשרת. בדוק את החיבור ונסה שוב.';
           } else if (status === 401 || status === 403) {
             message = 'אין הרשאה לשמור. ייתכן שפג תוקף ההתחברות.';
           } else if (status === 404) {
             message = 'הקמפיין לא נמצא בשרת.';
           } else if (status >= 500) {
-            message = 'שגיאת שרת. נסה שוב מאוחר יותר.';
+            message = detail
+              ? `שגיאת שרת (${status}): ${detail}`
+              : `שגיאת שרת (${status})`;
+          } else if (status >= 400) {
+            message = detail
+              ? `שגיאה ${status}: ${detail}`
+              : `שגיאה ${status}`;
+          } else if (detail) {
+            message = detail;
+          }
+
+          if (!detail && errorBody) {
+            const summary = JSON.stringify(errorBody).substring(0, 300);
+            message = `שגיאה ${status || ''}: ${summary}`;
           }
 
           this.saveError.set(message);
-          console.error('[Autosave] Save failed:', error);
+          console.error('[Autosave] Save failed', {
+            status,
+            errorBody,
+            fullError: error,
+          });
 
           this._continueSaveQueue();
           return false;

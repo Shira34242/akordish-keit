@@ -4,7 +4,7 @@ import { ContentItem } from '../types';
 
 export const CHORDS_BLOCK: CustomBlockDefinition = {
   type: 'chords',
-  name: 'אקורדים מאקורדישקייט',
+  name: 'אקורדים',
   icon: 'music_note',
   description: 'הצגת אקורדים נבחרים בכרטיסים',
   fields: [
@@ -182,6 +182,6 @@ export const CHORDS_BLOCK: CustomBlockDefinition = {
     }
   `,
   defaultStyles: {
-    padding: { top: 0, right: 0, bottom: 0, left: 0 },
+    padding: { top: 12, right: 0, bottom: 12, left: 0 },
   },
 };

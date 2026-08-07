@@ -1,0 +1,33 @@
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: var(--space-sm) 0;
+  direction: rtl;
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-xs);
+  line-height: var(--lh-small);
+}
+
+.breadcrumb-link {
+  color: inherit;
+  text-decoration: none;
+  opacity: 0.55;
+  transition: opacity 0.15s;
+}
+
+.breadcrumb-link:hover {
+  opacity: 0.85;
+}
+
+.breadcrumb-current {
+  opacity: 0.75;
+}
+
+.breadcrumb-separator {
+  opacity: 0.35;
+  font-size: var(--font-xs);
+  user-select: none;
+}
