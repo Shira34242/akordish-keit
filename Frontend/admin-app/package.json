@@ -6,8 +6,9 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
-  },
+      "test": "ng test",
+      "postinstall": "patch-package"
+    },
   "prettier": {
     "printWidth": 100,
     "singleQuote": true,
@@ -29,6 +30,8 @@
     "@angular/forms": "^20.3.0",
     "@angular/platform-browser": "^20.3.0",
     "@angular/router": "^20.3.0",
+    "@templatical/editor": "0.24.1",
+    "@templatical/renderer": "0.24.1",
     "@tiptap/core": "^3.27.1",
     "@tiptap/extension-bubble-menu": "^3.27.1",
     "@tiptap/extension-floating-menu": "^3.27.1",
@@ -58,6 +61,7 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
+    "patch-package": "6.5.1",
     "sharp": "^0.34.5",
     "typescript": "~5.9.2"
   }

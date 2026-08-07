@@ -87,6 +87,38 @@ namespace AkordishKeit.Services
             }
         }
 
+        public async Task<string?> UploadStringAsync(string content, string fileName, string? folder = null)
+        {
+            var bytes = System.Text.Encoding.UTF8.GetBytes(content);
+            using var stream = new MemoryStream(bytes);
+            return await UploadAsync(stream, fileName, "application/json", folder);
+        }
+
+        public async Task<string?> DownloadStringAsync(string blobPath)
+        {
+            if (_container == null)
+            {
+                _logger.LogWarning("Azure Blob download skipped (not configured): {Path}", blobPath);
+                return null;
+            }
+
+            try
+            {
+                var blobClient = _container.GetBlobClient(blobPath);
+                var response = await blobClient.DownloadContentAsync();
+                return response.Value.Content.ToString();
+            }
+            catch (Azure.RequestFailedException ex) when (ex.Status == 404)
+            {
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to download blob: {Path}", blobPath);
+                return null;
+            }
+        }
+
         public async Task<bool> DeleteAsync(string url)
         {
             if (_container == null)

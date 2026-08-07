@@ -22,6 +22,11 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "he-HE000000.js",
+                "input": "node_modules/@templatical/editor/dist",
+                "output": ""
               }
             ],
             "styles": [

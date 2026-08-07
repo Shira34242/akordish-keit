@@ -122,12 +122,21 @@ builder.Services.AddScoped<IReferralService, ReferralService>();
 builder.Services.AddScoped<INewsPageSectionService, NewsPageSectionService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IEmailV2Service, EmailV2Service>();
 builder.Services.AddScoped<IAgencyService, AgencyService>();
 builder.Services.AddScoped<IPodcastService, PodcastService>();
 builder.Services.AddScoped<IArtistSuggestionService, ArtistSuggestionService>();
 
 // 🔐 Security Services
 builder.Services.AddSingleton<ICsrfTokenService, CsrfTokenService>();
+
+// Email Pipeline
+builder.Services.AddScoped<AkordishKeit.Services.EmailPipeline.IBrevoEmailSender, AkordishKeit.Services.EmailPipeline.BrevoEmailSender>();
+builder.Services.AddScoped<AkordishKeit.Services.EmailPipeline.IMessageTracker, AkordishKeit.Services.EmailPipeline.BlobMessageTracker>();
+builder.Services.AddScoped<AkordishKeit.Services.EmailPipeline.IEmailPersonalizationStep, AkordishKeit.Services.EmailPipeline.EmailPersonalizationStep>();
+builder.Services.AddScoped<AkordishKeit.Services.EmailPipeline.IEmailUtmStep, AkordishKeit.Services.EmailPipeline.EmailUtmStep>();
+builder.Services.AddScoped<AkordishKeit.Services.EmailPipeline.IEmailSendPipeline, AkordishKeit.Services.EmailPipeline.EmailSendPipeline>();
+builder.Services.AddScoped<AkordishKeit.Services.EmailTrackingService>();
 
 // Storage
 builder.Services.AddSingleton<IAzureBlobService, AzureBlobService>();

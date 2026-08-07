@@ -478,6 +478,39 @@ export const routes: Routes = [
                         path: 'email',
                         loadComponent: () => import('./components/admin/email-campaign/email-campaign.component').then(m => m.EmailCampaignComponent),
                         title: 'שליחת מייל - אקורדישקייט'
+                    },
+                    {
+                        path: 'email-v2',
+                        loadComponent: () => import('./components/admin/email-campaign-v2/email-campaign-v2.component').then(m => m.EmailCampaignV2Component),
+                        children: [
+                            {
+                                path: '',
+                                loadComponent: () => import('./components/admin/email-campaign-v2/v2-drafts-list.component').then(m => m.V2DraftsListComponent),
+                                title: 'השליחה המשודרגת - אקורדישקייט'
+                            },
+                            {
+                                path: 'new',
+                                loadComponent: () => import('./components/admin/email-campaign-v2/v2-design-step.component').then(m => m.V2DesignStepComponent),
+                                canDeactivate: [() => import('./guards/unsaved-design-changes.guard').then(m => m.unsavedDesignChangesGuard)],
+                                title: 'עיצוב המייל - אקורדישקייט'
+                            },
+                            {
+                                path: ':id/edit',
+                                loadComponent: () => import('./components/admin/email-campaign-v2/v2-design-step.component').then(m => m.V2DesignStepComponent),
+                                canDeactivate: [() => import('./guards/unsaved-design-changes.guard').then(m => m.unsavedDesignChangesGuard)],
+                                title: 'עיצוב המייל - אקורדישקייט'
+                            },
+                            {
+                                path: ':id/send',
+                                loadComponent: () => import('./components/admin/email-campaign-v2/v2-send-step.component').then(m => m.V2SendStepComponent),
+                                title: 'הגדרות ושליחה - אקורדישקייט'
+                            },
+                            {
+                                path: ':id/results',
+                                loadComponent: () => import('./components/admin/email-campaign-v2/v2-results.component').then(m => m.V2ResultsComponent),
+                                title: 'אנליטיקת קמפיין - אקורדישקייט'
+                            },
+                        ]
                     }
                 ]
             },

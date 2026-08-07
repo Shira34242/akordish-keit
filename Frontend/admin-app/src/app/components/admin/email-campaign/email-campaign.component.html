@@ -199,9 +199,6 @@
         <!-- Toolbar -->
         <div
           class="editor-toolbar editor-toolbar--floating"
-          [class.visible]="editorMenuVisible"
-          [style.left.px]="editorMenuX"
-          [style.top.px]="editorMenuY"
           (mousedown)="onToolbarMouseDown($event)">
           <div class="toolbar-group">
             <button class="tb-btn" (click)="format('bold')" title="מודגש"><strong>B</strong></button>
@@ -229,28 +226,43 @@
             </button>
           </div>
           <div class="toolbar-group">
-            <select class="tb-select tb-select--font" (change)="setFontFamily($event)" title="פונט">
-              <option value="">פונט האתר</option>
-              <option value="Open Sans, Arial, sans-serif">Open Sans</option>
+            <select class="tb-select tb-select--font" [value]="activeFontFamily" (change)="setFontFamily($event)" title="פונט">
+              <option value="">פונט</option>
+              <option value="Open Sans, Arial, Helvetica, sans-serif">Open Sans</option>
               <option value="Arial, Helvetica, sans-serif">Arial</option>
+              <option value="Assistant, Arial, sans-serif">Assistant</option>
+              <option value="Heebo, Arial, sans-serif">Heebo</option>
+              <option value="Rubik, Arial, sans-serif">Rubik</option>
+              <option value="Karantina, Arial, sans-serif">Karantina</option>
               <option value="Georgia, serif">Georgia</option>
+              <option value="'Times New Roman', serif">Times New Roman</option>
+              <option value="Verdana, Geneva, sans-serif">Verdana</option>
+              <option value="Tahoma, Geneva, sans-serif">Tahoma</option>
             </select>
-            <select class="tb-select" (change)="setFontWeight($event)" title="משקל פונט">
+            <select class="tb-select" [value]="activeFontWeight" (change)="setFontWeight($event)" title="משקל פונט">
               <option value="">משקל</option>
-              <option value="300">דק</option>
-              <option value="400">רגיל</option>
-              <option value="600">חצי מודגש</option>
-              <option value="700">מודגש</option>
-              <option value="800">כבד</option>
+              <option value="300">300</option>
+              <option value="400">400</option>
+              <option value="500">500</option>
+              <option value="600">600</option>
+              <option value="700">700</option>
+              <option value="800">800</option>
             </select>
-            <select class="tb-select" (change)="setFontSize($event)" title="גודל טקסט">
+            <select class="tb-select" [value]="activeFontSize" (change)="setFontSize($event)" title="גודל טקסט">
               <option value="">גודל</option>
-              <option value="1">קטן מאוד</option>
-              <option value="2">קטן</option>
-              <option value="3">רגיל</option>
-              <option value="4">גדול</option>
-              <option value="5">גדול מאוד</option>
-              <option value="6">ענק</option>
+              <option value="10px">10px</option>
+              <option value="12px">12px</option>
+              <option value="14px">14px</option>
+              <option value="16px">16px</option>
+              <option value="18px">18px</option>
+              <option value="20px">20px</option>
+              <option value="22px">22px</option>
+              <option value="24px">24px</option>
+              <option value="28px">28px</option>
+              <option value="32px">32px</option>
+              <option value="36px">36px</option>
+              <option value="40px">40px</option>
+              <option value="48px">48px</option>
             </select>
             <div class="color-picker-wrap" title="צבע טקסט">
               <span class="material-symbols-outlined color-icon">format_color_text</span>

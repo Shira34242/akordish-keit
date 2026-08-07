@@ -103,6 +103,31 @@ export class EmailCampaignComponent implements OnInit {
   private editingImage: HTMLImageElement | null = null;
   private editingButton: HTMLTableElement | null = null;
 
+  activeFontSize = '';
+  activeFontFamily = '';
+  activeFontWeight = '';
+
+  private readonly FONT_STACKS: string[] = [
+    'Open Sans, Arial, Helvetica, sans-serif',
+    'Arial, Helvetica, sans-serif',
+    'Assistant, Arial, sans-serif',
+    'Heebo, Arial, sans-serif',
+    'Rubik, Arial, sans-serif',
+    'Karantina, Arial, sans-serif',
+    'Georgia, serif',
+    'Times New Roman, serif',
+    'Verdana, Geneva, sans-serif',
+    'Tahoma, Geneva, sans-serif',
+  ];
+
+  private matchFontStack(raw: string): string {
+    const normalized = raw.replace(/['"]/g, '').toLowerCase();
+    for (const stack of this.FONT_STACKS) {
+      if (normalized.includes(stack.replace(/['"]/g, '').toLowerCase())) return stack;
+    }
+    return '';
+  }
+
   readonly recipientGroups = [
     { value: EmailRecipientGroup.AllUsers,            label: 'כל המשתמשים',        icon: 'group' },
     { value: EmailRecipientGroup.ActiveOnly,          label: 'פעילים בלבד',         icon: 'person_check' },
@@ -361,7 +386,8 @@ export class EmailCampaignComponent implements OnInit {
 
   saveDraft() {
     const subject = this.subject.trim() || 'טיוטה ללא נושא';
-    const draft: SavedEmail = { id: Date.now(), subject, htmlBody: this.editorBody.nativeElement.innerHTML, fromName: this.fromName, savedAt: new Date().toISOString() };
+    const rawHtml = this.cleanupHTML(this.editorBody.nativeElement.innerHTML);
+    const draft: SavedEmail = { id: Date.now(), subject, htmlBody: rawHtml, fromName: this.fromName, savedAt: new Date().toISOString() };
     this.drafts = [draft, ...this.drafts].slice(0, 20);
     localStorage.setItem('akordish-email-drafts', JSON.stringify(this.drafts));
   }
@@ -377,7 +403,7 @@ export class EmailCampaignComponent implements OnInit {
     if (!recipientEmail) return;
     this.emailService.sendTestEmail({
       subject: this.subject,
-      htmlBody: this.editorBody.nativeElement.innerHTML,
+      htmlBody: this.cleanupHTML(this.editorBody.nativeElement.innerHTML),
       recipientGroup: this.recipientGroup,
       fromName: this.fromName,
       recipientEmail,
@@ -389,29 +415,129 @@ export class EmailCampaignComponent implements OnInit {
   }
 
   setFontSize(event: Event) {
-    const size = (event.target as HTMLSelectElement).value;
-    if (size) this.format('fontSize', size);
+    const px = (event.target as HTMLSelectElement).value;
+    if (px) this.applyInlineStyle({ 'font-size': px });
+    this.activeFontSize = px;
   }
 
   setFontFamily(event: Event) {
     const font = (event.target as HTMLSelectElement).value;
-    if (font) this.format('fontName', font);
+    if (font) this.applyInlineStyle({ 'font-family': font });
+    this.activeFontFamily = font;
   }
 
   setFontWeight(event: Event) {
     const weight = (event.target as HTMLSelectElement).value;
-    if (!weight) return;
+    if (weight) this.applyInlineStyle({ 'font-weight': weight });
+    this.activeFontWeight = weight;
+  }
+
+  private applyInlineStyle(properties: Record<string, string>): void {
     this.restoreSelection();
-    document.execCommand('styleWithCSS', false, 'true');
-    document.execCommand('fontSize', false, '3');
     const selection = window.getSelection();
-    const element = selection?.anchorNode?.parentElement?.closest('font, span');
-    if (element instanceof HTMLElement) element.style.fontWeight = weight;
+    if (!selection || selection.rangeCount === 0) { this.editorBody.nativeElement.focus(); return; }
+    const anchorNode = selection.anchorNode;
+    if (!anchorNode || !this.editorBody.nativeElement.contains(anchorNode)) { this.editorBody.nativeElement.focus(); return; }
+    const range = selection.getRangeAt(0);
+    if (range.collapsed) {
+      const span = document.createElement('span');
+      for (const [key, value] of Object.entries(properties)) span.style.setProperty(key, value);
+      span.appendChild(document.createTextNode('\u200B'));
+      range.insertNode(span);
+      range.setStartAfter(span.firstChild!);
+      range.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      this.saveRange(range.cloneRange());
+    } else {
+      this.wrapSelectionWithStyle(properties);
+    }
     this.editorBody.nativeElement.focus();
+  }
+
+  private wrapSelectionWithStyle(properties: Record<string, string>): void {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+    const range = selection.getRangeAt(0);
+    const commonAncestor = range.commonAncestorContainer;
+    const existingSpan = commonAncestor.nodeType === Node.ELEMENT_NODE
+      ? (commonAncestor as Element).closest('span')
+      : commonAncestor.parentElement?.closest('span') ?? null;
+    const entireSpanSelected = existingSpan instanceof HTMLSpanElement
+      && existingSpan === range.startContainer.parentElement?.closest('span')
+      && existingSpan === range.endContainer.parentElement?.closest('span')
+      && range.startOffset === 0
+      && range.endOffset === (range.endContainer.textContent?.length ?? 0)
+      && existingSpan.contains(range.startContainer)
+      && existingSpan.contains(range.endContainer);
+    if (entireSpanSelected) {
+      for (const [key, value] of Object.entries(properties)) existingSpan.style.setProperty(key, value);
+      selection.removeAllRanges();
+      const newRange = document.createRange();
+      newRange.selectNodeContents(existingSpan);
+      selection.addRange(newRange);
+      this.saveRange(newRange.cloneRange());
+      return;
+    }
+    const fragment = range.extractContents();
+    const span = document.createElement('span');
+    for (const [key, value] of Object.entries(properties)) span.style.setProperty(key, value);
+    span.appendChild(fragment);
+    range.insertNode(span);
+    selection.removeAllRanges();
+    const newRange = document.createRange();
+    newRange.selectNodeContents(span);
+    selection.addRange(newRange);
+    this.saveRange(newRange.cloneRange());
+  }
+
+  private saveRange(range: Range): void { this.savedRange = range.cloneRange(); }
+
+  private getActiveStyleValue(property: string, mapFn?: (v: string) => string): string {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return '';
+    const node = selection.anchorNode;
+    if (!node || !this.editorBody.nativeElement.contains(node)) return '';
+    let element: HTMLElement | null = node.nodeType === Node.ELEMENT_NODE ? (node as HTMLElement) : node.parentElement;
+    if (!element) return '';
+    while (element && element !== this.editorBody.nativeElement) {
+      const inlineValue = element.style.getPropertyValue(property);
+      if (inlineValue) return mapFn ? mapFn(inlineValue) : inlineValue;
+      element = element.parentElement;
+    }
+    const computed = window.getComputedStyle(node.nodeType === Node.ELEMENT_NODE ? (node as Element) : node.parentElement!);
+    const raw = computed.getPropertyValue(property);
+    return mapFn ? mapFn(raw) : raw;
+  }
+
+  private updateActiveStyleState(): void {
+    this.activeFontSize = this.getActiveStyleValue('font-size', (v) => {
+      const num = parseFloat(v);
+      if (!Number.isFinite(num)) return '';
+      return `${Math.round(num)}px`;
+    });
+    this.activeFontFamily = this.getActiveStyleValue('font-family', (v) => this.matchFontStack(v));
+    this.activeFontWeight = this.getActiveStyleValue('font-weight', (v) => {
+      const num = parseInt(v, 10);
+      return Number.isFinite(num) ? String(num) : '';
+    });
+  }
+
+  private cleanupHTML(html: string): string {
+    let cleaned = html.replace(/\u200B/g, '');
+    const temp = document.createElement('div');
+    temp.innerHTML = cleaned;
+    temp.querySelectorAll('span').forEach((s) => {
+      const hasContent = s.textContent?.trim() || s.querySelector('img, br');
+      if (!hasContent && !s.getAttribute('style')?.trim()) s.remove();
+      else if (!hasContent) s.remove();
+    });
+    return temp.innerHTML;
   }
 
   onEditorSelectionChange() {
     this.saveSelection();
+    this.updateActiveStyleState();
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
       this.editorMenuVisible = false;
@@ -565,7 +691,7 @@ export class EmailCampaignComponent implements OnInit {
     const image = `<img src="${this.escapeHtml(url)}" alt="${this.escapeHtml(alt)}" width="${pixelWidth}" style="width:100%;max-width:${pixelWidth}px;height:auto;display:block;border:0;" />`;
     const linkedImage = link ? `<a href="${link}" target="_blank" rel="noopener noreferrer">${image}</a>` : image;
     const tableAlign = align === 'left' ? 'left' : align === 'right' ? 'right' : 'center';
-    return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="${width}%" align="${tableAlign}" style="width:${width}%;max-width:520px;margin:16px ${align === 'center' ? 'auto' : '0'};"><tr><td align="${tableAlign}">${linkedImage}${caption ? `<div style="font-size:13px;color:#404040;margin-top:6px;text-align:${align};">${caption}</div>` : ''}</td></tr></table>`;
+    return `<table role="presentation" class="email-img-table" cellpadding="0" cellspacing="0" border="0" width="${width}%" align="${tableAlign}" style="width:${width}%;max-width:520px;margin:16px ${align === 'center' ? 'auto' : '0'};"><tr><td align="${tableAlign}">${linkedImage}${caption ? `<div style="font-size:13px;color:#404040;margin-top:6px;text-align:${align};">${caption}</div>` : ''}</td></tr></table>`;
   }
 
   openVideoDialog() {
@@ -656,7 +782,7 @@ export class EmailCampaignComponent implements OnInit {
     this.emailService
       .sendCampaign({
         subject:        this.subject,
-        htmlBody:       this.editorBody.nativeElement.innerHTML,
+        htmlBody:       this.cleanupHTML(this.editorBody.nativeElement.innerHTML),
         recipientGroup: this.recipientGroup,
         emailGroupId:   this.recipientGroup === EmailRecipientGroup.CustomGroup
                           ? (this.selectedEmailGroupId ?? undefined)
@@ -673,7 +799,7 @@ export class EmailCampaignComponent implements OnInit {
       .subscribe({
         next: (result) => {
           if (result.success) {
-            const item: SavedEmail = { id: Date.now(), subject: this.subject, htmlBody: this.editorBody.nativeElement.innerHTML, fromName: this.fromName, savedAt: new Date().toISOString() };
+            const item: SavedEmail = { id: Date.now(), subject: this.subject, htmlBody: this.cleanupHTML(this.editorBody.nativeElement.innerHTML), fromName: this.fromName, savedAt: new Date().toISOString() };
             this.sentEmails = [item, ...this.sentEmails].slice(0, 30);
             localStorage.setItem('akordish-email-history', JSON.stringify(this.sentEmails));
           }
