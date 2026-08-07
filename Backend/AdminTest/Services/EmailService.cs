@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using System.Security.Cryptography;
 using System.Net.Mail;
 using Ganss.Xss;
@@ -1048,14 +1049,67 @@ public class EmailService : IEmailService
         sanitizer.AllowedCssProperties.Clear();
         foreach (var property in new[]
         {
-            "background", "background-color", "border", "border-top", "border-collapse", "border-radius", "color", "display",
-            "font-family", "font-size", "font-style", "font-weight", "height", "line-height",
-            "margin", "margin-top", "margin-right", "margin-bottom", "margin-left", "max-width",
-            "padding", "padding-top", "padding-right", "padding-bottom", "padding-left", "text-align",
-            "text-decoration", "vertical-align", "width"
+            "background", "background-color", "background-image", "border", "border-top",
+            "border-right", "border-bottom", "border-left", "border-collapse", "border-radius",
+            "border-spacing", "box-sizing", "color", "display", "direction", "font-family",
+            "font-size", "font-style", "font-weight", "height", "left", "letter-spacing",
+            "line-height", "margin", "margin-top", "margin-right", "margin-bottom", "margin-left",
+            "max-height", "max-width", "min-height", "min-width",
+            "opacity", "overflow", "object-fit", "object-position",
+            "padding", "padding-top", "padding-right", "padding-bottom", "padding-left",
+            "position", "right", "text-align", "text-decoration", "text-overflow",
+            "text-transform", "top",
+            "transform", "vertical-align", "white-space", "width",
+            "z-index", "aspect-ratio"
         }) sanitizer.AllowedCssProperties.Add(property);
 
-        return sanitizer.Sanitize(content);
+        var protectedContent = ProtectCssFunctions(content);
+        var sanitized = sanitizer.Sanitize(protectedContent);
+        return RestoreCssFunctions(sanitized);
+    }
+
+    private static readonly string[] CssFunctionsToProtect =
+    {
+        "linear-gradient", "radial-gradient", "repeating-linear-gradient",
+        "rgba", "rgb", "hsl", "hsla", "var"
+    };
+
+    private static string ProtectCssFunctions(string html)
+    {
+        return Regex.Replace(html,
+            @"style\s*=\s*(""|')([^""']*)\1",
+            match =>
+            {
+                var quote = match.Groups[1].Value;
+                var css = match.Groups[2].Value;
+                var protectedCss = CssFunctionsToProtect.Aggregate(css, (current, func) =>
+                {
+                    var pattern = $@"{Regex.Escape(func)}\(([^()]*(\([^()]*\)[^()]*)*)\)";
+                    return Regex.Replace(current, pattern, m =>
+                        $"__CSSFN_{Convert.ToBase64String(Encoding.UTF8.GetBytes(m.Value))}__",
+                        RegexOptions.IgnoreCase);
+                });
+                return $"style={quote}{protectedCss}{quote}";
+            },
+            RegexOptions.IgnoreCase);
+    }
+
+    private static string RestoreCssFunctions(string html)
+    {
+        return Regex.Replace(html,
+            @"__CSSFN_([A-Za-z0-9+/=]+)__",
+            match =>
+            {
+                try
+                {
+                    var bytes = Convert.FromBase64String(match.Groups[1].Value);
+                    return Encoding.UTF8.GetString(bytes);
+                }
+                catch
+                {
+                    return match.Value;
+                }
+            });
     }
 
     private static string Base64UrlEncode(byte[] value) =>
