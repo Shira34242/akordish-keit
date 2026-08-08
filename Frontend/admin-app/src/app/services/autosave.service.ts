@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { EmailCampaignV2Service, type SaveEmailV2TemplateDto, type EmailV2TemplateDto } from './email-campaign-v2.service';
-import { firstValueFrom, timer } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 
 export interface SaveSnapshot {
   subject: string;
@@ -30,7 +30,6 @@ export class AutosaveService {
   private _lastSavedHash: string | null = null;
   private _saveInProgress = false;
   private _pendingSnapshot: SaveSnapshot | null = null;
-  private _retryCount = 0;
   private readonly _maxRetries = 3;
 
   getCampaignId(): number | null {
@@ -64,7 +63,6 @@ export class AutosaveService {
 
     this._saveInProgress = true;
     this._pendingSnapshot = null;
-    this._retryCount = 0;
     this.saveState.set('saving');
     this.saveError.set(null);
     this._executeSave(snapshot);
@@ -79,7 +77,6 @@ export class AutosaveService {
 
     if (this._saveInProgress) {
       this._pendingSnapshot = snapshot;
-      this._retryCount = 0;
       this.saveError.set(null);
       return new Promise<boolean>((resolve) => {
         const check = setInterval(() => {
@@ -96,7 +93,6 @@ export class AutosaveService {
     }
 
     this._saveInProgress = true;
-    this._retryCount = 0;
     this.saveState.set('saving');
     this.saveError.set(null);
     const success = await this._executeSaveAsync(snapshot);
@@ -108,7 +104,6 @@ export class AutosaveService {
     this._lastSavedHash = null;
     this._saveInProgress = false;
     this._pendingSnapshot = null;
-    this._retryCount = 0;
     this.saveState.set('idle');
     this.lastSavedAt.set(null);
     this.saveError.set(null);
@@ -121,11 +116,7 @@ export class AutosaveService {
   }
 
   private _executeSave(snapshot: SaveSnapshot): void {
-    this._executeSaveAsync(snapshot).then((success) => {
-      if (!success) {
-        this._handleSaveFailure();
-      }
-    });
+    void this._executeSaveAsync(snapshot);
   }
 
   private async _executeSaveAsync(snapshot: SaveSnapshot): Promise<boolean> {
@@ -153,9 +144,8 @@ export class AutosaveService {
         this.lastSavedAt.set(new Date());
         this.saveError.set(null);
 
-        this._continueSaveQueue();
-
         this.saveState.set('saved');
+        this._continueSaveQueue();
         setTimeout(() => {
           if (this.saveState() === 'saved') {
             this.saveState.set('idle');
@@ -200,6 +190,11 @@ export class AutosaveService {
             message = detail;
           }
 
+          // Do not expose server/MJML parser details in the admin UI.
+          if (status === 400) {
+            message = '׳”׳×׳•׳›׳ ׳©׳ ׳”׳׳™׳™׳ ׳׳™׳ ׳• ׳×׳§׳™׳. ׳‘׳“׳•׳§ ׳׳× ׳”׳¨׳›׳™׳‘ ׳”׳׳—׳¨׳•׳ ׳©׳”׳•׳¡׳£.';
+          }
+
           if (!detail && errorBody) {
             const summary = JSON.stringify(errorBody).substring(0, 300);
             message = `שגיאה ${status || ''}: ${summary}`;
@@ -233,17 +228,9 @@ export class AutosaveService {
       this._pendingSnapshot = null;
       if (this.isChanged(next)) {
         this._saveInProgress = true;
-        this._retryCount = 0;
         this.saveState.set('saving');
         this._executeSave(next);
       }
-    }
-  }
-
-  private _handleSaveFailure(): void {
-    this._saveInProgress = false;
-    if (this._pendingSnapshot) {
-      this._pendingSnapshot = null;
     }
   }
 

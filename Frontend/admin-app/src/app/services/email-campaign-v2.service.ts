@@ -19,6 +19,7 @@ export interface EmailV2TemplateDto {
   fromName: string;
   fromEmail?: string;
   designJson: string;
+  mjml?: string;
   htmlBody?: string;
   previewText?: string;
   status: string;

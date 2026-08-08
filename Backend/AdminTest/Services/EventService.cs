@@ -131,16 +131,52 @@ namespace AkordishKeit.Services
 
         public async Task<IEnumerable<UpcomingEventDto>> GetUpcomingEventsAsync(int limit = 15)
         {
-            var events = await _context.Events
+            limit = Math.Clamp(limit, 1, 50);
+            var today = DateTime.UtcNow.Date;
+            var activeEvents = _context.Events
+                .AsNoTracking()
                 .Include(e => e.EventArtists)
                     .ThenInclude(ea => ea.Artist)
-                .Where(e => !e.IsDeleted && e.IsActive)
-                // דף הבית מציג את ההופעות לפי מועד הפרסום, מהחדשה לישנה.
+                .Where(e => !e.IsDeleted && e.IsActive);
+
+            var latestUpcomingEvents = await activeEvents
+                .Where(e => e.EventDate >= today)
                 .OrderByDescending(e => e.CreatedAt)
                 .ThenByDescending(e => e.Id)
-                .Take(limit)
+                .Take(Math.Min(2, limit))
                 .ToListAsync();
 
+            var latestUpcomingIds = latestUpcomingEvents.Select(e => e.Id).ToList();
+            var remainingCount = limit - latestUpcomingEvents.Count;
+
+            if (remainingCount > 0)
+            {
+                var nearestUpcomingEvents = await activeEvents
+                    .Where(e => e.EventDate >= today && !latestUpcomingIds.Contains(e.Id))
+                    .OrderBy(e => e.EventDate)
+                    .ThenByDescending(e => e.CreatedAt)
+                    .ThenByDescending(e => e.Id)
+                    .Take(remainingCount)
+                    .ToListAsync();
+
+                latestUpcomingEvents.AddRange(nearestUpcomingEvents);
+                remainingCount -= nearestUpcomingEvents.Count;
+            }
+
+            if (remainingCount > 0)
+            {
+                var recentPastEvents = await activeEvents
+                    .Where(e => e.EventDate < today)
+                    .OrderByDescending(e => e.EventDate)
+                    .ThenByDescending(e => e.CreatedAt)
+                    .ThenByDescending(e => e.Id)
+                    .Take(remainingCount)
+                    .ToListAsync();
+
+                latestUpcomingEvents.AddRange(recentPastEvents);
+            }
+
+            var events = latestUpcomingEvents;
             return events.Select(e => new UpcomingEventDto
             {
                 Id = e.Id,

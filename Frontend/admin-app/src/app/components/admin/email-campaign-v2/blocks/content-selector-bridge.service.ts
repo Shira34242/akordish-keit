@@ -1,4 +1,4 @@
-import { Injectable, inject, ApplicationRef, EnvironmentInjector, createComponent } from '@angular/core';
+import { Injectable, inject, ApplicationRef, EnvironmentInjector, createComponent, type ComponentRef } from '@angular/core';
 import { ContentItem, ArticleSelectionResult, ContentSelectionResult, ContentSelectorConfig } from './types';
 import { ContentSelectorDialogComponent } from './content-selector-dialog.component';
 import { ContentApiService } from './content-api.service';
@@ -61,7 +61,7 @@ export class ContentSelectorBridgeService {
   private readonly appRef = inject(ApplicationRef);
   private readonly envInjector = inject(EnvironmentInjector);
   private readonly apiService = inject(ContentApiService);
-  private dialogRef: { component: ContentSelectorDialogComponent } | null = null;
+  private dialogRef: { componentRef: ComponentRef<ContentSelectorDialogComponent>; resolve: () => void } | null = null;
 
   constructor() {
     _bridge = this;
@@ -96,18 +96,12 @@ export class ContentSelectorBridgeService {
       if (showCategory !== undefined) component.showCategory.set(showCategory);
       if (showDescription !== undefined) component.showDescription.set(showDescription);
 
-      component.confirmed.subscribe((result: ArticleSelectionResult) => {
-        resolve(result);
-        this.destroyDialog();
-      });
+      component.confirmed.subscribe((result: ArticleSelectionResult) => this.closeDialog(resolve, result));
 
-      component.closed.subscribe(() => {
-        resolve(null);
-        this.destroyDialog();
-      });
+      component.closed.subscribe(() => this.closeDialog(resolve, null));
 
       this.appRef.attachView(componentRef.hostView);
-      this.dialogRef = { component };
+      this.dialogRef = { componentRef, resolve: () => resolve(null) };
     });
   }
 
@@ -146,18 +140,12 @@ export class ContentSelectorBridgeService {
       component.config = config;
       component.existingItems = existingItems;
 
-      component.contentConfirmed.subscribe((result: ContentSelectionResult) => {
-        resolve(result);
-        this.destroyDialog();
-      });
+      component.contentConfirmed.subscribe((result: ContentSelectionResult) => this.closeDialog(resolve, result));
 
-      component.closed.subscribe(() => {
-        resolve(null);
-        this.destroyDialog();
-      });
+      component.closed.subscribe(() => this.closeDialog(resolve, null));
 
       this.appRef.attachView(componentRef.hostView);
-      this.dialogRef = { component };
+      this.dialogRef = { componentRef, resolve: () => resolve(null) };
     });
   }
 
@@ -240,11 +228,18 @@ export class ContentSelectorBridgeService {
     }
   }
 
-  private destroyDialog(): void {
-    const hostElement = document.getElementById('akd-content-selector-host');
-    if (hostElement) {
-      document.body.removeChild(hostElement);
-    }
+  private closeDialog<T>(resolve: (result: T | null) => void, result: T | null): void {
+    this.destroyDialog(false);
+    resolve(result);
+  }
+
+  private destroyDialog(resolvePending = true): void {
+    const dialog = this.dialogRef;
     this.dialogRef = null;
+    if (!dialog) return;
+
+    this.appRef.detachView(dialog.componentRef.hostView);
+    dialog.componentRef.destroy();
+    if (resolvePending) dialog.resolve();
   }
 }

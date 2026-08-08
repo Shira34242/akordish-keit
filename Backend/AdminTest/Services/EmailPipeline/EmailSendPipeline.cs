@@ -47,6 +47,17 @@ public class EmailSendPipeline : IEmailSendPipeline
         var fromEmail = request.FromEmail ?? _configuration["Brevo:FromEmail"] ?? "noreply@akordishkeit.com";
         var fromName = request.FromName ?? _configuration["Brevo:FromName"] ?? "akordishkejit";
 
+        // Claim the draft atomically before resolving recipients or calling Brevo.  This
+        // protects against double-clicks and concurrent admin sessions sending the same
+        // V2 campaign twice (including when the app runs on more than one instance).
+        var claimed = await _context.EmailCampaigns
+            .Where(c => c.Id == campaignId && c.Status == "draft")
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(c => c.Status, "in_progress")
+                .SetProperty(c => c.UpdatedAt, DateTime.UtcNow));
+        if (claimed == 0)
+            return new EmailSendResultDto { Success = false, Message = "Campaign is not available for sending" };
+
         var campaign = await _context.EmailCampaigns.FindAsync(campaignId);
         if (campaign == null)
             return new EmailSendResultDto { Success = false, Message = "Campaign not found" };
@@ -80,7 +91,12 @@ public class EmailSendPipeline : IEmailSendPipeline
         recipients = await ExcludeUnsubscribedAsync(recipients);
 
         if (recipients.Count == 0)
+        {
+            campaign.Status = "failed";
+            campaign.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
             return new EmailSendResultDto { Success = false, Message = "no recipients found" };
+        }
 
         var subject = isTest ? $"[TEST] {request.Subject}" : request.Subject;
         var html = request.HtmlBody;
@@ -103,7 +119,7 @@ public class EmailSendPipeline : IEmailSendPipeline
                 var personalized = _personalization.Apply(html, variables);
 
                 var unsubscribeUrl = BuildUnsubscribeUrl(r.Email);
-                personalized = personalized.Replace("{{params.unsubscribe_url}}", unsubscribeUrl);
+                personalized = ReplaceUnsubscribePlaceholder(personalized, unsubscribeUrl);
 
                 var sendRequest = new BrevoSendRequest
                 {
@@ -157,7 +173,7 @@ public class EmailSendPipeline : IEmailSendPipeline
         campaign.FailedCount = failedCount;
         campaign.Status = sentCount > 0 ? "sent" : "failed";
         campaign.SentAt = DateTime.UtcNow;
-        campaign.Status = "sent";
+        campaign.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
         return new EmailSendResultDto
@@ -190,7 +206,7 @@ public class EmailSendPipeline : IEmailSendPipeline
 
         var variables = await BuildPersonalizationVariables(dto.RecipientEmail, dto.CampaignId);
         html = _personalization.Apply(html, variables);
-        html = html.Replace("{{params.unsubscribe_url}}", unsubscribeUrl);
+        html = ReplaceUnsubscribePlaceholder(html, unsubscribeUrl);
 
         var result = await _brevoSender.SendAsync(new BrevoSendRequest
         {
@@ -313,4 +329,11 @@ public class EmailSendPipeline : IEmailSendPipeline
 
     private static string Base64UrlEncode(byte[] value) =>
         Convert.ToBase64String(value).TrimEnd('=').Replace('+', '-').Replace('/', '_');
+
+    private static string ReplaceUnsubscribePlaceholder(string html, string unsubscribeUrl) =>
+        System.Text.RegularExpressions.Regex.Replace(
+            html,
+            @"\{\{\s*params\.unsubscribe_url\s*\}\}",
+            _ => unsubscribeUrl,
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 }

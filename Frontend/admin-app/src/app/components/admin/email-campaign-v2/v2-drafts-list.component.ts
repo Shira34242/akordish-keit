@@ -244,7 +244,7 @@ export class V2DraftsListComponent implements OnInit {
           fromName: full.fromName,
           fromEmail: full.fromEmail,
           designJson: full.designJson,
-          mjml: '',
+          mjml: full.mjml || '',
           previewText: full.previewText,
         };
         this.service.saveTemplate(dto).subscribe({ next: () => this.loadDrafts() });

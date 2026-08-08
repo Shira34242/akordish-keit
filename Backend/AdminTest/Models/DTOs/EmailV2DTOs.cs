@@ -18,6 +18,7 @@ public class EmailV2TemplateDto
     public string FromName { get; set; } = string.Empty;
     public string? FromEmail { get; set; }
     public string DesignJson { get; set; } = string.Empty;
+    public string? Mjml { get; set; }
     public string HtmlBody { get; set; } = string.Empty;
     public string? PreviewText { get; set; }
     public string Status { get; set; } = string.Empty;

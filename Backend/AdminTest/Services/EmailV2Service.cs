@@ -35,6 +35,13 @@ public class EmailV2Service : IEmailV2Service
 
     public async Task<EmailV2TemplateDto> SaveTemplateAsync(SaveEmailV2TemplateDto dto)
     {
+        var conversionResult = await ConvertToHtmlAsync(dto.Mjml);
+        if (!conversionResult.Success)
+        {
+            throw new InvalidOperationException(
+                $"MJML conversion failed: {conversionResult.Error}");
+        }
+
         EmailCampaign campaign;
         if (dto.CampaignId.HasValue)
         {
@@ -58,18 +65,11 @@ public class EmailV2Service : IEmailV2Service
             await _context.SaveChangesAsync();
         }
 
-        var conversionResult = await ConvertToHtmlAsync(dto.Mjml);
-        if (!conversionResult.Success)
-        {
-            throw new InvalidOperationException(
-                $"MJML conversion failed: {conversionResult.Error}");
-        }
-
         campaign.HtmlBody = conversionResult.Html!;
         await _context.SaveChangesAsync();
 
         var designJson = BuildDesignDocument(dto.DesignJson, dto.PreviewText, dto.Mjml);
-        await SaveDesignToBlobAsync(campaign.Id, designJson);
+        await SaveDesignToBlobAsync(campaign, designJson);
 
         return new EmailV2TemplateDto
         {
@@ -78,6 +78,7 @@ public class EmailV2Service : IEmailV2Service
             FromName = campaign.FromName,
             FromEmail = dto.FromEmail,
             DesignJson = designJson,
+            Mjml = dto.Mjml,
             HtmlBody = campaign.HtmlBody,
             PreviewText = dto.PreviewText,
             Status = campaign.Status,
@@ -90,15 +91,20 @@ public class EmailV2Service : IEmailV2Service
         var campaign = await _context.EmailCampaigns.FindAsync(campaignId);
         if (campaign == null) return null;
 
-        var designJson = await LoadDesignFromBlobAsync(campaignId);
+        var storedDesignJson = await LoadDesignFromBlobAsync(campaignId);
+        var designJson = ExtractFromDesignJson(storedDesignJson, "designContent")
+            ?? storedDesignJson
+            ?? "{}";
 
         return new EmailV2TemplateDto
         {
             CampaignId = campaign.Id,
             Subject = campaign.Subject,
             FromName = campaign.FromName,
-            DesignJson = designJson ?? "{}",
+            DesignJson = designJson,
+            Mjml = ExtractFromDesignJson(storedDesignJson, "lastGeneratedMjml"),
             HtmlBody = campaign.HtmlBody,
+            PreviewText = ExtractFromDesignJson(storedDesignJson, "previewText"),
             Status = campaign.Status,
             CreatedAt = campaign.CreatedAt
         };
@@ -143,6 +149,14 @@ public class EmailV2Service : IEmailV2Service
         try
         {
             var cleanMjml = SanitizeMjml(mjml);
+            var validationError = ValidateMjml(cleanMjml);
+            if (validationError != null)
+            {
+                result.Success = false;
+                result.Error = validationError;
+                result.Warnings = warnings;
+                return result;
+            }
             var mjmlWithRtl = InjectRtlDirection(cleanMjml);
             var mjmlWithFooter = InjectUnsubscribeFooter(mjmlWithRtl);
 
@@ -179,24 +193,74 @@ public class EmailV2Service : IEmailV2Service
             .Replace("\0", "")
             .Replace("\u0000", "");
 
+        // Templatical custom blocks may contain downlevel-revealed Outlook comments.
+        // Those comments are valid in an email client but not valid XML for Mjml.Net.
+        // Keep the table-based Outlook fallback as the universal safe representation.
         sanitized = Regex.Replace(
             sanitized,
-            @"<mj-text\b[^>]*>(.*?)</mj-text>",
-            match =>
-            {
-                var content = match.Groups[1].Value;
-                if (content.Contains("<table"))
-                {
-                    content = Regex.Replace(content,
-                        @"<table\b[^>]*>.*?</table>",
-                        m => $"<mj-raw>{m.Value}</mj-raw>",
-                        RegexOptions.Singleline | RegexOptions.IgnoreCase);
-                }
-                return $"<mj-text>{content}</mj-text>";
-            },
+            @"<!--\[if\s*!mso\]><!-->(.*?)<!--<!\[endif\]-->",
+            string.Empty,
+            RegexOptions.Singleline | RegexOptions.IgnoreCase);
+        sanitized = Regex.Replace(
+            sanitized,
+            @"<!--\[if\s*mso\]>(.*?)<!\[endif\]-->",
+            "$1",
             RegexOptions.Singleline | RegexOptions.IgnoreCase);
 
+        // Remove all remaining C0 control characters. A copied text value or a
+        // third-party block can contain more than just NUL, and XML rejects them.
+        sanitized = Regex.Replace(sanitized, "[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F]", "");
+
+        sanitized = UnwrapCustomBlockTables(sanitized);
+
         return sanitized;
+    }
+
+    private static string UnwrapCustomBlockTables(string mjml)
+    {
+        const string opening = "<mj-text";
+        const string closing = "</mj-text>";
+        var result = mjml;
+        var searchStart = 0;
+
+        while (searchStart < result.Length)
+        {
+            var start = result.IndexOf(opening, searchStart, StringComparison.OrdinalIgnoreCase);
+            if (start < 0) break;
+
+            var openingEnd = result.IndexOf('>', start + opening.Length);
+            if (openingEnd < 0) break;
+            var end = result.IndexOf(closing, openingEnd + 1, StringComparison.OrdinalIgnoreCase);
+            if (end < 0) break;
+
+            var contentStart = openingEnd + 1;
+            var content = result[contentStart..end];
+            if (content.Contains("<table", StringComparison.OrdinalIgnoreCase))
+            {
+                result = result[..start] + "<mj-raw>" + content + "</mj-raw>" + result[(end + closing.Length)..];
+                searchStart = start + 8;
+            }
+            else
+            {
+                searchStart = end + closing.Length;
+            }
+        }
+
+        return result;
+    }
+
+    private static string? ValidateMjml(string mjml)
+    {
+        if (Regex.IsMatch(mjml, @"<\s*(script|iframe|object|embed)\b", RegexOptions.IgnoreCase))
+            return "The email contains an unsupported active HTML element.";
+
+        if (Regex.IsMatch(mjml, @"\son\w+\s*=", RegexOptions.IgnoreCase))
+            return "The email contains unsupported inline event handlers.";
+
+        if (Regex.IsMatch(mjml, @"\b(?:href|src)\s*=\s*(['""])\s*(?:javascript|data)\s*:", RegexOptions.IgnoreCase))
+            return "The email contains an unsafe link or image URL.";
+
+        return null;
     }
 
     public async Task<EmailV2ConversionResultDto> SendTestEmailAsync(EmailV2SendTestDto dto)
@@ -338,8 +402,13 @@ public class EmailV2Service : IEmailV2Service
         campaign.FromName = versionData.FromName ?? campaign.FromName;
         campaign.UpdatedAt = DateTime.UtcNow;
 
-        var conversionResult = await ConvertToHtmlAsync(
-            ExtractFromDesignJson(versionData.DesignJson, "lastGeneratedMjml") ?? string.Empty);
+        var restoredDesignContent = ExtractFromDesignJson(versionData.DesignJson, "designContent")
+            ?? versionData.DesignJson;
+        var restoredMjml = ExtractFromDesignJson(versionData.DesignJson, "lastGeneratedMjml") ?? string.Empty;
+        var restoredPreheader = ExtractFromDesignJson(versionData.DesignJson, "previewText")
+            ?? versionData.Preheader;
+
+        var conversionResult = await ConvertToHtmlAsync(restoredMjml);
 
         if (conversionResult.Success && conversionResult.Html != null)
             campaign.HtmlBody = conversionResult.Html;
@@ -351,7 +420,7 @@ public class EmailV2Service : IEmailV2Service
             CampaignId = campaignId,
             Version = currentVersion + 2,
             Subject = campaign.Subject,
-            Preheader = ExtractFromDesignJson(versionData.DesignJson, "previewText"),
+            Preheader = restoredPreheader,
             FromName = campaign.FromName,
             DesignJson = versionData.DesignJson,
             CreatedAt = DateTime.UtcNow,
@@ -363,9 +432,9 @@ public class EmailV2Service : IEmailV2Service
         var currentDoc = new
         {
             schemaVersion = 2,
-            designContent = versionData.DesignJson,
-            previewText = versionData.Preheader,
-            lastGeneratedMjml = ExtractFromDesignJson(versionData.DesignJson, "lastGeneratedMjml"),
+            designContent = restoredDesignContent,
+            previewText = restoredPreheader,
+            lastGeneratedMjml = restoredMjml,
             updatedAt = DateTime.UtcNow.ToString("O"),
             restoredFromVersion = version
         };
@@ -380,7 +449,7 @@ public class EmailV2Service : IEmailV2Service
             CampaignId = campaign.Id,
             Subject = campaign.Subject,
             FromName = campaign.FromName,
-            DesignJson = versionData.DesignJson,
+            DesignJson = restoredDesignContent,
             HtmlBody = campaign.HtmlBody,
             Status = campaign.Status,
             CreatedAt = campaign.CreatedAt
@@ -409,8 +478,9 @@ public class EmailV2Service : IEmailV2Service
             $"email-designs/{version.CampaignId}/versions");
     }
 
-    private async Task SaveDesignToBlobAsync(int campaignId, string json)
+    private async Task SaveDesignToBlobAsync(EmailCampaign campaign, string json)
     {
+        var campaignId = campaign.Id;
         try
         {
             var bytes = Encoding.UTF8.GetBytes(json);
@@ -431,10 +501,9 @@ public class EmailV2Service : IEmailV2Service
             {
                 CampaignId = campaignId,
                 Version = nextVersion,
-                Subject = ExtractFromDesignJson(json, "previewText") is { } pt
-                    ? ExtractFromDesignJson(json, "designContent") ?? string.Empty
-                    : string.Empty,
+                Subject = campaign.Subject,
                 Preheader = ExtractFromDesignJson(json, "previewText"),
+                FromName = campaign.FromName,
                 DesignJson = json,
                 CreatedAt = DateTime.UtcNow,
                 Reason = "save"
@@ -454,16 +523,8 @@ public class EmailV2Service : IEmailV2Service
     {
         try
         {
-            var containerUrl = GetBlobContainerBaseUrl();
-            if (string.IsNullOrEmpty(containerUrl)) return null;
-
-            var blobUrl = $"{containerUrl.TrimEnd('/')}/email-designs/{campaignId}/design-{campaignId}.json";
-
-            var client = _httpClientFactory.CreateClient();
-            var response = await client.GetAsync(blobUrl);
-            if (!response.IsSuccessStatusCode) return null;
-
-            return await response.Content.ReadAsStringAsync();
+            return await _blobService.DownloadStringAsync(
+                $"email-designs/{campaignId}/design-{campaignId}.json");
         }
         catch (Exception ex)
         {

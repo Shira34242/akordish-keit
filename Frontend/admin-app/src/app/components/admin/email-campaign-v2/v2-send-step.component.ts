@@ -1122,7 +1122,8 @@ export class V2SendStepComponent implements OnInit {
 
     this.v2Service.getTemplate(this.campaignId()).subscribe({
       next: (tmpl) => {
-        this.emailService.sendCampaign({
+        this.v2Service.sendCampaign({
+          campaignId: this.campaignId(),
           subject: this.template()?.subject ?? '',
           htmlBody: tmpl?.htmlBody ?? '',
           recipientGroup: this.recipientGroup(),

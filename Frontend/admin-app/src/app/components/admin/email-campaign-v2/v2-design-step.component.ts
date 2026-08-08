@@ -194,6 +194,7 @@ import { firstValueFrom } from 'rxjs';
     @if (showPreview()) {
       <app-email-preview-dialog
         [htmlBody]="previewHtml()"
+        [errorMessage]="previewError()"
         [subject]="subject()"
         [previewText]="''"
         [fromName]="'אקורדישקייט'"
@@ -227,6 +228,7 @@ export class V2DesignStepComponent implements OnInit, OnDestroy {
   showPreview = signal(false);
   previewHtml = signal('');
   previewLoading = signal(false);
+  previewError = signal('');
 
   private _unsavedResolve: ((value: boolean) => void) | null = null;
   private _debounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -336,9 +338,17 @@ export class V2DesignStepComponent implements OnInit, OnDestroy {
     this.previewLoading.set(true);
     this.showPreview.set(true);
     this.previewHtml.set('');
+    this.previewError.set('');
 
-    const mjml = this.currentMjml();
+    let mjml = '';
+    try {
+      mjml = await this.editorComponent()?.generateMjml() ?? '';
+      if (mjml) this.currentMjml.set(mjml);
+    } catch (error) {
+      console.error('[Preview] MJML generation failed:', error);
+    }
     if (!mjml) {
+      this.previewError.set('לא ניתן ליצור תצוגה מקדימה כרגע. נסה שוב בעוד רגע.');
       this.previewLoading.set(false);
       return;
     }
@@ -353,9 +363,13 @@ export class V2DesignStepComponent implements OnInit, OnDestroy {
       }));
       if (result?.success && result?.html) {
         this.previewHtml.set(result.html);
+      } else {
+        console.error('[Preview] Conversion rejected:', result?.error);
+        this.previewError.set('לא ניתן להמיר את תוכן המייל לתצוגה מקדימה. בדוק את הרכיב האחרון שהוספת ונסה שוב.');
       }
     } catch (e) {
       console.error('[Preview] Conversion failed:', e);
+      this.previewError.set('יצירת התצוגה המקדימה נכשלה. בדוק את תוכן המייל ונסה שוב.');
     } finally {
       this.previewLoading.set(false);
     }
@@ -364,9 +378,20 @@ export class V2DesignStepComponent implements OnInit, OnDestroy {
   closePreview(): void {
     this.showPreview.set(false);
     this.previewHtml.set('');
+    this.previewError.set('');
   }
 
-  openTestDialog(): void {
+  async openTestDialog(): Promise<void> {
+    const snapshot = this._buildSnapshot();
+    if (snapshot && this.autosave.isChanged(snapshot)) {
+      const saved = await this.autosave.flush(snapshot);
+      if (!saved) return;
+      this._syncCampaignId();
+      this.dirty.set(false);
+      this._editorContentDirty = false;
+      this.editorComponent()?.markSaved();
+    }
+
     this.showTestDialog.set(true);
     this.testResults.set([]);
     this.testError.set('');

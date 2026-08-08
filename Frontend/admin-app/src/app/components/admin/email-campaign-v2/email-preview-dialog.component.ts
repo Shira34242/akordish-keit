@@ -120,6 +120,18 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
       background: #e5e7eb; overflow: auto; padding: 24px 0;
     }
 
+    .preview-error {
+      align-self: center;
+      margin: auto;
+      max-width: 32rem;
+      padding: 1rem;
+      color: #991b1b;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 6px;
+      text-align: center;
+    }
+
     iframe {
       border: 1px solid #d1d5db; border-radius: 4px; background: #fff; flex-shrink: 0;
     }
@@ -178,6 +190,8 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
         <div class="preview-wrapper">
           @if (safeHtml(); as html) {
             <iframe [style.width.px]="iframeWidth()" [style.height.px]="700" [srcdoc]="html" sandbox="" title="תצוגה מקדימה של המייל"></iframe>
+          } @else if (errorMessage()) {
+            <p class="preview-error" role="alert">{{ errorMessage() }}</p>
           }
         </div>
       }
@@ -186,6 +200,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 })
 export class EmailPreviewDialogComponent {
   readonly htmlBody = input.required<string>();
+  readonly errorMessage = input<string>('');
   readonly subject = input<string>('');
   readonly previewText = input<string>('');
   readonly fromName = input<string>('');
