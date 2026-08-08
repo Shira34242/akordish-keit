@@ -157,7 +157,7 @@ public class ArticlesController : ControllerBase
     {
         var normalizedLimit = Math.Clamp(limit, 1, 10);
         var normalizedOffset = Math.Clamp(offset, 0, 200);
-        var cacheKey = $"home_viral_banners_v3_{normalizedLimit}_{normalizedOffset}";
+        var cacheKey = $"home_viral_banners_v4_{normalizedLimit}_{normalizedOffset}";
         var banners = await _cache.GetOrCreateAsync(cacheKey, async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);

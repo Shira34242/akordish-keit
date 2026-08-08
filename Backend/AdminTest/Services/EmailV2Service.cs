@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using AkordishKeit.Data;
 using AkordishKeit.Models.DTOs;
 using AkordishKeit.Models.Entities;
@@ -141,7 +142,8 @@ public class EmailV2Service : IEmailV2Service
 
         try
         {
-            var mjmlWithRtl = InjectRtlDirection(mjml);
+            var cleanMjml = SanitizeMjml(mjml);
+            var mjmlWithRtl = InjectRtlDirection(cleanMjml);
             var mjmlWithFooter = InjectUnsubscribeFooter(mjmlWithRtl);
 
             var renderer = new MjmlRenderer();
@@ -168,6 +170,33 @@ public class EmailV2Service : IEmailV2Service
         }
 
         return result;
+    }
+
+    private static string SanitizeMjml(string mjml)
+    {
+        if (string.IsNullOrWhiteSpace(mjml)) return mjml;
+        var sanitized = mjml
+            .Replace("\0", "")
+            .Replace("\u0000", "");
+
+        sanitized = Regex.Replace(
+            sanitized,
+            @"<mj-text\b[^>]*>(.*?)</mj-text>",
+            match =>
+            {
+                var content = match.Groups[1].Value;
+                if (content.Contains("<table"))
+                {
+                    content = Regex.Replace(content,
+                        @"<table\b[^>]*>.*?</table>",
+                        m => $"<mj-raw>{m.Value}</mj-raw>",
+                        RegexOptions.Singleline | RegexOptions.IgnoreCase);
+                }
+                return $"<mj-text>{content}</mj-text>";
+            },
+            RegexOptions.Singleline | RegexOptions.IgnoreCase);
+
+        return sanitized;
     }
 
     public async Task<EmailV2ConversionResultDto> SendTestEmailAsync(EmailV2SendTestDto dto)

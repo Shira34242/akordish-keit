@@ -533,7 +533,17 @@ public class ArticleService : IArticleService
             })
             .ToListAsync();
 
-        return candidates
+        var latestArticles = candidates
+            .OrderByDescending(a => a.Article.PublishDate)
+            .ThenByDescending(a => a.Article.Id)
+            .Take(4)
+            .ToList();
+        var latestArticleIds = latestArticles
+            .Select(a => a.Article.Id)
+            .ToHashSet();
+
+        var viralArticles = candidates
+            .Where(a => !latestArticleIds.Contains(a.Article.Id))
             .Select(a => new
             {
                 a.Article,
@@ -545,9 +555,14 @@ public class ArticleService : IArticleService
             })
             .OrderByDescending(a => a.Score)
             .ThenByDescending(a => a.Article.PublishDate)
+            .ThenByDescending(a => a.Article.Id)
+            .Select(a => a.Article);
+
+        return latestArticles
+            .Select(a => a.Article)
+            .Concat(viralArticles)
             .Skip(skip)
             .Take(take)
-            .Select(a => a.Article)
             .ToList();
     }
 

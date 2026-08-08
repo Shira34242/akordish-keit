@@ -172,10 +172,39 @@ namespace AkordishKeit.Services
             limit = Math.Clamp(limit, 1, 24);
             var now = DateTime.UtcNow;
             var weekAgo = now.AddDays(-7);
+            var latestCount = Math.Min(2, limit);
 
-            return await _context.PodcastEpisodes
+            var latestEpisodes = await _context.PodcastEpisodes
                 .AsNoTracking()
                 .Where(e => !e.IsDeleted && e.IsActive && !e.Podcast.IsDeleted && e.Podcast.IsActive)
+                .OrderByDescending(e => e.PublishedAt)
+                .ThenByDescending(e => e.Id)
+                .Take(latestCount)
+                .Select(e => new PodcastEpisodeBannerDto
+                {
+                    Id = e.Id,
+                    PodcastName = e.Podcast.Name,
+                    PodcastSlug = e.Podcast.Slug,
+                    Title = e.Title,
+                    Slug = e.Slug,
+                    ThumbnailUrl = e.ThumbnailUrl
+                })
+                .ToListAsync();
+
+            var remainingCount = limit - latestEpisodes.Count;
+            if (remainingCount == 0)
+            {
+                return latestEpisodes;
+            }
+
+            var latestEpisodeIds = latestEpisodes.Select(e => e.Id).ToList();
+            var popularEpisodes = await _context.PodcastEpisodes
+                .AsNoTracking()
+                .Where(e => !e.IsDeleted
+                    && e.IsActive
+                    && !e.Podcast.IsDeleted
+                    && e.Podcast.IsActive
+                    && !latestEpisodeIds.Contains(e.Id))
                 .Select(e => new
                 {
                     Episode = e,
@@ -197,7 +226,7 @@ namespace AkordishKeit.Services
                 .ThenByDescending(e => e.Episode.ViewCount)
                 .ThenByDescending(e => e.Episode.PublishedAt)
                 .ThenByDescending(e => e.Episode.Id)
-                .Take(limit)
+                .Take(remainingCount)
                 .Select(e => new PodcastEpisodeBannerDto
                 {
                     Id = e.Episode.Id,
@@ -208,6 +237,9 @@ namespace AkordishKeit.Services
                     ThumbnailUrl = e.Episode.ThumbnailUrl
                 })
                 .ToListAsync();
+
+            latestEpisodes.AddRange(popularEpisodes);
+            return latestEpisodes;
         }
 
         public async Task<PodcastDetailDto?> GetPodcastBySlugAsync(string slug, bool includeInactive = false)

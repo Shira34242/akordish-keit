@@ -61,7 +61,7 @@ namespace AkordishKeit.Controllers
         [HttpGet("home-popular-episode-banners")]
         public async Task<ActionResult<List<PodcastEpisodeBannerDto>>> GetHomePopularEpisodeBanners()
         {
-            var banners = await _cache.GetOrCreateAsync("home_popular_episode_banners_v1", async entry =>
+            var banners = await _cache.GetOrCreateAsync("home_popular_episode_banners_v2", async entry =>
             {
                 entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
                 return await _podcastService.GetHomePopularEpisodeBannersAsync();
@@ -322,6 +322,7 @@ namespace AkordishKeit.Controllers
         {
             _cache.Remove("home_podcast_cards_v1");
             _cache.Remove("home_popular_episode_banners_v1");
+            _cache.Remove("home_popular_episode_banners_v2");
             for (var limit = 1; limit <= 12; limit++)
             {
                 _cache.Remove($"home_podcast_cards_v2_{limit}");

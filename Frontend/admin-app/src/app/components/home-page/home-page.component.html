@@ -616,7 +616,7 @@
 
     <section class="home-section popular-episodes-section" *ngIf="podcastsSectionStarted && popularPodcastEpisodes.length > 0">
       <div class="section-header">
-        <a routerLink="/podcasts" class="section-title section-title-link">פרקים מובילים</a>
+        <a routerLink="/podcasts" class="section-title section-title-link">פרקים חדשים ומובילים</a>
         <div class="section-scroll-controls" *ngIf="canScrollBySelector('.podcast-episodes-row', 'right') || canScrollBySelector('.podcast-episodes-row', 'left')">
           <button type="button" class="section-scroll-btn" *ngIf="canScrollBySelector('.podcast-episodes-row', 'right')" (click)="scrollCarouselBySelector('.podcast-episodes-row', 'right')" aria-label="גלילה ימינה">
             <span class="material-icons" aria-hidden="true">chevron_right</span>
