@@ -136,6 +136,8 @@ builder.Services.AddScoped<AkordishKeit.Services.EmailPipeline.IMessageTracker, 
 builder.Services.AddScoped<AkordishKeit.Services.EmailPipeline.IEmailPersonalizationStep, AkordishKeit.Services.EmailPipeline.EmailPersonalizationStep>();
 builder.Services.AddScoped<AkordishKeit.Services.EmailPipeline.IEmailUtmStep, AkordishKeit.Services.EmailPipeline.EmailUtmStep>();
 builder.Services.AddScoped<AkordishKeit.Services.EmailPipeline.IEmailSendPipeline, AkordishKeit.Services.EmailPipeline.EmailSendPipeline>();
+builder.Services.AddSingleton<AkordishKeit.Services.EmailPipeline.EmailTransientSendJobService>();
+builder.Services.AddSingleton<AkordishKeit.Services.EmailPipeline.IEmailTransientSendJobService>(sp => sp.GetRequiredService<AkordishKeit.Services.EmailPipeline.EmailTransientSendJobService>());
 builder.Services.AddScoped<AkordishKeit.Services.EmailTrackingService>();
 
 // Storage
@@ -144,6 +146,7 @@ builder.Services.AddSingleton<IAzureBlobService, AzureBlobService>();
 // Add Background Services
 builder.Services.AddHostedService<CleanupService>();
 builder.Services.AddHostedService<BumpSchedulerService>();
+builder.Services.AddHostedService<AkordishKeit.Services.EmailPipeline.EmailTransientSendJobWorker>();
 
 // Add DbContext
 builder.Services.AddDbContext<AkordishKeitDbContext>(options =>

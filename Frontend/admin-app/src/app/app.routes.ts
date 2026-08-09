@@ -476,9 +476,8 @@ export const routes: Routes = [
                     },
                     {
                         path: 'email',
-                        loadComponent: () => import('./components/admin/email-campaign/email-campaign.component').then(m => m.EmailCampaignComponent),
-                        canDeactivate: [() => import('./guards/unsaved-email-changes.guard').then(m => m.unsavedEmailChangesGuard)],
-                        title: 'שליחת מייל - אקורדישקייט'
+                        redirectTo: 'email-v2',
+                        pathMatch: 'full'
                     },
                     {
                         path: 'email-v2',
@@ -520,7 +519,7 @@ export const routes: Routes = [
                     }
                 ]
             },
-            { path: 'email', redirectTo: 'notifications/email', pathMatch: 'full' },
+            { path: 'email', redirectTo: 'notifications/email-v2', pathMatch: 'full' },
             { path: 'content/stats', redirectTo: '/admin/analytics', pathMatch: 'full' },
             {
                 path: 'advertising',

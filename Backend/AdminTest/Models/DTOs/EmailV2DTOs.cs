@@ -39,6 +39,29 @@ public class EmailV2TransientSendDto
     public string? FromEmail { get; set; }
     public EmailRecipientGroup RecipientGroup { get; set; }
     public int? EmailGroupId { get; set; }
+    public List<string>? ExcludedEmails { get; set; }
+}
+
+public class EmailTransientSendJobDto
+{
+    public string SendId { get; set; } = string.Empty;
+    public string Status { get; set; } = "pending";
+    public int PlannedCount { get; set; }
+    public int ProcessedCount { get; set; }
+    public int SentCount { get; set; }
+    public int FailedCount { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime? StartedAt { get; set; }
+    public DateTime? CompletedAt { get; set; }
+    public string? Error { get; set; }
+    public List<EmailRecipientSendResultDto> Recipients { get; set; } = [];
+}
+
+public class EmailV2TransientRecipientPreviewDto
+{
+    public int EligibleCount { get; set; }
+    public int ExcludedCount { get; set; }
+    public int FinalCount { get; set; }
 }
 
 public class EmailV2TransientTestDto

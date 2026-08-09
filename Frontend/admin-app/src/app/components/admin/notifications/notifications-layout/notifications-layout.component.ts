@@ -36,7 +36,7 @@ export class AdminNotificationsLayoutComponent {
       };
     }
 
-    if (url.includes('/notifications/email')) {
+    if (url.includes('/notifications/email-v2')) {
       return {
         title: 'מיילים',
         subtitle: 'שליחת מיילים לקבוצות משתמשים מתוך אזור ההתראות.'

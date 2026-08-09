@@ -32,8 +32,18 @@ public class EmailSendResultDto
 {
     public bool Success { get; set; }
     public string Message { get; set; } = string.Empty;
+    public int AttemptedCount { get; set; }
     public int SentCount { get; set; }
     public int FailedCount { get; set; }
+    public List<EmailRecipientSendResultDto> Recipients { get; set; } = [];
+}
+
+public class EmailRecipientSendResultDto
+{
+    public string Email { get; set; } = string.Empty;
+    public bool AcceptedByBrevo { get; set; }
+    public string? MessageId { get; set; }
+    public string? Error { get; set; }
 }
 
 public class SendTestEmailRequestDto : SendEmailRequestDto

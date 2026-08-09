@@ -132,7 +132,7 @@ namespace AkordishKeit.Services
         public async Task<IEnumerable<UpcomingEventDto>> GetUpcomingEventsAsync(int limit = 15)
         {
             limit = Math.Clamp(limit, 1, 50);
-            var today = DateTime.UtcNow.Date;
+            var now = DateTime.UtcNow;
             var activeEvents = _context.Events
                 .AsNoTracking()
                 .Include(e => e.EventArtists)
@@ -140,7 +140,7 @@ namespace AkordishKeit.Services
                 .Where(e => !e.IsDeleted && e.IsActive);
 
             var latestUpcomingEvents = await activeEvents
-                .Where(e => e.EventDate >= today)
+                .Where(e => e.EventDate >= now)
                 .OrderByDescending(e => e.CreatedAt)
                 .ThenByDescending(e => e.Id)
                 .Take(Math.Min(2, limit))
@@ -152,7 +152,7 @@ namespace AkordishKeit.Services
             if (remainingCount > 0)
             {
                 var nearestUpcomingEvents = await activeEvents
-                    .Where(e => e.EventDate >= today && !latestUpcomingIds.Contains(e.Id))
+                    .Where(e => e.EventDate >= now && !latestUpcomingIds.Contains(e.Id))
                     .OrderBy(e => e.EventDate)
                     .ThenByDescending(e => e.CreatedAt)
                     .ThenByDescending(e => e.Id)
@@ -166,7 +166,7 @@ namespace AkordishKeit.Services
             if (remainingCount > 0)
             {
                 var recentPastEvents = await activeEvents
-                    .Where(e => e.EventDate < today)
+                    .Where(e => e.EventDate < now)
                     .OrderByDescending(e => e.EventDate)
                     .ThenByDescending(e => e.CreatedAt)
                     .ThenByDescending(e => e.Id)

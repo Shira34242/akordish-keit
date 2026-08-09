@@ -15,15 +15,18 @@ public class EmailV2Controller : ControllerBase
     private readonly IEmailV2Service _emailV2Service;
     private readonly IEmailSendPipeline _pipeline;
     private readonly IMessageTracker _messageTracker;
+    private readonly IEmailTransientSendJobService _transientJobs;
 
     public EmailV2Controller(
         IEmailV2Service emailV2Service,
         IEmailSendPipeline pipeline,
-        IMessageTracker messageTracker)
+        IMessageTracker messageTracker,
+        IEmailTransientSendJobService transientJobs)
     {
         _emailV2Service = emailV2Service;
         _pipeline = pipeline;
         _messageTracker = messageTracker;
+        _transientJobs = transientJobs;
     }
 
     [HttpPost("templates")]
@@ -127,7 +130,7 @@ public class EmailV2Controller : ControllerBase
     }
 
     [HttpPost("send-now")]
-    public async Task<ActionResult<EmailSendResultDto>> SendTransientCampaign(
+    public ActionResult<EmailTransientSendJobDto> SendTransientCampaign(
         [FromBody] EmailV2TransientSendDto dto)
     {
         if (string.IsNullOrWhiteSpace(dto.Subject))
@@ -137,16 +140,37 @@ public class EmailV2Controller : ControllerBase
         if (dto.RecipientGroup == EmailRecipientGroup.CustomGroup && !dto.EmailGroupId.HasValue)
             return BadRequest("email group required");
 
-        var result = await _pipeline.SendTransientCampaignAsync(new SendEmailRequestDto
+        var job = _transientJobs.Start(new SendEmailRequestDto
         {
             Subject = dto.Subject,
             HtmlBody = dto.HtmlBody,
             RecipientGroup = dto.RecipientGroup,
             EmailGroupId = dto.EmailGroupId,
             FromName = dto.FromName,
-            FromEmail = dto.FromEmail
+            FromEmail = dto.FromEmail,
+            ExcludedEmails = dto.ExcludedEmails
         });
-        return Ok(result);
+        return Accepted(job);
+    }
+
+    [HttpGet("send-now/{sendId}")]
+    public ActionResult<EmailTransientSendJobDto> GetTransientSendStatus(string sendId)
+    {
+        var job = _transientJobs.Get(sendId);
+        return job == null ? NotFound() : Ok(job);
+    }
+
+    [HttpPost("send-now/preview")]
+    public async Task<ActionResult<EmailV2TransientRecipientPreviewDto>> PreviewTransientRecipients([FromBody] EmailV2TransientSendDto dto)
+    {
+        if (dto.RecipientGroup == EmailRecipientGroup.CustomGroup && !dto.EmailGroupId.HasValue)
+            return BadRequest("email group required");
+        return Ok(await _pipeline.PreviewTransientRecipientsAsync(new SendEmailRequestDto
+        {
+            RecipientGroup = dto.RecipientGroup,
+            EmailGroupId = dto.EmailGroupId,
+            ExcludedEmails = dto.ExcludedEmails
+        }));
     }
 
     [HttpPost("send-test-now")]

@@ -246,18 +246,11 @@ public class EmailSendPipeline : IEmailSendPipeline
             : new EmailV2ConversionResultDto { Success = false, Error = result.Error };
     }
 
-    public async Task<EmailSendResultDto> SendTransientCampaignAsync(SendEmailRequestDto request)
+    public async Task<EmailSendResultDto> SendTransientCampaignAsync(SendEmailRequestDto request, Action<int, EmailRecipientSendResultDto>? onRecipientCompleted = null)
     {
         var apiKey = _configuration["Brevo:ApiKey"];
         if (string.IsNullOrEmpty(apiKey) || apiKey.StartsWith("REPLACE"))
             return new EmailSendResultDto { Success = false, Message = "Brevo API key not configured" };
-
-        if (!TryClaimTransientSend(request))
-            return new EmailSendResultDto
-            {
-                Success = false,
-                Message = "A matching temporary send is already running or was just sent."
-            };
 
         try
         {
@@ -292,6 +285,7 @@ public class EmailSendPipeline : IEmailSendPipeline
             var html = _utm.Apply(request.HtmlBody, ResolveTransientUtmSettings());
             var sentCount = 0;
             var failedCount = 0;
+            var recipientResults = new ConcurrentBag<EmailRecipientSendResultDto>();
             using var semaphore = new SemaphoreSlim(20);
 
             var tasks = recipients.Select(async recipient =>
@@ -320,16 +314,40 @@ public class EmailSendPipeline : IEmailSendPipeline
                     if (result.Success)
                     {
                         Interlocked.Increment(ref sentCount);
+                        var recipientResult = new EmailRecipientSendResultDto
+                        {
+                            Email = recipient.Email,
+                            AcceptedByBrevo = true,
+                            MessageId = result.MessageId
+                        };
+                        recipientResults.Add(recipientResult);
+                        onRecipientCompleted?.Invoke(recipients.Count, recipientResult);
                     }
                     else
                     {
                         Interlocked.Increment(ref failedCount);
+                        var recipientResult = new EmailRecipientSendResultDto
+                        {
+                            Email = recipient.Email,
+                            AcceptedByBrevo = false,
+                            Error = result.Error ?? "Brevo rejected the message"
+                        };
+                        recipientResults.Add(recipientResult);
+                        onRecipientCompleted?.Invoke(recipients.Count, recipientResult);
                         _logger.LogWarning("Transient Email V2 send failed for {Email}: {Error}", recipient.Email, result.Error);
                     }
                 }
                 catch (Exception ex)
                 {
                     Interlocked.Increment(ref failedCount);
+                    var recipientResult = new EmailRecipientSendResultDto
+                    {
+                        Email = recipient.Email,
+                        AcceptedByBrevo = false,
+                        Error = "The message could not be submitted to Brevo."
+                    };
+                    recipientResults.Add(recipientResult);
+                    onRecipientCompleted?.Invoke(recipients.Count, recipientResult);
                     _logger.LogError(ex, "Transient Email V2 send exception for {Email}", recipient.Email);
                 }
                 finally
@@ -342,8 +360,10 @@ public class EmailSendPipeline : IEmailSendPipeline
             return new EmailSendResultDto
             {
                 Success = sentCount > 0,
+                AttemptedCount = recipients.Count,
                 SentCount = sentCount,
                 FailedCount = failedCount,
+                Recipients = recipientResults.OrderBy(r => r.Email, StringComparer.OrdinalIgnoreCase).ToList(),
                 Message = failedCount > 0
                     ? $"sent to {sentCount}, {failedCount} failed"
                     : $"sent to {sentCount}"
@@ -354,6 +374,16 @@ public class EmailSendPipeline : IEmailSendPipeline
             _logger.LogError(ex, "Transient Email V2 campaign send failed");
             return new EmailSendResultDto { Success = false, Message = "The email could not be sent." };
         }
+    }
+
+    public async Task<EmailV2TransientRecipientPreviewDto> PreviewTransientRecipientsAsync(SendEmailRequestDto request)
+    {
+        var recipients = await ResolveTransientRecipientsAsync(request);
+        var eligible = recipients.Count;
+        var excluded = request.ExcludedEmails is { Count: > 0 }
+            ? new HashSet<string>(request.ExcludedEmails, StringComparer.OrdinalIgnoreCase) : [];
+        var finalCount = recipients.Count(r => !excluded.Contains(r.Email));
+        return new EmailV2TransientRecipientPreviewDto { EligibleCount = eligible, ExcludedCount = eligible - finalCount, FinalCount = finalCount };
     }
 
     public async Task<EmailV2ConversionResultDto> SendTransientTestEmailAsync(EmailV2TransientTestDto dto)
@@ -468,6 +498,21 @@ public class EmailSendPipeline : IEmailSendPipeline
             .Select(m => new { m.Subscriber!.Email, m.Subscriber.Name })
             .ToListAsync()
             .ContinueWith(t => t.Result.Select(m => (m.Email, m.Name)).ToList());
+    }
+
+    private async Task<List<(string Email, string? Name)>> ResolveTransientRecipientsAsync(SendEmailRequestDto request)
+    {
+        List<(string Email, string? Name)> recipients;
+        if (request.RecipientGroup == EmailRecipientGroup.ManualOneTime)
+            recipients = (request.ManualRecipients ?? []).Select(e => (e, (string?)null)).ToList();
+        else
+        {
+            var emailService = _serviceProvider.GetRequiredService<IEmailService>();
+            recipients = request.RecipientGroup == EmailRecipientGroup.CustomGroup && request.EmailGroupId.HasValue
+                ? await ResolveCustomGroupAsync(request.EmailGroupId.Value)
+                : await ResolveRecipientsAsync(emailService, request.RecipientGroup, request.EmailGroupId);
+        }
+        return await ExcludeUnsubscribedAsync(recipients);
     }
 
     private async Task<List<(string Email, string? Name)>> ResolveRecipientsAsync(

@@ -38,6 +38,7 @@ export interface EmailV2TransientSendDto {
   fromEmail?: string;
   recipientGroup: number;
   emailGroupId?: number;
+  excludedEmails?: string[];
 }
 
 export interface EmailV2TransientTestDto {
@@ -54,6 +55,38 @@ export interface EmailV2ConversionResultDto {
   error?: string;
   warnings: string[];
 }
+
+export interface EmailRecipientSendResult {
+  email: string;
+  acceptedByBrevo: boolean;
+  messageId?: string;
+  error?: string;
+}
+
+export interface EmailV2SendResult {
+  success: boolean;
+  message: string;
+  attemptedCount: number;
+  sentCount: number;
+  failedCount: number;
+  recipients: EmailRecipientSendResult[];
+}
+
+export interface EmailTransientSendJob {
+  sendId: string;
+  status: 'pending' | 'running' | 'completed' | 'failed';
+  plannedCount: number;
+  processedCount: number;
+  sentCount: number;
+  failedCount: number;
+  createdAt: string;
+  startedAt?: string;
+  completedAt?: string;
+  error?: string;
+  recipients: EmailRecipientSendResult[];
+}
+
+export interface EmailTransientRecipientPreview { eligibleCount: number; excludedCount: number; finalCount: number; }
 
 export interface EmailCampaignAnalytics {
   campaignId: number;
@@ -144,7 +177,15 @@ export class EmailCampaignV2Service {
     return this.http.post<any>(`${this.apiUrl}/send-campaign`, dto, { withCredentials: true });
   }
 
-  sendTransientCampaign(dto: EmailV2TransientSendDto): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/send-now`, dto, { withCredentials: true });
+  sendTransientCampaign(dto: EmailV2TransientSendDto): Observable<EmailTransientSendJob> {
+    return this.http.post<EmailTransientSendJob>(`${this.apiUrl}/send-now`, dto, { withCredentials: true });
+  }
+
+  getTransientSendJob(sendId: string): Observable<EmailTransientSendJob> {
+    return this.http.get<EmailTransientSendJob>(`${this.apiUrl}/send-now/${sendId}`, { withCredentials: true });
+  }
+
+  previewTransientRecipients(dto: EmailV2TransientSendDto): Observable<EmailTransientRecipientPreview> {
+    return this.http.post<EmailTransientRecipientPreview>(`${this.apiUrl}/send-now/preview`, dto, { withCredentials: true });
   }
 }

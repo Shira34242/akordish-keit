@@ -1,10 +1,13 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import {
   EmailCampaignV2Service,
   type EmailV2TemplateDto,
+  type EmailV2SendResult,
+  type EmailTransientSendJob,
+  type EmailTransientRecipientPreview,
 } from '../../../services/email-campaign-v2.service';
 import { EmailV2TransientDraftService } from '../../../services/email-v2-transient-draft.service';
 import {
@@ -572,6 +575,21 @@ import { TestSendDialogComponent, type TestSendResultItem } from './test-send-di
         color: #991b1b;
       }
 
+      .progress-dialog { max-width: 440px; text-align: right; }
+      .progress-dialog h3 { margin-top: 0; }.progress-dialog p { margin: 8px 0; }
+      .progress-track { height: 10px; overflow: hidden; border-radius: 999px; background: #ececec; }.progress-fill { height: 100%; background: #ddff53; transition: width .25s ease; }
+      .progress-stats { display: flex; justify-content: space-between; gap: 12px; margin: 14px 0; font-size: 14px; }.progress-note { color: #666; font-size: 13px; line-height: 1.5; }.progress-error { color: #991b1b; }.progress-backdrop { cursor: default; }
+
+      .send-result-card { border-color: #b7d982; }
+      .send-result-summary { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; }
+      .send-result-note { margin: 0 0 12px; color: #555; font-size: 13px; line-height: 1.5; }
+      .accepted { color: #196b2b; }
+      .failed { color: #b42318; }
+      .recipient-result-list { max-height: 280px; overflow: auto; margin-top: 10px; border: 1px solid #e5e7eb; border-radius: 8px; }
+      .recipient-result { display: flex; justify-content: space-between; gap: 12px; padding: 8px 10px; border-bottom: 1px solid #f1f1f1; font-size: 13px; }
+      .recipient-result:last-child { border-bottom: 0; }
+      .failed-row { background: #fff7f6; }
+
       .loading-page {
         display: flex;
         align-items: center;
@@ -611,6 +629,48 @@ import { TestSendDialogComponent, type TestSendResultItem } from './test-send-di
       @if (statusMessage()) {
         <div class="status-banner" [class.success]="statusType() === 'success'" [class.error]="statusType() === 'error'">
           {{ statusMessage() }}
+        </div>
+      }
+
+      @if (activeSendJob() && progressModalOpen()) {
+        <div class="dialog-backdrop progress-backdrop">
+          <section class="dialog progress-dialog" role="dialog" aria-live="polite" aria-label="מצב שליחה">
+            <h3>{{ activeSendJob()!.status === 'completed' ? 'השליחה הסתיימה' : activeSendJob()!.status === 'failed' ? 'השליחה הופסקה' : 'שולח את המייל…' }}</h3>
+            <p>{{ activeSendJob()!.processedCount }} מתוך {{ activeSendJob()!.plannedCount || '…' }}</p>
+            <div class="progress-track"><div class="progress-fill" [style.width.%]="sendProgressPercent()"></div></div>
+            <div class="progress-stats"><span>התקבלו ב־Brevo: {{ activeSendJob()!.sentCount }}</span><span>נכשלו: {{ activeSendJob()!.failedCount }}</span></div>
+            @if (activeSendJob()!.error) { <p class="progress-error">{{ activeSendJob()!.error }}</p> }
+            @if (activeSendJob()!.status === 'pending' || activeSendJob()!.status === 'running') {
+              <p class="progress-note">אפשר לסגור את החלון. השליחה תמשיך ברקע כל עוד השרת פעיל.</p>
+              <button class="btn-cancel" (click)="progressModalOpen.set(false)">סגור והמשך ברקע</button>
+            } @else {
+              <button class="btn-confirm" (click)="progressModalOpen.set(false)">סגור</button>
+            }
+          </section>
+        </div>
+      }
+
+      @if (sendResult()) {
+        <div class="card send-result-card" aria-live="polite">
+          <div class="card-header">תוצאת השליחה</div>
+          <div class="send-result-summary">
+            <span>נבדקו: <strong>{{ sendResult()!.attemptedCount }}</strong></span>
+            <span class="accepted">התקבלו ב־Brevo: <strong>{{ sendResult()!.sentCount }}</strong></span>
+            <span class="failed">נכשלו: <strong>{{ sendResult()!.failedCount }}</strong></span>
+          </div>
+          <p class="send-result-note">התקבלו ב־Brevo פירושו שהשירות אישר את קבלת המייל לשליחה; מסירה בפועל נבדקת ב־Brevo.</p>
+          <details open>
+            <summary>פירוט נמענים ({{ sendResult()!.recipients.length }})</summary>
+            <div class="recipient-result-list">
+              @for (recipient of sendResult()!.recipients; track recipient.email) {
+                <div class="recipient-result" [class.failed-row]="!recipient.acceptedByBrevo">
+                  <span dir="ltr">{{ recipient.email }}</span>
+                  @if (recipient.acceptedByBrevo) { <span class="accepted">התקבל ב־Brevo</span> }
+                  @else { <span class="failed">נכשל{{ recipient.error ? ': ' + recipient.error : '' }}</span> }
+                </div>
+              }
+            </div>
+          </details>
         </div>
       }
 
@@ -728,6 +788,15 @@ import { TestSendDialogComponent, type TestSendResultItem } from './test-send-di
             </select>
           </div>
         }
+        <div class="field-row exclusion-box">
+          <label class="field-label">החרגת כתובות זמנית</label>
+          <input #brevoCsvInput type="file" accept=".csv,text/csv" hidden (change)="loadBrevoExclusionCsv($event)" />
+          <button type="button" class="btn-test" (click)="brevoCsvInput.click()">טעינת CSV מ־Brevo</button>
+          <textarea class="field-input" rows="3" [ngModel]="excludedEmailsText()" (ngModelChange)="setExcludedEmails($event)" placeholder="הדבק כתובות מייל או עמודת Email מ־CSV, כתובת בכל שורה"></textarea>
+          @if (recipientPreview()) {
+            <span class="field-note">זכאים: {{ recipientPreview()!.eligibleCount }} · מוחרגים: {{ recipientPreview()!.excludedCount }} · יישלח בפועל: <strong>{{ recipientPreview()!.finalCount }}</strong></span>
+          }
+        </div>
       </div>
 
       <div class="card">
@@ -830,7 +899,7 @@ import { TestSendDialogComponent, type TestSendResultItem } from './test-send-di
     }
   `,
 })
-export class V2SendStepComponent implements OnInit {
+export class V2SendStepComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private v2Service = inject(EmailCampaignV2Service);
@@ -849,6 +918,9 @@ export class V2SendStepComponent implements OnInit {
   recipientGroup = signal<EmailRecipientGroup>(EmailRecipientGroup.AllUsers);
   selectedEmailGroupId = signal<number | null>(null);
   recipientCount = signal(0);
+  excludedEmailsText = signal('');
+  excludedEmails = signal<string[]>([]);
+  recipientPreview = signal<EmailTransientRecipientPreview | null>(null);
   loadingCount = signal(false);
   emailGroups = signal<EmailGroupDto[]>([]);
 
@@ -862,6 +934,10 @@ export class V2SendStepComponent implements OnInit {
   showSendConfirm = signal(false);
   sending = signal(false);
   transientCompleted = signal(false);
+  sendResult = signal<EmailV2SendResult | null>(null);
+  activeSendJob = signal<EmailTransientSendJob | null>(null);
+  progressModalOpen = signal(true);
+  private progressTimer?: ReturnType<typeof setTimeout>;
 
   statusMessage = signal('');
   statusType = signal<'success' | 'error' | ''>('');
@@ -900,6 +976,10 @@ export class V2SendStepComponent implements OnInit {
     this.senderValid() &&
     !this.transientCompleted()
   );
+  readonly sendProgressPercent = computed(() => {
+    const job = this.activeSendJob();
+    return !job?.plannedCount ? 0 : Math.min(100, Math.round((job.processedCount / job.plannedCount) * 100));
+  });
 
   get selectedGroupLabel(): string {
     if (this.recipientGroup() === EmailRecipientGroup.CustomGroup) {
@@ -910,6 +990,8 @@ export class V2SendStepComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    const activeSendId = sessionStorage.getItem('email-v2-active-send-id');
+    if (activeSendId) this.trackSendJob(activeSendId);
     this.route.paramMap.subscribe(params => {
       const id = Number(params.get('id'));
       if (id && !isNaN(id)) {
@@ -940,6 +1022,10 @@ export class V2SendStepComponent implements OnInit {
         this.loadRecipientCount();
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    if (this.progressTimer) clearTimeout(this.progressTimer);
   }
 
   private loadTemplate(id: number): void {
@@ -991,12 +1077,43 @@ export class V2SendStepComponent implements OnInit {
       next: (count) => {
         this.recipientCount.set(count);
         this.loadingCount.set(false);
+        this.loadRecipientPreview();
       },
       error: () => {
         this.recipientCount.set(0);
         this.loadingCount.set(false);
       },
     });
+  }
+
+  setExcludedEmails(value: string): void {
+    this.excludedEmailsText.set(value);
+    const emails = value.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi) ?? [];
+    this.excludedEmails.set([...new Set(emails.map(email => email.trim().toLowerCase()))]);
+    this.loadRecipientPreview();
+  }
+
+  loadBrevoExclusionCsv(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const csv = String(reader.result ?? '');
+      const sentRows = csv.split(/\r?\n/).filter(row => /(^|[,;])\s*Sent\s*([,;]|$)/i.test(row));
+      const source = sentRows.length > 0 ? sentRows.join('\n') : csv;
+      const emails = source.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi) ?? [];
+      this.setExcludedEmails([...new Set(emails.map(email => email.trim().toLowerCase()))].join('\n'));
+      this.setStatus(`נטענו ${this.excludedEmails().length} כתובות להחרגה. בדוק את המספר הסופי לפני שליחה.`, 'success');
+    };
+    reader.onerror = () => this.setStatus('לא ניתן לקרוא את קובץ ה־CSV.', 'error');
+    reader.readAsText(file, 'utf-8');
+  }
+
+  private loadRecipientPreview(): void {
+    if (this.recipientGroup() === EmailRecipientGroup.CustomGroup && !this.selectedEmailGroupId()) return;
+    this.v2Service.previewTransientRecipients({ subject: '', htmlBody: '', recipientGroup: this.recipientGroup(), emailGroupId: this.selectedEmailGroupId() ?? undefined, excludedEmails: this.excludedEmails() }).subscribe({ next: preview => { this.recipientPreview.set(preview); this.recipientCount.set(preview.finalCount); } });
   }
 
   openTestDialog(): void {
@@ -1177,17 +1294,12 @@ export class V2SendStepComponent implements OnInit {
           : undefined,
         fromName: this.fromName(),
         fromEmail: this.fromEmail() || undefined,
+        excludedEmails: this.excludedEmails(),
       }).subscribe({
-        next: (result) => {
+        next: (job) => {
           this.sending.set(false);
-          if (result?.success) {
-            this.transientDraft.clear();
-            this.transientCompleted.set(true);
-            this.template.update(template => template ? { ...template, status: 'sent' } : template);
-            this.setStatus(`נשלח ל-${result.sentCount} נמענים. השליחה לא נשמרה בהיסטוריה.`, 'success');
-          } else {
-            this.setStatus(result?.message || 'השליחה נכשלה', 'error');
-          }
+          this.progressModalOpen.set(true);
+          this.trackSendJob(job.sendId);
         },
         error: (err) => {
           this.sending.set(false);
@@ -1242,5 +1354,33 @@ export class V2SendStepComponent implements OnInit {
         }
       }, 5000);
     }
+  }
+
+  private trackSendJob(sendId: string): void {
+    sessionStorage.setItem('email-v2-active-send-id', sendId);
+    if (this.progressTimer) clearTimeout(this.progressTimer);
+    this.v2Service.getTransientSendJob(sendId).subscribe({
+      next: (job) => {
+        this.activeSendJob.set(job);
+        if (job.status === 'pending' || job.status === 'running') {
+          this.progressTimer = setTimeout(() => this.trackSendJob(sendId), 1000);
+          return;
+        }
+        sessionStorage.removeItem('email-v2-active-send-id');
+        this.sendResult.set({ success: job.status === 'completed', message: job.error || '', attemptedCount: job.plannedCount, sentCount: job.sentCount, failedCount: job.failedCount, recipients: job.recipients });
+        if (job.status === 'completed') {
+          this.transientDraft.clear();
+          this.transientCompleted.set(true);
+          this.template.update(template => template ? { ...template, status: 'sent' } : template);
+          this.setStatus(`השליחה הסתיימה: ${job.sentCount} התקבלו ב־Brevo, ${job.failedCount} נכשלו.`, 'success');
+        } else {
+          this.setStatus(job.error || 'השליחה הופסקה לפני סיומה.', 'error');
+        }
+      },
+      error: () => {
+        sessionStorage.removeItem('email-v2-active-send-id');
+        this.setStatus('לא ניתן לקרוא את מצב השליחה. ייתכן שהשרת הופעל מחדש.', 'error');
+      },
+    });
   }
 }

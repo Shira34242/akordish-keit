@@ -197,7 +197,7 @@
               [style.height.px]="feedbackCircleSize('yes')"
               (click)="giveFeedbackYes()"
               [disabled]="feedbackGiven">
-              <span class="material-icons">thumb_up</span>
+              <span class="material-icons" aria-hidden="true">thumb_up</span>
               <span class="circle-pct" *ngIf="feedbackGiven">{{ feedbackPct('yes') }}%</span>
             </button>
             <span class="circle-label">כן</span>
@@ -214,7 +214,7 @@
               [style.height.px]="feedbackCircleSize('no')"
               (click)="giveFeedbackNo()"
               [disabled]="feedbackGiven">
-              <span class="material-icons">thumb_down</span>
+              <span class="material-icons" aria-hidden="true">thumb_down</span>
               <span class="circle-pct" *ngIf="feedbackGiven">{{ feedbackPct('no') }}%</span>
             </button>
             <span class="circle-label">לא</span>

@@ -146,13 +146,9 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
   feedbackCircleSize(type: 'yes' | 'no'): number {
     const pct = this.feedbackGiven ? this.feedbackPct(type) : 50;
     const isMobile = window.matchMedia('(max-width: 768px)').matches;
-    const baseSize = isMobile ? 56 : 72;
-    const sizeRange = isMobile ? 32 : 40;
-    const size = baseSize + Math.round((pct / 100) * sizeRange);
-    if (type === 'no') {
-      return baseSize + Math.round((pct / 100) * sizeRange);
-    }
-    return size;
+    const baseSize = isMobile ? 52 : 64;
+    const sizeRange = isMobile ? 36 : 48;
+    return baseSize + Math.round((pct / 100) * sizeRange);
   }
 
   get visibleRelatedArticles(): Article[] {
@@ -183,7 +179,12 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
   }
 
   showMoreRelatedArticles(): void {
-    this.relatedArticlesVisibleCount = Math.min(this.relatedArticlesVisibleCount + 4, this.relatedArticles.length);
+    let nextCount = this.relatedArticlesVisibleCount + 4;
+    if (nextCount < this.relatedArticles.length) {
+      this.relatedArticlesVisibleCount = nextCount;
+    } else {
+      this.relatedArticlesVisibleCount = this.relatedArticles.length;
+    }
   }
 
   ngAfterViewInit(): void { /* hero מאותחל ע"י הסטר */ }
@@ -367,8 +368,11 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
     ).pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (result) => {
-          // Filter out the current article
-          this.relatedArticles = result.items.filter(a => a.id !== article.id).slice(0, 12);
+          // Filter out the current article and keep only even count
+          const filtered = result.items.filter(a => a.id !== article.id);
+          const evenCount = Math.floor(filtered.length / 2) * 2;
+          this.relatedArticles = filtered.slice(0, evenCount);
+          this.relatedArticlesVisibleCount = Math.min(this.relatedArticlesVisibleCount, this.relatedArticles.length);
         },
         error: (error) => {
           console.error('Error loading related articles:', error);

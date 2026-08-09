@@ -1,14 +1,21 @@
 import { Component, signal, computed, inject, type OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { EmailCampaignV2Service, type EmailV2TemplateDto, type SaveEmailV2TemplateDto } from '../../../services/email-campaign-v2.service';
 import { TemplateLibraryService } from '../../../services/template-library.service';
 import type { EmailTemplateDef } from './blocks/component-library.types';
+import {
+  EmailCampaignService,
+  type EmailGroupDto,
+  type EmailSubscriberDto,
+  type EmailSubscriberPageDto,
+} from '../../../services/email-campaign.service';
 
 @Component({
   selector: 'app-v2-drafts-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   template: `
     <div class="drafts-page">
       <header class="page-header">
@@ -37,6 +44,9 @@ import type { EmailTemplateDef } from './blocks/component-library.types';
         </button>
         <button class="tab" [class.active]="activeTab() === 'templates'" (click)="activeTab.set('templates')">
           <span class="material-symbols-outlined" style="font-size:16px">dashboard</span> תבניות מוכנות
+        </button>
+        <button class="tab" [class.active]="activeTab() === 'audience'" (click)="openAudience()">
+        <span class="material-symbols-outlined" style="font-size:16px">groups</span> קהל וקבוצות
         </button>
       </div>
 
@@ -119,6 +129,41 @@ import type { EmailTemplateDef } from './blocks/component-library.types';
           </div>
         }
       }
+
+      @if (activeTab() === 'audience') {
+        <section class="audience-panel">
+          <div class="audience-summary">
+            <div><strong>{{ subscribersTotal() }}</strong><span>מנויים</span></div>
+            <div><strong>{{ subscribedCount() }}</strong><span>מאושרי דיוור</span></div>
+            <div><strong>{{ unsubscribedCount() }}</strong><span>מוסרים</span></div>
+            <div><strong>{{ emailGroups().length }}</strong><span>קבוצות</span></div>
+          </div>
+          <div class="audience-grid">
+            <section class="audience-card">
+              <div class="audience-card-header"><h2>מנויים</h2><button class="btn-secondary" (click)="showCreateSubscriber.set(!showCreateSubscriber())">הוסף מנוי</button></div>
+              @if (showCreateSubscriber()) {
+                <form class="inline-form" (ngSubmit)="createSubscriber()">
+                  <input [(ngModel)]="newSubscriberEmail" name="subscriberEmail" type="email" dir="ltr" placeholder="name@example.com" required />
+                  <input [(ngModel)]="newSubscriberName" name="subscriberName" placeholder="שם (אופציונלי)" />
+                  <button class="btn-primary" type="submit" [disabled]="savingSubscriber()">שמירה</button>
+                </form>
+              }
+              <div class="audience-toolbar"><input [(ngModel)]="subscriberSearch" (ngModelChange)="loadSubscribers()" placeholder="חיפוש מנוי" /><button class="btn-refresh" (click)="loadSubscribers()">↻</button></div>
+              @if (audienceLoading()) { <p class="muted">טוען…</p> }
+              @else { <div class="audience-list">@for (subscriber of subscribers(); track subscriber.id) {
+                <div class="audience-row"><div><strong dir="ltr">{{ subscriber.email }}</strong><small>{{ subscriber.name || subscriber.source }}</small></div><button class="status-toggle" [class.is-subscribed]="subscriber.isSubscribed" (click)="toggleSubscriber(subscriber)">{{ subscriber.isSubscribed ? 'מאושר' : 'מוסר' }}</button></div>
+              } @empty { <p class="muted">לא נמצאו מנויים.</p> }</div> }
+            </section>
+            <section class="audience-card">
+              <div class="audience-card-header"><h2>קבוצות דיוור</h2><button class="btn-secondary" (click)="showCreateGroup.set(!showCreateGroup())">קבוצה חדשה</button></div>
+              @if (showCreateGroup()) { <form class="inline-form" (ngSubmit)="createGroup()"><input [(ngModel)]="newGroupName" name="groupName" placeholder="שם הקבוצה" required /><input [(ngModel)]="newGroupDescription" name="groupDescription" placeholder="תיאור (אופציונלי)" /><button class="btn-primary" type="submit" [disabled]="savingGroup()">יצירה</button></form> }
+              <div class="audience-list">@for (group of emailGroups(); track group.id) {
+                <div class="audience-row"><div><strong>{{ group.name }}</strong><small>{{ group.memberCount }} חברים{{ group.description ? ' · ' + group.description : '' }}</small></div><button class="icon-action" (click)="deleteGroup(group)" title="מחיקת קבוצה">delete</button></div>
+              } @empty { <p class="muted">אין עדיין קבוצות דיוור.</p> }</div>
+            </section>
+          </div>
+        </section>
+      }
     </div>
   `,
   styles: [`
@@ -192,10 +237,22 @@ import type { EmailTemplateDef } from './blocks/component-library.types';
     .template-card-name { font-size: 14px; font-weight: 600; color: #1a1a1a; margin-bottom: 2px; }
     .template-card-desc { font-size: 12px; color: #6b7280; line-height: 1.4; }
     .template-card-cat { font-size: 11px; color: #9ca3af; padding: 2px 8px; background: #f3f4f6; border-radius: 4px; align-self: flex-start; }
+    .audience-panel { display: flex; flex-direction: column; gap: 16px; }
+    .audience-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .audience-summary > div, .audience-card { border: 1px solid #e0e0e0; border-radius: 10px; background: #fff; }
+    .audience-summary > div { padding: 14px; display: flex; flex-direction: column; gap: 2px; }
+    .audience-summary strong { font-size: 22px; }.audience-summary span, .muted, .audience-row small { color: #666; font-size: 12px; }
+    .audience-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }.audience-card { padding: 16px; min-width: 0; }
+    .audience-card-header, .audience-row, .audience-toolbar, .inline-form { display: flex; align-items: center; gap: 8px; }.audience-card-header { justify-content: space-between; margin-bottom: 12px; }.audience-card h2 { margin: 0; font-size: 16px; }
+    .inline-form { flex-wrap: wrap; margin-bottom: 12px; }.inline-form input, .audience-toolbar input { min-width: 0; flex: 1; padding: 8px 10px; border: 1px solid #ccc; border-radius: 8px; font: inherit; }.audience-toolbar { margin-bottom: 10px; }
+    .audience-list { border-top: 1px solid #eee; }.audience-row { justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }.audience-row > div { min-width: 0; display: flex; flex-direction: column; gap: 2px; }.audience-row strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .status-toggle, .icon-action { border: 1px solid #ccc; border-radius: 999px; background: #fff; padding: 5px 9px; cursor: pointer; font: inherit; font-size: 12px; white-space: nowrap; }.status-toggle.is-subscribed { background: #ddff53; border-color: #ddff53; }.icon-action { font-family: 'Material Symbols Outlined'; color: #991b1b; }
+    @media (max-width: 640px) { .audience-summary, .audience-grid { grid-template-columns: 1fr 1fr; } }
   `],
 })
 export class V2DraftsListComponent implements OnInit {
   private service = inject(EmailCampaignV2Service);
+  private emailService = inject(EmailCampaignService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   templateLibrary = inject(TemplateLibraryService);
@@ -203,7 +260,22 @@ export class V2DraftsListComponent implements OnInit {
   drafts = signal<EmailV2TemplateDto[]>([]);
   loading = signal(true);
   searchQuery = signal('');
-  activeTab = signal<'drafts' | 'templates'>('drafts');
+  activeTab = signal<'drafts' | 'templates' | 'audience'>('drafts');
+  subscribers = signal<EmailSubscriberDto[]>([]);
+  emailGroups = signal<EmailGroupDto[]>([]);
+  subscribersTotal = signal(0);
+  subscribedCount = signal(0);
+  unsubscribedCount = signal(0);
+  audienceLoading = signal(false);
+  showCreateSubscriber = signal(false);
+  showCreateGroup = signal(false);
+  savingSubscriber = signal(false);
+  savingGroup = signal(false);
+  subscriberSearch = '';
+  newSubscriberEmail = '';
+  newSubscriberName = '';
+  newGroupName = '';
+  newGroupDescription = '';
 
   filteredDrafts = computed(() => {
     const q = this.searchQuery().trim().toLowerCase();
@@ -212,6 +284,71 @@ export class V2DraftsListComponent implements OnInit {
   });
 
   ngOnInit(): void { this.loadDrafts(); }
+
+  openAudience(): void {
+    this.activeTab.set('audience');
+    this.loadSubscribers();
+    this.loadGroups();
+  }
+
+  loadSubscribers(): void {
+    this.audienceLoading.set(true);
+    this.emailService.getSubscribers(this.subscriberSearch.trim(), 'all', undefined, 1, 50).subscribe({
+      next: (page: EmailSubscriberPageDto) => {
+        this.subscribers.set(page.items);
+        this.subscribersTotal.set(page.totalCount);
+        this.subscribedCount.set(page.subscribedCount);
+        this.unsubscribedCount.set(page.unsubscribedCount);
+        this.audienceLoading.set(false);
+      },
+      error: () => this.audienceLoading.set(false),
+    });
+  }
+
+  loadGroups(): void {
+    this.emailService.getGroups().subscribe({ next: groups => this.emailGroups.set(groups) });
+  }
+
+  createSubscriber(): void {
+    const email = this.newSubscriberEmail.trim();
+    if (!email) return;
+    this.savingSubscriber.set(true);
+    this.emailService.createSubscriber({ email, name: this.newSubscriberName.trim() || undefined, isSubscribed: true, groupIds: [] }).subscribe({
+      next: () => {
+        this.newSubscriberEmail = '';
+        this.newSubscriberName = '';
+        this.showCreateSubscriber.set(false);
+        this.savingSubscriber.set(false);
+        this.loadSubscribers();
+      },
+      error: () => this.savingSubscriber.set(false),
+    });
+  }
+
+  toggleSubscriber(subscriber: EmailSubscriberDto): void {
+    this.emailService.updateSubscriber(subscriber.id, { name: subscriber.name, isSubscribed: !subscriber.isSubscribed, groupIds: subscriber.groups.map(group => group.id) }).subscribe({ next: () => this.loadSubscribers() });
+  }
+
+  createGroup(): void {
+    const name = this.newGroupName.trim();
+    if (!name) return;
+    this.savingGroup.set(true);
+    this.emailService.createGroup({ name, description: this.newGroupDescription.trim() || undefined, subscriberIds: [] }).subscribe({
+      next: () => {
+        this.newGroupName = '';
+        this.newGroupDescription = '';
+        this.showCreateGroup.set(false);
+        this.savingGroup.set(false);
+        this.loadGroups();
+      },
+      error: () => this.savingGroup.set(false),
+    });
+  }
+
+  deleteGroup(group: EmailGroupDto): void {
+    if (!window.confirm(`למחוק את הקבוצה "${group.name}"?`)) return;
+    this.emailService.deleteGroup(group.id).subscribe({ next: () => this.loadGroups() });
+  }
 
   loadDrafts(): void {
     this.loading.set(true);
