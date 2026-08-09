@@ -194,27 +194,153 @@ public class EmailV2Service : IEmailV2Service
             .Replace("\u0000", "");
 
         // Templatical custom blocks may contain downlevel-revealed Outlook comments.
-        // Those comments are valid in an email client but not valid XML for Mjml.Net.
-        // Keep the table-based Outlook fallback as the universal safe representation.
+        // They are not valid XML for Mjml.Net. Keep the normal branch for the
+        // editor/Gmail preview and discard only the Outlook-only duplicate.
         sanitized = Regex.Replace(
             sanitized,
-            @"<!--\[if\s*!mso\]><!-->(.*?)<!--<!\[endif\]-->",
+            @"<!--\[if\s*!mso\]><!-->|<!--<!\[endif\]-->",
             string.Empty,
-            RegexOptions.Singleline | RegexOptions.IgnoreCase);
-        sanitized = Regex.Replace(
-            sanitized,
-            @"<!--\[if\s*mso\]>(.*?)<!\[endif\]-->",
-            "$1",
-            RegexOptions.Singleline | RegexOptions.IgnoreCase);
+            RegexOptions.IgnoreCase);
+        // Standard Outlook conditional comments are valid XML comments, so they
+        // can remain in the rendered output as an Outlook fallback.
 
         // Remove all remaining C0 control characters. A copied text value or a
         // third-party block can contain more than just NUL, and XML rejects them.
         sanitized = Regex.Replace(sanitized, "[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F]", "");
 
+        // The content blocks are fed from CMS data. Older saved designs may still
+        // contain a literal ampersand in a title or URL; XML requires it to be an
+        // entity before Mjml.Net can parse the document.
+        sanitized = Regex.Replace(
+            sanitized,
+            @"&(?!#(?:\d+|x[0-9a-fA-F]+);|[a-zA-Z][a-zA-Z0-9]+;)",
+            "&amp;");
+
+        sanitized = LiftCustomBlockSections(sanitized);
         sanitized = UnwrapCustomBlockTables(sanitized);
 
         return sanitized;
     }
+
+    private static string LiftCustomBlockSections(string mjml)
+    {
+        const string sectionOpening = "<mj-section>";
+        const string columnOpening = "<mj-column>";
+        const string columnClosing = "</mj-column>";
+        const string sectionClosing = "</mj-section>";
+        var result = mjml;
+        var searchStart = 0;
+
+        // Templatical wraps every custom block in a default section/column/mj-text.
+        // Some of our reusable blocks render complete mj-section markup themselves;
+        // lifting that content prevents invalid mj-section -> mj-column nesting.
+        while (searchStart < result.Length)
+        {
+            var sectionStart = result.IndexOf(sectionOpening, searchStart, StringComparison.OrdinalIgnoreCase);
+            if (sectionStart < 0) break;
+
+            var columnStart = SkipWhitespace(result, sectionStart + sectionOpening.Length);
+            if (!StartsWithAt(result, columnStart, columnOpening))
+            {
+                searchStart = sectionStart + sectionOpening.Length;
+                continue;
+            }
+
+            var textStart = SkipWhitespace(result, columnStart + columnOpening.Length);
+            if (!StartsWithAt(result, textStart, "<mj-text"))
+            {
+                searchStart = sectionStart + sectionOpening.Length;
+                continue;
+            }
+
+            var textOpeningEnd = result.IndexOf('>', textStart);
+            var textClosingStart = textOpeningEnd < 0
+                ? -1
+                : FindMatchingClosingTag(result, textStart, "mj-text");
+            if (textOpeningEnd < 0 || textClosingStart < 0)
+            {
+                searchStart = sectionStart + sectionOpening.Length;
+                continue;
+            }
+
+            var afterText = SkipWhitespace(result, textClosingStart + "</mj-text>".Length);
+            if (!StartsWithAt(result, afterText, columnClosing))
+            {
+                searchStart = sectionStart + sectionOpening.Length;
+                continue;
+            }
+
+            var afterColumn = SkipWhitespace(result, afterText + columnClosing.Length);
+            if (!StartsWithAt(result, afterColumn, sectionClosing))
+            {
+                searchStart = sectionStart + sectionOpening.Length;
+                continue;
+            }
+
+            var content = result[(textOpeningEnd + 1)..textClosingStart];
+            var trimmedContent = content.TrimStart();
+            if (!trimmedContent.StartsWith("<mj-section", StringComparison.OrdinalIgnoreCase)
+                && !trimmedContent.StartsWith("<mj-wrapper", StringComparison.OrdinalIgnoreCase))
+            {
+                searchStart = sectionStart + sectionOpening.Length;
+                continue;
+            }
+
+            var sectionEnd = afterColumn + sectionClosing.Length;
+            result = result[..sectionStart] + content + result[sectionEnd..];
+            searchStart = sectionStart + content.Length;
+        }
+
+        return result;
+    }
+
+    private static int FindMatchingClosingTag(string value, int openingStart, string tagName)
+    {
+        var openingEnd = value.IndexOf('>', openingStart);
+        if (openingEnd < 0) return -1;
+
+        var position = openingEnd + 1;
+        var depth = 1;
+        while (position < value.Length)
+        {
+            var tagStart = value.IndexOf('<', position);
+            if (tagStart < 0) return -1;
+
+            if (StartsWithAt(value, tagStart, $"</{tagName}"))
+            {
+                var tagEnd = value.IndexOf('>', tagStart);
+                if (tagEnd < 0) return -1;
+                if (--depth == 0) return tagStart;
+                position = tagEnd + 1;
+                continue;
+            }
+
+            if (StartsWithAt(value, tagStart, $"<{tagName}"))
+            {
+                var tagEnd = value.IndexOf('>', tagStart);
+                if (tagEnd < 0) return -1;
+                if (tagEnd == tagStart || value[tagEnd - 1] != '/') depth++;
+                position = tagEnd + 1;
+                continue;
+            }
+
+            position = tagStart + 1;
+        }
+
+        return -1;
+    }
+
+    private static int SkipWhitespace(string value, int start)
+    {
+        var position = start;
+        while (position < value.Length && char.IsWhiteSpace(value[position])) position++;
+        return position;
+    }
+
+    private static bool StartsWithAt(string value, int start, string expected) =>
+        start >= 0
+        && start + expected.Length <= value.Length
+        && value.AsSpan(start, expected.Length).Equals(expected, StringComparison.OrdinalIgnoreCase);
 
     private static string UnwrapCustomBlockTables(string mjml)
     {
@@ -235,10 +361,12 @@ public class EmailV2Service : IEmailV2Service
 
             var contentStart = openingEnd + 1;
             var content = result[contentStart..end];
-            if (content.Contains("<table", StringComparison.OrdinalIgnoreCase))
+            if (TryConvertRootTableToMjTable(content, out var mjTable))
             {
-                result = result[..start] + "<mj-raw>" + content + "</mj-raw>" + result[(end + closing.Length)..];
-                searchStart = start + 8;
+                // Mjml.Net accepts mj-table as a direct child of mj-column, but
+                // rejects both a raw HTML table and mj-raw inside mj-text.
+                result = result[..start] + mjTable + result[(end + closing.Length)..];
+                searchStart = start + "<mj-table".Length;
             }
             else
             {
@@ -247,6 +375,30 @@ public class EmailV2Service : IEmailV2Service
         }
 
         return result;
+    }
+
+    private static bool TryConvertRootTableToMjTable(string content, out string mjTable)
+    {
+        mjTable = string.Empty;
+        var tableStart = SkipWhitespace(content, 0);
+        if (!StartsWithAt(content, tableStart, "<table")) return false;
+
+        var tableOpeningEnd = content.IndexOf('>', tableStart);
+        var tableClosingStart = tableOpeningEnd < 0
+            ? -1
+            : FindMatchingClosingTag(content, tableStart, "table");
+        if (tableOpeningEnd < 0 || tableClosingStart < 0) return false;
+
+        var afterTable = SkipWhitespace(content, tableClosingStart + "</table>".Length);
+        if (afterTable != content.Length) return false;
+
+        mjTable = content[..tableStart]
+            + "<mj-table"
+            + content[(tableStart + "<table".Length)..(tableOpeningEnd + 1)]
+            + content[(tableOpeningEnd + 1)..tableClosingStart]
+            + "</mj-table>"
+            + content[(tableClosingStart + "</table>".Length)..];
+        return true;
     }
 
     private static string? ValidateMjml(string mjml)

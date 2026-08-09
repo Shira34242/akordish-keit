@@ -15,6 +15,7 @@ public interface INotificationService
     Task DeleteAllAsync(int userId);
     Task<NotificationDto> SendAdminMessageAsync(SendUserNotificationDto dto, int createdByUserId);
     Task<BroadcastNotificationResultDto> SendBroadcastAsync(SendBroadcastNotificationDto dto, int createdByUserId);
+    Task<BroadcastNotificationAnalyticsSummaryDto> GetBroadcastAnalyticsAsync();
     Task<List<NotificationGroupDto>> GetGroupsAsync();
     Task<NotificationGroupDto> CreateGroupAsync(SaveNotificationGroupDto dto, int createdByUserId);
     Task<NotificationGroupDto?> UpdateGroupAsync(int groupId, SaveNotificationGroupDto dto);

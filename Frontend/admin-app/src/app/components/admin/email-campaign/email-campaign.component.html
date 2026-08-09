@@ -54,7 +54,7 @@
 
         <div class="sidebar-section">
           <label class="field-label">שם השולח</label>
-          <input class="field-input" type="text" [(ngModel)]="fromName" placeholder="אקורדישקייט" />
+          <input class="field-input" type="text" [(ngModel)]="fromName" (ngModelChange)="markDirty()" placeholder="אקורדישקייט" />
         </div>
 
         <div class="sidebar-section">
@@ -136,10 +136,9 @@
                 <span class="count-loading">טוען...</span>
               } @else {
                 <span class="material-symbols-outlined">people</span>
-                <strong>{{ effectiveRecipientCount | number }}</strong>
-                <span>נמענים</span>
+                <span>יישלח ל־<strong>{{ effectiveRecipientCount | number }}</strong> נמענים</span>
                 @if (excludedEmails.size > 0) {
-                  <span class="excluded-hint">({{ excludedEmails.size }} הוסרו)</span>
+                  <span class="excluded-hint">· {{ excludedEmails.size }} הוסרו ידנית</span>
                 }
               }
             </div>
@@ -173,6 +172,7 @@
             class="field-input subject-input"
             type="text"
             [(ngModel)]="subject"
+            (ngModelChange)="markDirty()"
             placeholder="הכנסי נושא למייל..."
             maxlength="150"
           />
@@ -180,7 +180,25 @@
             <button type="button" (click)="undo()"><span class="material-symbols-outlined">undo</span>ביטול</button>
             <button type="button" (click)="redo()"><span class="material-symbols-outlined">redo</span>ביצוע מחדש</button>
             <button type="button" (click)="saveDraft()"><span class="material-symbols-outlined">save</span>שמור טיוטה</button>
-            <button type="button" (click)="sendTestEmail()"><span class="material-symbols-outlined">forward_to_inbox</span>שלח לעצמי בדיקה</button>
+            <button type="button" (click)="openTestDialog()" [disabled]="isSendingTest"><span class="material-symbols-outlined">forward_to_inbox</span>שלח לעצמי בדיקה</button>
+          </div>
+          <div class="composer-status-row" aria-live="polite">
+            <span class="save-status" [class.unsaved]="isDirty">
+              <span class="material-symbols-outlined">{{ isDirty ? 'edit_note' : 'cloud_done' }}</span>
+              @if (isDirty) {
+                יש שינויים שלא נשמרו
+              } @else if (lastSavedAt) {
+                נשמר לאחרונה {{ lastSavedAt | date:'HH:mm' }}
+              } @else {
+                אין שינויים שלא נשמרו
+              }
+            </span>
+            @if (testSendMessage) {
+              <span class="test-status" [class.success]="testSendSucceeded" [class.error]="!testSendSucceeded">
+                <span class="material-symbols-outlined">{{ testSendSucceeded ? 'check_circle' : 'error' }}</span>
+                {{ testSendMessage }}
+              </span>
+            }
           </div>
           @if (drafts.length || sentEmails.length) {
             <div class="saved-emails">
@@ -201,27 +219,27 @@
           class="editor-toolbar editor-toolbar--floating"
           (mousedown)="onToolbarMouseDown($event)">
           <div class="toolbar-group">
-            <button class="tb-btn" (click)="format('bold')" title="מודגש"><strong>B</strong></button>
-            <button class="tb-btn italic-btn" (click)="format('italic')" title="נטוי"><em>I</em></button>
-            <button class="tb-btn underline-btn" (click)="format('underline')" title="קו תחתון"><u>U</u></button>
-            <button class="tb-btn" (click)="format('strikeThrough')" title="קו חוצה"><s>S</s></button>
+            <button class="tb-btn" [class.active]="isCommandActive('bold')" (click)="format('bold')" title="מודגש"><strong>B</strong></button>
+            <button class="tb-btn italic-btn" [class.active]="isCommandActive('italic')" (click)="format('italic')" title="נטוי"><em>I</em></button>
+            <button class="tb-btn underline-btn" [class.active]="isCommandActive('underline')" (click)="format('underline')" title="קו תחתון"><u>U</u></button>
+            <button class="tb-btn" [class.active]="isCommandActive('strikeThrough')" (click)="format('strikeThrough')" title="קו חוצה"><s>S</s></button>
           </div>
           <div class="toolbar-group">
-            <button class="tb-btn" (click)="setAlign('justifyRight')" title="יישור ימין">
+            <button class="tb-btn" [class.active]="isCommandActive('justifyRight')" (click)="setAlign('justifyRight')" title="יישור ימין">
               <span class="material-symbols-outlined">format_align_right</span>
             </button>
-            <button class="tb-btn" (click)="setAlign('justifyCenter')" title="מרכז">
+            <button class="tb-btn" [class.active]="isCommandActive('justifyCenter')" (click)="setAlign('justifyCenter')" title="מרכז">
               <span class="material-symbols-outlined">format_align_center</span>
             </button>
-            <button class="tb-btn" (click)="setAlign('justifyLeft')" title="יישור שמאל">
+            <button class="tb-btn" [class.active]="isCommandActive('justifyLeft')" (click)="setAlign('justifyLeft')" title="יישור שמאל">
               <span class="material-symbols-outlined">format_align_left</span>
             </button>
           </div>
           <div class="toolbar-group">
-            <button class="tb-btn" (click)="format('insertUnorderedList')" title="רשימה">
+            <button class="tb-btn" [class.active]="isCommandActive('insertUnorderedList')" (click)="format('insertUnorderedList')" title="רשימה">
               <span class="material-symbols-outlined">format_list_bulleted</span>
             </button>
-            <button class="tb-btn" (click)="format('insertOrderedList')" title="רשימה ממוספרת">
+            <button class="tb-btn" [class.active]="isCommandActive('insertOrderedList')" (click)="format('insertOrderedList')" title="רשימה ממוספרת">
               <span class="material-symbols-outlined">format_list_numbered</span>
             </button>
           </div>
@@ -304,6 +322,8 @@
           (keyup)="onEditorSelectionChange()"
           (blur)="onEditorSelectionChange()"
           (click)="onEditorClick($event)"
+          (input)="markDirty()"
+          (paste)="onEditorPaste($event)"
           [attr.data-placeholder]="'כתבי את תוכן המייל כאן...'"
         ></div>
 
@@ -322,9 +342,9 @@
 
         <!-- Actions -->
         <div class="editor-actions">
-          <button class="btn-preview" type="button" (click)="mobilePreview = !mobilePreview">
-            <span class="material-symbols-outlined">{{ mobilePreview ? 'desktop_windows' : 'phone_iphone' }}</span>
-            {{ mobilePreview ? 'תצוגת מחשב' : 'תצוגת מובייל' }}
+          <button class="btn-preview" type="button" (click)="openPreview()">
+            <span class="material-symbols-outlined">preview</span>
+            תצוגה מקדימה
           </button>
           <button
             class="btn-send"
@@ -335,6 +355,31 @@
             שלח ל-{{ effectiveRecipientCount | number }} נמענים
           </button>
         </div>
+
+        @if (showPreview) {
+          <section class="preview-panel" aria-label="תצוגה מקדימה של המייל">
+            <div class="preview-header">
+              <span class="material-symbols-outlined">devices</span>
+              <span>תצוגה מקדימה בגודל אמיתי</span>
+              <div class="preview-device-switch">
+                <button type="button" [class.active]="previewDevice === 'desktop'" (click)="previewDevice = 'desktop'">מחשב</button>
+                <button type="button" [class.active]="previewDevice === 'mobile'" (click)="previewDevice = 'mobile'">מובייל</button>
+              </div>
+              <button type="button" class="preview-close" (click)="showPreview = false" title="סגירה">
+                <span class="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            @if (previewLoading) {
+              <div class="preview-loading">יוצר תצוגה מקדימה...</div>
+            } @else if (previewError) {
+              <div class="preview-loading preview-error">{{ previewError }}</div>
+            } @else {
+              <div class="preview-frame-shell" [class.mobile]="previewDevice === 'mobile'">
+                <iframe class="preview-iframe" [class.preview-iframe--mobile]="previewDevice === 'mobile'" [srcdoc]="previewHtml" sandbox="" title="תצוגה מקדימה של המייל"></iframe>
+              </div>
+            }
+          </section>
+        }
 
       </div>
     </div>
@@ -566,13 +611,38 @@
   </div>
 }
 
+<!-- Test Email Dialog -->
+@if (showTestDialog) {
+  <div class="dialog-overlay" (click)="showTestDialog = isSendingTest">
+    <div class="dialog" (click)="$event.stopPropagation()">
+      <div class="dialog-header">
+        <span class="material-symbols-outlined">forward_to_inbox</span>
+        <h3>שליחת מייל בדיקה</h3>
+      </div>
+      <div class="dialog-body">
+        <label class="field-label">כתובת המייל לקבלת הבדיקה</label>
+        <input class="field-input" type="email" [(ngModel)]="testRecipientEmail" placeholder="name@example.com" dir="ltr" (keyup.enter)="sendTestEmail()" />
+        @if (testSendMessage && !testSendSucceeded) {
+          <p class="inline-dialog-error">{{ testSendMessage }}</p>
+        }
+      </div>
+      <div class="dialog-actions">
+        <button class="btn-dialog-cancel" (click)="showTestDialog = false" [disabled]="isSendingTest">ביטול</button>
+        <button class="btn-dialog-confirm" (click)="sendTestEmail()" [disabled]="!testRecipientEmail.trim() || isSendingTest">
+          {{ isSendingTest ? 'שולח...' : 'שלח בדיקה' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
 <!-- Image Dialog -->
 @if (showImageDialog) {
   <div class="dialog-overlay" (click)="showImageDialog = false">
     <div class="dialog" (click)="$event.stopPropagation()">
       <div class="dialog-header">
         <span class="material-symbols-outlined">image</span>
-        <h3>הוספת תמונה</h3>
+        <h3>{{ isEditingImage ? 'עריכת תמונה' : 'הוספת תמונה' }}</h3>
       </div>
       <div class="dialog-body">
         <label class="field-label">תמונה</label>
@@ -586,7 +656,19 @@
         <label class="field-label">טקסט חלופי (alt)</label>
         <input class="field-input" type="text" [(ngModel)]="imageAlt" placeholder="תיאור התמונה" />
         <label class="field-label">גודל: {{ imageWidth }}%</label>
-        <input class="image-size-range" type="range" min="30" max="200" step="5" [(ngModel)]="imageWidth" />
+        <div class="image-size-control">
+          <input class="image-size-range" type="range" min="30" [max]="imageMaxWidth" step="5" [(ngModel)]="imageWidth" />
+          <input class="image-size-number" type="number" min="30" [max]="imageMaxWidth" step="5" [(ngModel)]="imageWidth" aria-label="גודל תמונה באחוזים" />
+        </div>
+        <div class="image-size-presets" aria-label="גדלים מהירים">
+          @for (size of [50, 100, 150, 200]; track size) {
+            <button type="button" [class.active]="imageWidth === size" (click)="setImageWidth(size)">{{ size }}%</button>
+          }
+          <button type="button" [class.active]="imageWidth === 100" (click)="setImageWidth(100)">רוחב מלא</button>
+        </div>
+        @if (imageWidth > 100) {
+          <p class="image-width-warning"><span class="material-symbols-outlined">warning</span>תמונה רחבה מ־100% עלולה להיחתך בחלק מתוכנות המייל.</p>
+        }
         <label class="field-label">יישור</label>
         <div class="choice-row">
           <button type="button" [class.active]="imageAlign === 'right'" (click)="imageAlign = 'right'">ימין</button>
@@ -599,8 +681,11 @@
         <input class="field-input" type="text" [(ngModel)]="imageCaption" placeholder="כיתוב קצר מתחת לתמונה" />
       </div>
       <div class="dialog-actions">
+        @if (isEditingImage) {
+          <button class="btn-dialog-danger" (click)="removeEditingImage()">הסר תמונה</button>
+        }
         <button class="btn-dialog-cancel" (click)="showImageDialog = false">ביטול</button>
-        <button class="btn-dialog-confirm" (click)="insertImage()" [disabled]="!imageUrl">הוסף תמונה</button>
+        <button class="btn-dialog-confirm" (click)="insertImage()" [disabled]="!imageUrl">{{ isEditingImage ? 'עדכן תמונה' : 'הוסף תמונה' }}</button>
       </div>
     </div>
   </div>
@@ -698,6 +783,15 @@
             }
           }
         </div>
+        <div class="preflight-list">
+          <h4>בדיקה לפני שליחה</h4>
+          @for (check of preflightChecks; track check.label) {
+            <div class="preflight-item" [class.pass]="check.status === 'pass'" [class.warning]="check.status === 'warning'" [class.error]="check.status === 'error'">
+              <span class="material-symbols-outlined">{{ check.status === 'pass' ? 'check_circle' : check.status === 'warning' ? 'warning' : 'error' }}</span>
+              <span><strong>{{ check.label }}</strong><small>{{ check.detail }}</small></span>
+            </div>
+          }
+        </div>
         <p class="confirm-warning">
           <span class="material-symbols-outlined">warning</span>
           פעולה זו תשלח מייל אמיתי לכל הנמענים. לא ניתן לבטל לאחר השליחה.
@@ -705,7 +799,7 @@
       </div>
       <div class="dialog-actions">
         <button class="btn-dialog-cancel" (click)="showConfirmDialog = false" [disabled]="isSending">ביטול</button>
-        <button class="btn-dialog-send" (click)="sendEmail()" [disabled]="isSending">
+        <button class="btn-dialog-send" (click)="sendEmail()" [disabled]="isSending || hasPreflightErrors">
           @if (isSending) {
             <span class="material-symbols-outlined spinning">progress_activity</span>
             שולח...
@@ -714,6 +808,26 @@
             שלח עכשיו
           }
         </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Unsaved Changes Dialog -->
+@if (showUnsavedDialog) {
+  <div class="dialog-overlay">
+    <div class="dialog dialog--confirm" role="dialog" aria-labelledby="unsaved-email-title">
+      <div class="dialog-header">
+        <span class="material-symbols-outlined">edit_note</span>
+        <h3 id="unsaved-email-title">השינויים עדיין לא נשמרו</h3>
+      </div>
+      <div class="dialog-body">
+        <p class="dialog-hint">יש במייל שינויים שלא נשמרו. אפשר להישאר בעמוד, לשמור טיוטה ולצאת, או לצאת ללא שמירה.</p>
+      </div>
+      <div class="dialog-actions unsaved-actions">
+        <button class="btn-dialog-cancel" (click)="stayOnPage()">הישאר בעמוד</button>
+        <button class="btn-dialog-danger" (click)="exitWithoutSaving()">צא ללא שמירה</button>
+        <button class="btn-dialog-confirm" (click)="saveAndExit()">שמור וצא</button>
       </div>
     </div>
   </div>

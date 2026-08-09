@@ -192,7 +192,7 @@ export class AutosaveService {
 
           // Do not expose server/MJML parser details in the admin UI.
           if (status === 400) {
-            message = '׳”׳×׳•׳›׳ ׳©׳ ׳”׳׳™׳™׳ ׳׳™׳ ׳• ׳×׳§׳™׳. ׳‘׳“׳•׳§ ׳׳× ׳”׳¨׳›׳™׳‘ ׳”׳׳—׳¨׳•׳ ׳©׳”׳•׳¡׳£.';
+            message = 'תוכן המייל אינו תקין. בדוק את הרכיב האחרון שהוספת.';
           }
 
           if (!detail && errorBody) {

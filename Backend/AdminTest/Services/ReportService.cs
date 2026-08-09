@@ -11,6 +11,8 @@ namespace AkordishKeit.Services;
 public class ReportService : IReportService
 {
     private const string ChordRequestAdminOnlyMarker = "[ChordRequestAdminOnly]";
+    private const string ReportContextPrefix = "[[AKCTX1|";
+    private const string ReportContextSuffix = "]]";
     private readonly AkordishKeitDbContext _context;
 
     public ReportService(AkordishKeitDbContext context)
@@ -26,7 +28,7 @@ public class ReportService : IReportService
             ContentType = dto.ContentType,
             ContentId = dto.ContentId,
             ReportType = dto.ReportType,
-            Description = dto.Description,
+            Description = PackReportDescription(dto),
             ReportedAt = DateTime.UtcNow,
             Status = "Pending"
         };
@@ -474,6 +476,18 @@ public class ReportService : IReportService
     private async Task<ReportDto> MapToDtoAsync(ContentReport report)
     {
         var (contentTitle, contentUrl) = await GetContentInfoAsync(report.ContentType, report.ContentId);
+        var (cleanDescription, context) = UnpackReportDescription(report.Description);
+
+        if (!string.IsNullOrWhiteSpace(context.SourcePageUrl))
+        {
+            contentUrl = context.SourcePageUrl;
+        }
+
+        if (!string.IsNullOrWhiteSpace(context.SourcePageTitle) &&
+            (report.ContentType == "General" || contentTitle == "תוכן לא נמצא"))
+        {
+            contentTitle = context.SourcePageTitle;
+        }
 
         int? songCount = null;
         if (report.ReportType == "NewArtist")
@@ -496,7 +510,7 @@ public class ReportService : IReportService
             ContentTitle = contentTitle,
             ContentUrl = contentUrl,
             ReportType = report.ReportType,
-            Description = report.Description,
+            Description = cleanDescription,
             ReportedAt = report.ReportedAt,
             Status = report.Status,
             ReporterUsername = report.User?.Username,
@@ -505,8 +519,94 @@ public class ReportService : IReportService
             ResolvedAt = report.ResolvedAt,
             ResolvedByUsername = report.ResolvedByUser?.Username,
             AdminNotes = report.AdminNotes,
-            SongCount = songCount
+            SongCount = songCount,
+            SourcePageUrl = context.SourcePageUrl,
+            SourcePageTitle = context.SourcePageTitle,
+            SourceContext = context.SourceContext,
+            LastAction = context.LastAction,
+            ClientEnvironment = context.ClientEnvironment,
+            ErrorId = context.ErrorId,
+            ErrorSummary = context.ErrorSummary
         };
+    }
+
+    private static string PackReportDescription(CreateReportDto dto)
+    {
+        var description = dto.Description.Trim();
+        var url = NormalizeInternalPath(dto.SourcePageUrl, 300);
+        var title = NormalizeContextValue(dto.SourcePageTitle, 100);
+        var source = NormalizeContextValue(dto.SourceContext, 70);
+        var action = NormalizeContextValue(dto.LastAction, 140);
+        var environment = NormalizeContextValue(dto.ClientEnvironment, 180);
+        var errorId = NormalizeContextValue(dto.ErrorId, 50);
+        var errorSummary = NormalizeContextValue(dto.ErrorSummary, 120);
+
+        if (url == null && title == null && source == null && action == null && environment == null && errorId == null)
+            return description;
+
+        var context = $"{ReportContextPrefix}u={url ?? ""}|t={title ?? ""}|s={source ?? ""}|a={action ?? ""}|v={environment ?? ""}|i={errorId ?? ""}|m={errorSummary ?? ""}{ReportContextSuffix}";
+        if (context.Length + Environment.NewLine.Length + description.Length <= 1000)
+            return $"{context}{Environment.NewLine}{description}";
+
+        // Never trim the user's explanation. For unusually long reports, retain the exact page
+        // when it fits and otherwise store the original description unchanged.
+        var essentialContext = $"{ReportContextPrefix}u={url ?? ""}|t=|s=|a=|v=|i={errorId ?? ""}|m={ReportContextSuffix}";
+        return (url != null || errorId != null) && essentialContext.Length + Environment.NewLine.Length + description.Length <= 1000
+            ? $"{essentialContext}{Environment.NewLine}{description}"
+            : description;
+    }
+
+    private static (string Description, ReportContext Context) UnpackReportDescription(string storedDescription)
+    {
+        if (!storedDescription.StartsWith(ReportContextPrefix, StringComparison.Ordinal))
+            return (storedDescription, new ReportContext());
+
+        var end = storedDescription.IndexOf(ReportContextSuffix, StringComparison.Ordinal);
+        if (end < 0)
+            return (storedDescription, new ReportContext());
+
+        var rawContext = storedDescription[ReportContextPrefix.Length..end];
+        var values = rawContext.Split('|')
+            .Select(part => part.Split('=', 2))
+            .Where(parts => parts.Length == 2)
+            .ToDictionary(parts => parts[0], parts => string.IsNullOrWhiteSpace(parts[1]) ? null : parts[1]);
+
+        var descriptionStart = end + ReportContextSuffix.Length;
+        var description = storedDescription[descriptionStart..].TrimStart('\r', '\n');
+        return (description, new ReportContext
+        {
+            SourcePageUrl = values.GetValueOrDefault("u"),
+            SourcePageTitle = values.GetValueOrDefault("t"),
+            SourceContext = values.GetValueOrDefault("s"),
+            LastAction = values.GetValueOrDefault("a"),
+            ClientEnvironment = values.GetValueOrDefault("v"),
+            ErrorId = values.GetValueOrDefault("i"),
+            ErrorSummary = values.GetValueOrDefault("m")
+        });
+    }
+
+    private static string? NormalizeInternalPath(string? value, int maxLength)
+    {
+        var normalized = NormalizeContextValue(value, maxLength);
+        return normalized != null && normalized.StartsWith('/') && !normalized.StartsWith("//") ? normalized : null;
+    }
+
+    private static string? NormalizeContextValue(string? value, int maxLength)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        var normalized = value.Replace('|', ' ').Replace(']', ' ').Replace('\r', ' ').Replace('\n', ' ').Trim();
+        return normalized.Length <= maxLength ? normalized : normalized[..maxLength];
+    }
+
+    private sealed class ReportContext
+    {
+        public string? SourcePageUrl { get; init; }
+        public string? SourcePageTitle { get; init; }
+        public string? SourceContext { get; init; }
+        public string? LastAction { get; init; }
+        public string? ClientEnvironment { get; init; }
+        public string? ErrorId { get; init; }
+        public string? ErrorSummary { get; init; }
     }
 
     public async Task<int> CleanupArtistDuplicatesAsync(int adminUserId)

@@ -144,9 +144,12 @@ public class NotificationService : INotificationService
 
     public async Task DeleteAllAsync(int userId)
     {
+        var now = DateTime.UtcNow;
         await _context.Notifications
-            .Where(n => n.UserId == userId)
-            .ExecuteDeleteAsync();
+            .Where(n => n.UserId == userId && !n.IsDeleted)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(n => n.IsDeleted, true)
+                .SetProperty(n => n.DeletedAt, now));
     }
 
     public Task<NotificationDto> SendAdminMessageAsync(SendUserNotificationDto dto, int createdByUserId)
@@ -172,6 +175,7 @@ public class NotificationService : INotificationService
 
     public async Task<BroadcastNotificationResultDto> SendBroadcastAsync(SendBroadcastNotificationDto dto, int createdByUserId)
     {
+        string? selectedGroupName = null;
         if (dto.GroupId.HasValue && dto.GroupId.Value > 0)
         {
             var group = await _context.NotificationGroups
@@ -183,6 +187,7 @@ public class NotificationService : INotificationService
                 throw new InvalidOperationException("קבוצת ההתראות לא נמצאה");
             }
 
+            selectedGroupName = group.Name;
             ApplyGroupToBroadcastDto(dto, group);
             dto.UserIds = await _context.NotificationGroupMembers
                 .AsNoTracking()
@@ -223,7 +228,9 @@ public class NotificationService : INotificationService
         }
 
         var now = DateTime.UtcNow;
-        var audienceLabel = BuildAudienceLabel(dto, users.Count);
+        var audienceLabel = selectedGroupName == null
+            ? BuildAudienceLabel(dto, users.Count)
+            : $"{selectedGroupName} ({users.Count})";
         var notifications = users.Select(user => new Notification
         {
             UserId = user.Id,
@@ -254,6 +261,86 @@ public class NotificationService : INotificationService
         {
             SentCount = notifications.Count,
             AudienceLabel = audienceLabel
+        };
+    }
+
+    public async Task<BroadcastNotificationAnalyticsSummaryDto> GetBroadcastAnalyticsAsync()
+    {
+        var campaigns = await _context.Notifications
+            .AsNoTracking()
+            .Where(notification => notification.RelatedEntityType == "Broadcast")
+            .GroupBy(notification => new { notification.CreatedAt, notification.CreatedByUserId })
+            .Select(group => new BroadcastNotificationAnalyticsDto
+            {
+                SentAt = group.Key.CreatedAt,
+                Title = group.Max(notification => notification.Title),
+                Message = group.Max(notification => notification.Message),
+                CampaignName = group.Max(notification => notification.CampaignName),
+                AudienceLabel = group.Max(notification => notification.AudienceLabel),
+                SentCount = group.Count(),
+                ReadCount = group.Count(notification => notification.IsRead),
+                HasClickableContent = group.Any(notification =>
+                    notification.ActionUrl != null
+                    || (notification.MediaUrl != null && notification.MediaType != "image")
+                    || (notification.AttachmentsJson != null && notification.AttachmentsJson != "[]"))
+            })
+            .OrderByDescending(campaign => campaign.SentAt)
+            .ToListAsync();
+
+        var clickStats = await (
+            from click in _context.ButtonClicks.AsNoTracking()
+            join notification in _context.Notifications.AsNoTracking()
+                on click.ItemId equals (int?)notification.Id
+            where click.ButtonType == "notification_link"
+                && notification.RelatedEntityType == "Broadcast"
+            group click by new { notification.CreatedAt, notification.CreatedByUserId }
+            into clicks
+            select new
+            {
+                SentAt = clicks.Key.CreatedAt,
+                clicks.Key.CreatedByUserId,
+                TotalClicks = clicks.Count(),
+                AuthenticatedClickers = clicks
+                    .Where(click => click.UserId.HasValue)
+                    .Select(click => click.UserId)
+                    .Distinct()
+                    .Count(),
+                AnonymousClickers = clicks
+                    .Where(click => !click.UserId.HasValue && click.IpAddress != null)
+                    .Select(click => click.IpAddress)
+                    .Distinct()
+                    .Count()
+            })
+            .ToListAsync();
+
+        var statsByCampaign = clickStats
+            .GroupBy(stats => stats.SentAt)
+            .ToDictionary(
+                group => group.Key,
+                group => new
+                {
+                    TotalClicks = group.Sum(stats => stats.TotalClicks),
+                    UniqueClickers = group.Sum(stats => stats.AuthenticatedClickers + stats.AnonymousClickers)
+                });
+
+        foreach (var campaign in campaigns)
+        {
+            if (!statsByCampaign.TryGetValue(campaign.SentAt, out var clickStat))
+            {
+                continue;
+            }
+
+            campaign.TotalClicks = clickStat.TotalClicks;
+            campaign.UniqueClickers = clickStat.UniqueClickers;
+        }
+
+        return new BroadcastNotificationAnalyticsSummaryDto
+        {
+            CampaignCount = campaigns.Count,
+            RecipientCount = campaigns.Sum(campaign => campaign.SentCount),
+            ReadCount = campaigns.Sum(campaign => campaign.ReadCount),
+            TotalClicks = campaigns.Sum(campaign => campaign.TotalClicks),
+            Campaigns = campaigns
         };
     }
 

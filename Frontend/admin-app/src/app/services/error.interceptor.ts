@@ -3,10 +3,12 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
+import { ReportContextService } from './report-context.service';
 
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const router = inject(Router);
+  const reportContext = inject(ReportContextService);
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
@@ -90,11 +92,16 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         }
       }
 
+      const capturedError = error.status === 0 || error.status >= 500
+        ? reportContext.recordError(errorMessage)
+        : undefined;
+
       return throwError(() => ({
         status: error.status,
         message: errorMessage,
         error: error.error,
-        originalError: error
+        originalError: error,
+        errorId: capturedError?.id
       }));
     })
   );

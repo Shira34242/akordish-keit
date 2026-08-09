@@ -31,8 +31,8 @@ export class AdminNotificationsLayoutComponent {
   private getState(url: string): LayoutState {
     if (url.includes('/notifications/reports')) {
       return {
-        title: 'דיווחים',
-        subtitle: 'טיפול בדיווחים על תוכן, טעויות ובקשות שהגיעו מהאתר.'
+        title: 'דוחות התראות',
+        subtitle: 'פתיחות ולחיצות בשליחות לקבוצות ולכל המשתמשים.'
       };
     }
 

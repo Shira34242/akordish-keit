@@ -34,12 +34,12 @@ const TEMPLATE = `{% assign style = bannerStyle | default: 'hero' %}
 {% if style == 'hero' %}
 <mj-section padding="{{ space }}px 0" direction="rtl">
   <mj-column>
-    <mj-image src="{{ imageUrl }}" alt="{{ altText }}" width="600px" border-radius="{{ radius }}px"></mj-image>
+    <mj-image src="{{ imageUrl | escape }}" alt="{{ altText | escape }}" width="600px" border-radius="{{ radius }}px"></mj-image>
     <mj-text font-size="24px" font-weight="800" color="{{ txt }}" align="right" padding="16px" font-family="Open Sans, Arial, sans-serif" container-background-color="{{ bg }}" border-radius="{{ radius }}px">
-      {{ title }}{% if subtitle and subtitle != '' %}<br/><span style="font-size:16px;font-weight:300;color:#cccccc;">{{ subtitle }}</span>{% endif %}
+      {{ title | escape }}{% if subtitle and subtitle != '' %}<br/><span style="font-size:16px;font-weight:300;color:#cccccc;">{{ subtitle | escape }}</span>{% endif %}
     </mj-text>
     {% if buttonUrl and buttonUrl != '' and buttonText and buttonText != '' %}
-    <mj-button href="{{ buttonUrl }}" background-color="{{ accent }}" color="#1a1a1a" font-weight="800" font-family="Open Sans, Arial, sans-serif" border-radius="999px" font-size="16px" padding="4px 0" align="right">{{ buttonText }}</mj-button>
+    <mj-button href="{{ buttonUrl | escape }}" background-color="{{ accent }}" color="#1a1a1a" font-weight="800" font-family="Open Sans, Arial, sans-serif" border-radius="999px" font-size="16px" padding="4px 0" align="right">{{ buttonText | escape }}</mj-button>
     {% endif %}
   </mj-column>
 </mj-section>
@@ -48,9 +48,9 @@ const TEMPLATE = `{% assign style = bannerStyle | default: 'hero' %}
 <mj-section padding="{{ space }}px 0" direction="rtl">
   <mj-column>
     {% if buttonUrl and buttonUrl != '' %}
-    <mj-image src="{{ imageUrl }}" alt="{{ altText }}" href="{{ buttonUrl }}" width="600px" border-radius="{{ radius }}px"></mj-image>
+    <mj-image src="{{ imageUrl | escape }}" alt="{{ altText | escape }}" href="{{ buttonUrl | escape }}" width="600px" border-radius="{{ radius }}px"></mj-image>
     {% else %}
-    <mj-image src="{{ imageUrl }}" alt="{{ altText }}" width="600px" border-radius="{{ radius }}px"></mj-image>
+    <mj-image src="{{ imageUrl | escape }}" alt="{{ altText | escape }}" width="600px" border-radius="{{ radius }}px"></mj-image>
     {% endif %}
   </mj-column>
 </mj-section>
@@ -58,12 +58,12 @@ const TEMPLATE = `{% assign style = bannerStyle | default: 'hero' %}
 {% elsif style == 'title-button' %}
 <mj-section padding="{{ space }}px 0" direction="rtl" background-color="{{ bg }}" border-radius="{{ radius }}px">
   <mj-column>
-    <mj-text font-size="22px" font-weight="800" color="{{ txt }}" align="center" padding="24px 24px 8px" font-family="Open Sans, Arial, sans-serif">{{ title }}</mj-text>
+    <mj-text font-size="22px" font-weight="800" color="{{ txt }}" align="center" padding="24px 24px 8px" font-family="Open Sans, Arial, sans-serif">{{ title | escape }}</mj-text>
     {% if subtitle and subtitle != '' %}
-    <mj-text font-size="14px" font-weight="300" color="#cccccc" align="center" padding="0 24px 16px" font-family="Open Sans, Arial, sans-serif">{{ subtitle }}</mj-text>
+    <mj-text font-size="14px" font-weight="300" color="#cccccc" align="center" padding="0 24px 16px" font-family="Open Sans, Arial, sans-serif">{{ subtitle | escape }}</mj-text>
     {% endif %}
     {% if buttonUrl and buttonUrl != '' and buttonText and buttonText != '' %}
-    <mj-button href="{{ buttonUrl }}" background-color="{{ accent }}" color="#1a1a1a" font-weight="800" font-family="Open Sans, Arial, sans-serif" border-radius="999px" align="center" font-size="15px" padding="0 0 24px">{{ buttonText }}</mj-button>
+    <mj-button href="{{ buttonUrl | escape }}" background-color="{{ accent }}" color="#1a1a1a" font-weight="800" font-family="Open Sans, Arial, sans-serif" border-radius="999px" align="center" font-size="15px" padding="0 0 24px">{{ buttonText | escape }}</mj-button>
     {% endif %}
   </mj-column>
 </mj-section>
@@ -71,21 +71,21 @@ const TEMPLATE = `{% assign style = bannerStyle | default: 'hero' %}
 {% elsif style == 'event' %}
 <mj-section padding="{{ space }}px 0" direction="rtl" background-color="{{ bg }}" border-radius="{{ radius }}px">
   <mj-column width="40%">
-    <mj-image src="{{ imageUrl }}" alt="{{ altText }}" width="240px" padding="0" border-radius="{{ radius }}px 0 0 {{ radius }}px"></mj-image>
+    <mj-image src="{{ imageUrl | escape }}" alt="{{ altText | escape }}" width="240px" padding="0" border-radius="{{ radius }}px 0 0 {{ radius }}px"></mj-image>
   </mj-column>
   <mj-column width="60%">
     <mj-text font-size="12px" font-weight="600" color="{{ accent }}" align="right" padding="16px 16px 4px" font-family="Open Sans, Arial, sans-serif" text-transform="uppercase">הופעה קרובה</mj-text>
-    <mj-text font-size="18px" font-weight="800" color="{{ txt }}" align="right" padding="0 16px 8px" font-family="Open Sans, Arial, sans-serif">{{ title }}</mj-text>
+    <mj-text font-size="18px" font-weight="800" color="{{ txt }}" align="right" padding="0 16px 8px" font-family="Open Sans, Arial, sans-serif">{{ title | escape }}</mj-text>
   </mj-column>
 </mj-section>
 
 {% elsif style == 'join' %}
 <mj-section padding="{{ space }}px 0" direction="rtl">
   <mj-column background-color="{{ bg }}" border-radius="{{ radius }}px">
-    <mj-text font-size="20px" font-weight="800" color="{{ accent }}" align="center" padding="20px 24px 8px" font-family="Open Sans, Arial, sans-serif">{{ title }}</mj-text>
-    <mj-text font-size="14px" font-weight="300" color="{{ txt }}" align="center" padding="0 24px 16px" font-family="Open Sans, Arial, sans-serif">{{ subtitle }}</mj-text>
+    <mj-text font-size="20px" font-weight="800" color="{{ accent }}" align="center" padding="20px 24px 8px" font-family="Open Sans, Arial, sans-serif">{{ title | escape }}</mj-text>
+    <mj-text font-size="14px" font-weight="300" color="{{ txt }}" align="center" padding="0 24px 16px" font-family="Open Sans, Arial, sans-serif">{{ subtitle | escape }}</mj-text>
     {% if buttonUrl and buttonUrl != '' and buttonText and buttonText != '' %}
-    <mj-button href="{{ buttonUrl }}" background-color="{{ accent }}" color="#1a1a1a" font-weight="800" font-family="Open Sans, Arial, sans-serif" border-radius="999px" align="center" padding="0 0 24px">{{ buttonText }}</mj-button>
+    <mj-button href="{{ buttonUrl | escape }}" background-color="{{ accent }}" color="#1a1a1a" font-weight="800" font-family="Open Sans, Arial, sans-serif" border-radius="999px" align="center" padding="0 0 24px">{{ buttonText | escape }}</mj-button>
     {% endif %}
   </mj-column>
 </mj-section>
@@ -94,18 +94,18 @@ const TEMPLATE = `{% assign style = bannerStyle | default: 'hero' %}
 <mj-section padding="{{ space }}px 0" direction="rtl" background-color="{{ bg }}" border-radius="{{ radius }}px">
   <mj-column>
     <mj-text font-size="18px" font-weight="800" color="{{ accent }}" align="right" padding="16px 20px 4px" font-family="Open Sans, Arial, sans-serif">עולם המוזיקה</mj-text>
-    <mj-text font-size="14px" font-weight="300" color="{{ txt }}" align="right" padding="0 20px 12px" font-family="Open Sans, Arial, sans-serif">{{ title }}</mj-text>
-    <mj-button href="{{ buttonUrl }}" background-color="{{ accent }}" color="#1a1a1a" font-weight="800" border-radius="999px" font-family="Open Sans, Arial, sans-serif" font-size="14px" align="right" padding="0 0 16px">מעבר לאינדקס &larr;</mj-button>
+    <mj-text font-size="14px" font-weight="300" color="{{ txt }}" align="right" padding="0 20px 12px" font-family="Open Sans, Arial, sans-serif">{{ title | escape }}</mj-text>
+    <mj-button href="{{ buttonUrl | escape }}" background-color="{{ accent }}" color="#1a1a1a" font-weight="800" border-radius="999px" font-family="Open Sans, Arial, sans-serif" font-size="14px" align="right" padding="0 0 16px">מעבר לאינדקס &larr;</mj-button>
   </mj-column>
 </mj-section>
 
 {% elsif style == 'promo' %}
 <mj-section padding="{{ space }}px 0" direction="rtl" background-color="{{ bg }}" border-radius="{{ radius }}px">
   <mj-column>
-    <mj-text font-size="14px" font-weight="800" color="{{ accent }}" align="center" padding="12px 24px 4px" font-family="Open Sans, Arial, sans-serif" text-transform="uppercase">{% if subtitle and subtitle != '' %}{{ subtitle }}{% else %}מבצע מיוחד{% endif %}</mj-text>
-    <mj-text font-size="20px" font-weight="800" color="{{ txt }}" align="center" padding="0 24px 12px" font-family="Open Sans, Arial, sans-serif">{{ title }}</mj-text>
+    <mj-text font-size="14px" font-weight="800" color="{{ accent }}" align="center" padding="12px 24px 4px" font-family="Open Sans, Arial, sans-serif" text-transform="uppercase">{% if subtitle and subtitle != '' %}{{ subtitle | escape }}{% else %}מבצע מיוחד{% endif %}</mj-text>
+    <mj-text font-size="20px" font-weight="800" color="{{ txt }}" align="center" padding="0 24px 12px" font-family="Open Sans, Arial, sans-serif">{{ title | escape }}</mj-text>
     {% if buttonUrl and buttonUrl != '' and buttonText and buttonText != '' %}
-    <mj-button href="{{ buttonUrl }}" background-color="{{ accent }}" color="#1a1a1a" font-weight="800" font-family="Open Sans, Arial, sans-serif" border-radius="999px" align="center" font-size="15px" padding="0 0 16px">{{ buttonText }}</mj-button>
+    <mj-button href="{{ buttonUrl | escape }}" background-color="{{ accent }}" color="#1a1a1a" font-weight="800" font-family="Open Sans, Arial, sans-serif" border-radius="999px" align="center" font-size="15px" padding="0 0 16px">{{ buttonText | escape }}</mj-button>
     {% endif %}
   </mj-column>
 </mj-section>

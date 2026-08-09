@@ -377,7 +377,7 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
   }
 
   private applySeo(article: Article): void {
-    const path = article.canonicalUrl || getArticlePath(article);
+    const path = this.seo.canonicalPath(article.canonicalUrl, getArticlePath(article));
     const description = article.metaDescription || article.subtitle || this.stripHtml(article.content).slice(0, 155);
     this.seo.set({
       title: article.metaTitle || article.title,

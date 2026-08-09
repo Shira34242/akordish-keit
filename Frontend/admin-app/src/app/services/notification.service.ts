@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import {
   BroadcastNotificationResultDto,
+  BroadcastNotificationAnalyticsSummaryDto,
   NotificationGroupDto,
   NotificationDto,
   SaveNotificationGroupDto,
@@ -80,6 +81,10 @@ export class NotificationService {
 
   sendBroadcast(payload: SendBroadcastNotificationDto): Observable<BroadcastNotificationResultDto> {
     return this.http.post<BroadcastNotificationResultDto>(`${this.apiUrl}/admin/send-broadcast`, payload, { withCredentials: true });
+  }
+
+  getBroadcastAnalytics(): Observable<BroadcastNotificationAnalyticsSummaryDto> {
+    return this.http.get<BroadcastNotificationAnalyticsSummaryDto>(`${this.apiUrl}/admin/broadcast-analytics`, { withCredentials: true });
   }
 
   getUserNotificationsForAdmin(userId: number, pageNumber = 1, pageSize = 100): Observable<NotificationDto[]> {

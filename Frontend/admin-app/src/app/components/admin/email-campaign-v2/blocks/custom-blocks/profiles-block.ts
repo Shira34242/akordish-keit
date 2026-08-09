@@ -94,16 +94,9 @@ export const PROFILES_BLOCK: CustomBlockDefinition = {
     {% assign item = items[i] %}
     {% assign col_idx = i | modulo: 4 %}
 
-    {% if col_idx == 0 %}
-      {% if i > 0 %}
-      </tr>
-      {% endif %}
-    <tr>
-    {% endif %}
+    {% if col_idx == 0 %}<tr>{% endif %}
 
     <td width="25%" valign="top" class="akd-profile-cell" style="padding:{{ gap | divided_by: 2 }}px;direction:rtl;">
-
-      <a href="{{ item.publicUrl }}" target="_blank" style="text-decoration:none;display:block;direction:rtl;">
 
         <table width="100%" cellpadding="0" cellspacing="0" border="0" dir="rtl" style="height:100%;border-radius:{{ card_radius }}px;overflow:hidden;background-color:#F2F2F2;">
           <tr>
@@ -112,9 +105,9 @@ export const PROFILES_BLOCK: CustomBlockDefinition = {
                 <tr>
                   <td style="vertical-align:middle;text-align:center;padding:0;line-height:0;">
                     {% if item.imageUrl and item.imageUrl != '' %}
-                    <img src="{{ item.imageUrl }}" alt="{{ item.altText }}" width="120" style="display:block;width:100%;height:auto;aspect-ratio:1/1;object-fit:cover;border:0;" />
+                    <a href="{{ item.publicUrl | escape }}" target="_blank" style="display:block;text-decoration:none;"><img src="{{ item.imageUrl | escape }}" alt="{{ item.altText | escape }}" width="120" style="display:block;width:100%;height:auto;aspect-ratio:1/1;object-fit:cover;border:0;" /></a>
                     {% else %}
-                    <span style="font-family:'Open Sans',Arial,sans-serif;font-size:22px;font-weight:800;color:rgba(0,0,0,0.25);">{{ item.title | slice: 0 }}</span>
+                    <span style="font-family:'Open Sans',Arial,sans-serif;font-size:22px;font-weight:800;color:rgba(0,0,0,0.25);">{{ item.title | slice: 0, 1 | escape }}</span>
                     {% endif %}
                   </td>
                 </tr>
@@ -126,20 +119,20 @@ export const PROFILES_BLOCK: CustomBlockDefinition = {
               <table width="100%" cellpadding="0" cellspacing="0" border="0" dir="rtl">
                 <tr>
                   <td style="padding:0;text-align:right;">
-                    <span style="font-family:'Open Sans',Arial,sans-serif;font-size:11px;font-weight:700;color:#000000;line-height:1.2;">{{ item.title }}</span>
+                    <a href="{{ item.publicUrl | escape }}" target="_blank" style="font-family:'Open Sans',Arial,sans-serif;font-size:11px;font-weight:700;color:#000000;line-height:1.2;text-decoration:none;">{{ item.title | escape }}</a>
                   </td>
                 </tr>
                 {% if item.categoryName and item.categoryName != '' %}
                 <tr>
                   <td style="padding:2px 0 0;text-align:right;">
-                    <span style="font-family:'Open Sans',Arial,sans-serif;font-size:9px;font-weight:300;color:#404040;line-height:1.2;">{{ item.categoryName }}</span>
+                    <span style="font-family:'Open Sans',Arial,sans-serif;font-size:9px;font-weight:300;color:#404040;line-height:1.2;">{{ item.categoryName | escape }}</span>
                   </td>
                 </tr>
                 {% endif %}
                 {% if item.cityName and item.cityName != '' %}
                 <tr>
                   <td style="padding:1px 0 0;text-align:right;">
-                    <span style="font-family:'Open Sans',Arial,sans-serif;font-size:9px;font-weight:300;color:#404040;line-height:1.2;">{{ item.cityName }}</span>
+                    <span style="font-family:'Open Sans',Arial,sans-serif;font-size:9px;font-weight:300;color:#404040;line-height:1.2;">{{ item.cityName | escape }}</span>
                   </td>
                 </tr>
                 {% endif %}
@@ -147,8 +140,6 @@ export const PROFILES_BLOCK: CustomBlockDefinition = {
             </td>
           </tr>
         </table>
-
-      </a>
 
     </td>
 

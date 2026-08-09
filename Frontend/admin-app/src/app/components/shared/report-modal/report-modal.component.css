@@ -102,6 +102,41 @@
     margin-bottom: 22px;
 }
 
+.structured-report-fields,
+.structured-field {
+    display: grid;
+    gap: var(--space-sm);
+}
+
+.structured-report-fields {
+    gap: var(--space-base);
+}
+
+.structured-field .section-label {
+    margin: 0;
+}
+
+.report-capture-note {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-md) var(--space-base);
+    border-radius: 14px;
+    background: #F2F2F2;
+    color: #404040;
+    font-size: var(--font-xs);
+    line-height: var(--lh-small);
+}
+
+.report-capture-note .material-icons {
+    font-size: 18px;
+}
+
+.char-count.limit-reached {
+    color: #cc0000;
+    font-weight: 700;
+}
+
 .section-label {
     font-family: 'Open Sans', sans-serif;
     font-size: 0.8rem;

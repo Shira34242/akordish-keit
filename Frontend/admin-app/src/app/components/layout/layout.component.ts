@@ -27,6 +27,7 @@ import { NotificationDto } from '../../models/notification.model';
 import { QuickAddAssistantService, QuickAddEntryPoint } from '../../services/quick-add-assistant.service';
 import { LanguageService, Lang } from '../../services/language.service';
 import { TranslatePipe } from '../../pipes/translate.pipe';
+import { AnalyticsService } from '../../services/analytics.service';
 
 @Component({
   selector: 'app-layout',
@@ -110,6 +111,7 @@ export class LayoutComponent implements OnInit, AfterViewInit, OnDestroy {
     private artistPageService: ArtistPageService,
     private contentPageService: ContentPageService,
     private notificationService: NotificationService,
+    private analyticsService: AnalyticsService,
     private quickAddAssistantService: QuickAddAssistantService,
     private profileReminderService: ProfileReminderService,
     public langService: LanguageService,
@@ -513,6 +515,7 @@ export class LayoutComponent implements OnInit, AfterViewInit, OnDestroy {
       this.closeNotificationsPopup();
       this.showMobileMenu = false;
       if (notification.actionUrl) {
+        this.trackNotificationClick(notification);
         this.openNotificationAction(notification.actionUrl);
       } else {
         this.showNotificationsCenterModal = true;
@@ -538,6 +541,7 @@ export class LayoutComponent implements OnInit, AfterViewInit, OnDestroy {
   openNotificationFromCenter(notification: NotificationDto): void {
     const openAction = () => {
       if (notification.actionUrl) {
+        this.trackNotificationClick(notification);
         this.closeNotificationsCenter();
         this.closeNotificationsPopup();
         this.showMobileMenu = false;
@@ -603,6 +607,19 @@ export class LayoutComponent implements OnInit, AfterViewInit, OnDestroy {
       default:
         return 'link';
     }
+  }
+
+  onNotificationResourceClick(event: Event, notification: NotificationDto): void {
+    event.stopPropagation();
+    this.trackNotificationClick(notification);
+  }
+
+  private trackNotificationClick(notification: NotificationDto): void {
+    this.analyticsService.trackButtonClick(
+      'notification_link',
+      notification.id,
+      notification.title || notification.message?.slice(0, 50)
+    );
   }
 
   private getNotificationDateKey(dateValue: string): string {

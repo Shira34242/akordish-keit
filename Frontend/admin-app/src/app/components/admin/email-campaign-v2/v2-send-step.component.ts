@@ -6,6 +6,7 @@ import {
   EmailCampaignV2Service,
   type EmailV2TemplateDto,
 } from '../../../services/email-campaign-v2.service';
+import { EmailV2TransientDraftService } from '../../../services/email-v2-transient-draft.service';
 import {
   EmailCampaignService,
   EmailRecipientGroup,
@@ -601,7 +602,7 @@ import { TestSendDialogComponent, type TestSendResultItem } from './test-send-di
             הגדרות ושליחה
           </span>
         </div>
-        <a class="stepper-back" [routerLink]="['../edit']">
+        <a class="stepper-back" [routerLink]="isTransientMode() ? '../new' : '../edit'">
           <span style="font-size:18px">&#8592;</span>
           חזרה לעריכת המייל
         </a>
@@ -610,6 +611,12 @@ import { TestSendDialogComponent, type TestSendResultItem } from './test-send-di
       @if (statusMessage()) {
         <div class="status-banner" [class.success]="statusType() === 'success'" [class.error]="statusType() === 'error'">
           {{ statusMessage() }}
+        </div>
+      }
+
+      @if (isTransientMode()) {
+        <div class="status-banner">
+          שליחה זמנית: המייל לא נשמר כטיוטה, ולא יופיע בהיסטוריה או בנתוני האנליטיקה.
         </div>
       }
 
@@ -750,7 +757,7 @@ import { TestSendDialogComponent, type TestSendResultItem } from './test-send-di
       </div>
 
       <div class="actions-bar">
-        <button class="btn-test" (click)="openTestDialog()" [disabled]="!campaignId() || testSending()">
+        <button class="btn-test" (click)="openTestDialog()" [disabled]="testSending() || transientCompleted()">
           &#9993; שלח בדיקה
         </button>
         <button class="btn-send" (click)="openSendConfirm()" [disabled]="!readyToSend() || sending()">
@@ -827,6 +834,7 @@ export class V2SendStepComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private v2Service = inject(EmailCampaignV2Service);
+  private transientDraft = inject(EmailV2TransientDraftService);
   private emailService = inject(EmailCampaignService);
   private preflightService = inject(PreflightService);
 
@@ -853,6 +861,7 @@ export class V2SendStepComponent implements OnInit {
 
   showSendConfirm = signal(false);
   sending = signal(false);
+  transientCompleted = signal(false);
 
   statusMessage = signal('');
   statusType = signal<'success' | 'error' | ''>('');
@@ -877,6 +886,7 @@ export class V2SendStepComponent implements OnInit {
 
   readonly subjectExists = computed(() => !!this.template()?.subject?.trim());
   readonly contentExists = computed(() => !!this.template()?.htmlBody);
+  readonly isTransientMode = computed(() => this.campaignId() === 0);
   readonly audienceSelected = computed(() => true);
   readonly countPositive = computed(() => this.recipientCount() > 0);
   readonly senderValid = computed(() => {
@@ -888,7 +898,7 @@ export class V2SendStepComponent implements OnInit {
     this.subjectExists() &&
     this.countPositive() &&
     this.senderValid() &&
-    this.campaignId() > 0
+    !this.transientCompleted()
   );
 
   get selectedGroupLabel(): string {
@@ -907,8 +917,27 @@ export class V2SendStepComponent implements OnInit {
         this.loadTemplate(id);
         this.loadGroups();
       } else {
+        const transient = this.transientDraft.get();
         this.pageLoading.set(false);
-        this.setStatus('לא נמצא מזהה קמפיין', 'error');
+        this.loadGroups();
+        if (!transient) {
+          this.setStatus('השליחה הזמנית אינה זמינה עוד. חזור לעורך וצור אותה מחדש.', 'error');
+          return;
+        }
+
+        this.template.set({
+          campaignId: 0,
+          subject: transient.subject,
+          fromName: transient.fromName,
+          fromEmail: transient.fromEmail,
+          designJson: '',
+          htmlBody: transient.htmlBody,
+          status: 'transient',
+          createdAt: new Date().toISOString(),
+        });
+        this.fromName.set(transient.fromName);
+        this.fromEmail.set(transient.fromEmail || '');
+        this.loadRecipientCount();
       }
     });
   }
@@ -989,7 +1018,12 @@ export class V2SendStepComponent implements OnInit {
   }
 
   async handleTestSend(emails: string[]): Promise<void> {
-    if (!this.campaignId() || emails.length === 0) return;
+    if (emails.length === 0) return;
+    const transient = this.isTransientMode() ? this.transientDraft.get() : null;
+    if (this.isTransientMode() && !transient) {
+      this.testError.set('השליחה הזמנית אינה זמינה עוד. חזור לעורך וצור אותה מחדש.');
+      return;
+    }
 
     this.testSending.set(true);
     this.testResults.set([]);
@@ -1002,12 +1036,22 @@ export class V2SendStepComponent implements OnInit {
       this.testSendIndex.set(i + 1);
 
       try {
-        const result = await new Promise<any>((resolve, reject) => {
-          this.v2Service.sendTest({ campaignId: this.campaignId(), recipientEmail: email }).subscribe({
-            next: resolve,
-            error: reject,
-          });
-        });
+        const result = transient
+          ? await new Promise<any>((resolve, reject) => {
+              this.v2Service.sendTransientTest({
+                subject: transient.subject,
+                htmlBody: transient.htmlBody,
+                fromName: this.fromName(),
+                fromEmail: this.fromEmail() || undefined,
+                recipientEmail: email,
+              }).subscribe({ next: resolve, error: reject });
+            })
+          : await new Promise<any>((resolve, reject) => {
+              this.v2Service.sendTest({ campaignId: this.campaignId(), recipientEmail: email }).subscribe({
+                next: resolve,
+                error: reject,
+              });
+            });
         results.push({ email, success: !!result?.success, error: result?.error });
       } catch (e: any) {
         let message = 'שליחה נכשלה';
@@ -1028,10 +1072,6 @@ export class V2SendStepComponent implements OnInit {
   }
 
   openSendConfirm(): void {
-    if (!this.campaignId()) {
-      this.setStatus('לא נמצא מזהה קמפיין', 'error');
-      return;
-    }
     this.pendingPreflightAction = 'send';
     this.runPreflight();
   }
@@ -1119,6 +1159,43 @@ export class V2SendStepComponent implements OnInit {
     this.showSendConfirm.set(false);
     this.sending.set(true);
     this.setStatus('שולח...', '');
+
+    const transient = this.isTransientMode() ? this.transientDraft.get() : null;
+    if (this.isTransientMode()) {
+      if (!transient) {
+        this.sending.set(false);
+        this.setStatus('השליחה הזמנית אינה זמינה עוד. חזור לעורך וצור אותה מחדש.', 'error');
+        return;
+      }
+
+      this.v2Service.sendTransientCampaign({
+        subject: transient.subject,
+        htmlBody: transient.htmlBody,
+        recipientGroup: this.recipientGroup(),
+        emailGroupId: this.recipientGroup() === EmailRecipientGroup.CustomGroup
+          ? this.selectedEmailGroupId() ?? undefined
+          : undefined,
+        fromName: this.fromName(),
+        fromEmail: this.fromEmail() || undefined,
+      }).subscribe({
+        next: (result) => {
+          this.sending.set(false);
+          if (result?.success) {
+            this.transientDraft.clear();
+            this.transientCompleted.set(true);
+            this.template.update(template => template ? { ...template, status: 'sent' } : template);
+            this.setStatus(`נשלח ל-${result.sentCount} נמענים. השליחה לא נשמרה בהיסטוריה.`, 'success');
+          } else {
+            this.setStatus(result?.message || 'השליחה נכשלה', 'error');
+          }
+        },
+        error: (err) => {
+          this.sending.set(false);
+          this.setStatus(err?.error?.message || 'שגיאה בשליחה', 'error');
+        },
+      });
+      return;
+    }
 
     this.v2Service.getTemplate(this.campaignId()).subscribe({
       next: (tmpl) => {

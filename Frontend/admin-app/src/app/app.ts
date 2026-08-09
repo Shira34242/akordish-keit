@@ -15,6 +15,7 @@ import { SeoRouteService } from './services/seo-route.service';
 import { AdBlockDetectionService } from './services/adblock-detection.service';
 import { SystemSettingsService } from './services/system-settings.service';
 import { PageViewAnalyticsService } from './services/page-view-analytics.service';
+import { ReportContextService } from './services/report-context.service';
 
 @Component({
   selector: 'app-root',
@@ -113,7 +114,8 @@ export class AppComponent implements OnInit {
     private adBlockDetectionService: AdBlockDetectionService,
     private settingsService: SystemSettingsService,
     private router: Router,
-    private pageViewAnalytics: PageViewAnalyticsService
+    private pageViewAnalytics: PageViewAnalyticsService,
+    private reportContextService: ReportContextService
   ) { }
 
   ngOnInit() {
@@ -172,6 +174,7 @@ export class AppComponent implements OnInit {
     this.adBlockDetectionService.start();
     this.siteAlertService.patchBrowserAlerts();
     this.requiredFieldFeedback.initGlobalValidation();
+    this.reportContextService.start();
     this.authService.refreshSession().subscribe();
 
     // Subscribe to modal state changes

@@ -48,12 +48,70 @@
                 </div>
             </div>
 
-            <div class="form-section">
-                <p class="section-label">{{ 'report.detail' | translate }} <span class="required">*</span></p>
-                <textarea class="form-textarea" [(ngModel)]="description" name="description" rows="4"
-                    [placeholder]="'report.placeholder' | translate" [disabled]="isSubmitting"
-                    maxlength="1000"></textarea>
-                <span class="char-count">{{ description.length }} / 1000</span>
+            <div class="form-section structured-report-fields" *ngIf="selectedReportType === 'ContentError'">
+                <label class="structured-field">
+                    <span class="section-label">{{ 'report.attempted_action' | translate }}</span>
+                    <textarea class="form-textarea" [(ngModel)]="attemptedAction" name="attemptedAction" rows="2"
+                        [placeholder]="'report.attempted_placeholder' | translate" [disabled]="isSubmitting"
+                        maxlength="300"></textarea>
+                </label>
+                <label class="structured-field">
+                    <span class="section-label">{{ 'report.expected_result' | translate }}</span>
+                    <textarea class="form-textarea" [(ngModel)]="expectedResult" name="expectedResult" rows="2"
+                        [placeholder]="'report.expected_placeholder' | translate" [disabled]="isSubmitting"
+                        maxlength="300"></textarea>
+                </label>
+                <label class="structured-field">
+                    <span class="section-label">{{ 'report.actual_result' | translate }} <span class="required">*</span></span>
+                    <textarea class="form-textarea" [(ngModel)]="description" name="description" rows="3"
+                        [placeholder]="'report.actual_placeholder' | translate" [disabled]="isSubmitting"
+                        maxlength="500"></textarea>
+                </label>
+                <div class="report-capture-note">
+                    <span class="material-icons" aria-hidden="true">shield</span>
+                    <span>{{ 'report.technical_context' | translate }}</span>
+                </div>
+                <span class="char-count" [class.limit-reached]="structuredDescriptionLength > 700">
+                    {{ structuredDescriptionLength }} / 700
+                </span>
+            </div>
+
+            <div class="form-section structured-report-fields" *ngIf="selectedReportType === 'InappropriateContent'">
+                <label class="structured-field">
+                    <span class="section-label">{{ 'report.inappropriate_location' | translate }}</span>
+                    <textarea class="form-textarea" [(ngModel)]="inappropriateLocation" name="inappropriateLocation" rows="2"
+                        [placeholder]="'report.inappropriate_location_placeholder' | translate" [disabled]="isSubmitting"
+                        maxlength="250"></textarea>
+                </label>
+                <label class="structured-field">
+                    <span class="section-label">{{ 'report.inappropriate_explanation' | translate }} <span class="required">*</span></span>
+                    <textarea class="form-textarea" [(ngModel)]="description" name="inappropriateDescription" rows="4"
+                        [placeholder]="'report.inappropriate_explanation_placeholder' | translate" [disabled]="isSubmitting"
+                        maxlength="500"></textarea>
+                </label>
+                <div class="report-capture-note">
+                    <span class="material-icons" aria-hidden="true">shield</span>
+                    <span>{{ 'report.technical_context' | translate }}</span>
+                </div>
+                <span class="char-count" [class.limit-reached]="structuredDescriptionLength > 700">
+                    {{ structuredDescriptionLength }} / 700
+                </span>
+            </div>
+
+            <div class="form-section structured-report-fields" *ngIf="selectedReportType === 'Other'">
+                <label class="structured-field">
+                    <span class="section-label">{{ 'report.other_details' | translate }} <span class="required">*</span></span>
+                    <textarea class="form-textarea" [(ngModel)]="description" name="otherDescription" rows="5"
+                        [placeholder]="'report.other_placeholder' | translate" [disabled]="isSubmitting"
+                        maxlength="650"></textarea>
+                </label>
+                <div class="report-capture-note">
+                    <span class="material-icons" aria-hidden="true">shield</span>
+                    <span>{{ 'report.technical_context' | translate }}</span>
+                </div>
+                <span class="char-count" [class.limit-reached]="structuredDescriptionLength > 700">
+                    {{ structuredDescriptionLength }} / 700
+                </span>
             </div>
 
             <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
@@ -62,7 +120,7 @@
                 <button type="button" class="btn-cancel" (click)="closeModal()" [disabled]="isSubmitting">
                     {{ 'shared.cancel' | translate }}
                 </button>
-                <button type="submit" class="btn-submit" [disabled]="isSubmitting || description.length < 10">
+                <button type="submit" class="btn-submit" [disabled]="isSubmitting || !isFormValid">
                     {{ isSubmitting ? ('report.sending' | translate) : ('report.submit' | translate) }}
                 </button>
             </div>

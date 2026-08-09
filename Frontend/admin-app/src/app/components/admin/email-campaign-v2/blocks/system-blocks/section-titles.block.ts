@@ -41,7 +41,7 @@ const TEMPLATE = `{% assign style = titleStyle | default: 'green-strip' %}
 <mj-section padding="{{ space }}px 0" direction="rtl">
   <mj-column>
     <mj-text font-size="{{ size }}px" font-weight="800" color="{{ txt }}" align="{{ align }}" padding="8px 16px" font-family="Open Sans, Arial, sans-serif" container-background-color="{{ bg }}" border-radius="{{ radius }}px">
-      {{ title }}
+      {{ title | escape }}
     </mj-text>
   </mj-column>
 </mj-section>
@@ -50,7 +50,7 @@ const TEMPLATE = `{% assign style = titleStyle | default: 'green-strip' %}
 <mj-section padding="{{ space }}px 0" direction="rtl">
   <mj-column>
     <mj-text font-size="{{ size }}px" font-weight="800" color="{{ txt }}" align="{{ align }}" padding="0 0 6px 0" font-family="Open Sans, Arial, sans-serif" border-bottom="3px solid {{ bg }}">
-      {{ title }}
+      {{ title | escape }}
     </mj-text>
   </mj-column>
 </mj-section>
@@ -59,7 +59,7 @@ const TEMPLATE = `{% assign style = titleStyle | default: 'green-strip' %}
 <mj-section padding="{{ space }}px 0" direction="rtl">
   <mj-column>
     <mj-text font-size="{{ size }}px" font-weight="800" color="#ddff53" align="{{ align }}" padding="10px 16px" font-family="Open Sans, Arial, sans-serif" container-background-color="#1a1a1a" border-radius="{{ radius }}px">
-      &#9670; {{ title }}
+      &#9670; {{ title | escape }}
     </mj-text>
   </mj-column>
 </mj-section>
@@ -69,7 +69,7 @@ const TEMPLATE = `{% assign style = titleStyle | default: 'green-strip' %}
   <mj-column>
     <mj-text font-size="{{ size }}px" font-weight="800" color="{{ txt }}" align="{{ align }}" padding="8px 0" font-family="Open Sans, Arial, sans-serif">
       <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:{{ bg }};margin-left:8px;"></span>
-      {{ title }}
+      {{ title | escape }}
     </mj-text>
   </mj-column>
 </mj-section>
@@ -79,7 +79,7 @@ const TEMPLATE = `{% assign style = titleStyle | default: 'green-strip' %}
   <mj-column>
     <mj-divider border-color="{{ bg }}" border-width="2px" width="60px" padding="0 0 8px 0" />
     <mj-text font-size="{{ size }}px" font-weight="800" color="{{ txt }}" align="center" padding="0" font-family="Open Sans, Arial, sans-serif">
-      {{ title }}
+      {{ title | escape }}
     </mj-text>
     <mj-divider border-color="{{ bg }}" border-width="2px" width="60px" padding="8px 0 0 0" />
   </mj-column>
@@ -89,7 +89,7 @@ const TEMPLATE = `{% assign style = titleStyle | default: 'green-strip' %}
 <mj-section padding="{{ space }}px 0" direction="rtl">
   <mj-column>
     <mj-text font-size="{{ size }}px" font-weight="800" color="{{ txt }}" align="right" padding="0 16px" font-family="Open Sans, Arial, sans-serif" border-right="4px solid {{ bg }}">
-      {{ title }}
+      {{ title | escape }}
     </mj-text>
   </mj-column>
 </mj-section>

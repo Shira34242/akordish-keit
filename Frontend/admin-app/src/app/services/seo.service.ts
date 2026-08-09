@@ -86,6 +86,19 @@ export class SeoService {
     return `${origin}${path}`.split('#')[0];
   }
 
+  canonicalPath(configuredUrl: string | null | undefined, fallbackPath: string): string {
+    const candidate = configuredUrl?.trim();
+    if (!candidate) return fallbackPath;
+    if (candidate.startsWith('/')) return candidate;
+
+    try {
+      const url = new URL(candidate);
+      return url.protocol === 'http:' || url.protocol === 'https:' ? candidate : fallbackPath;
+    } catch {
+      return fallbackPath;
+    }
+  }
+
   private withSiteName(title: string): string {
     return title.includes(this.siteName) ? title : `${title} - ${this.siteName}`;
   }

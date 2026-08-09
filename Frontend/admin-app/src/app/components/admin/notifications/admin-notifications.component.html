@@ -8,6 +8,10 @@
         </div>
 
         <div class="top-actions">
+          <button type="button" class="analytics-trigger" (click)="openAnalytics()">
+            <span class="material-icons" aria-hidden="true">analytics</span>
+            <span>אנליטיקס התראות</span>
+          </button>
           <button type="button" class="circle-action" (click)="toggleSearch()" aria-label="חיפוש">
             <span class="material-icons">search</span>
           </button>
@@ -148,7 +152,16 @@
                 <span>{{ item.label || item.type }}</span>
               </a>
             </div>
-            <time>{{ formatDate(notification.createdAt) }}</time>
+            <div class="message-meta">
+              <time>{{ formatDate(notification.createdAt) }}</time>
+              <span
+                class="delivery-status"
+                [class.read]="notification.isRead"
+                [attr.title]="notification.isRead ? 'נקראה ' + formatDate(notification.readAt || notification.createdAt) : 'נשלחה למרכז ההתראות'"
+                [attr.aria-label]="notification.isRead ? 'ההתראה נקראה' : 'ההתראה נשלחה למרכז ההתראות'">
+                <span class="material-icons" aria-hidden="true">{{ notification.isRead ? 'done_all' : 'done' }}</span>
+              </span>
+            </div>
           </article>
           <div class="conversation-empty" *ngIf="!isLoadingThread && threadNotifications.length === 0">עדיין אין התראות למשתמש הזה.</div>
         </div>
@@ -414,3 +427,17 @@
     </form>
   </section>
 </section>
+
+<div class="analytics-modal-backdrop" *ngIf="showAnalytics" (click)="closeAnalytics()">
+  <section class="analytics-modal" role="dialog" aria-modal="true" aria-labelledby="analytics-modal-title" (click)="$event.stopPropagation()">
+    <header class="analytics-modal-header">
+      <h2 id="analytics-modal-title">אנליטיקס התראות</h2>
+      <button type="button" class="analytics-modal-close" (click)="closeAnalytics()" aria-label="סגירה">
+        <span class="material-icons" aria-hidden="true">close</span>
+      </button>
+    </header>
+    <div class="analytics-modal-body">
+      <app-notification-analytics></app-notification-analytics>
+    </div>
+  </section>
+</div>

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { V2EditorComponent } from './v2-editor.component';
 import { EmailCampaignV2Service } from '../../../services/email-campaign-v2.service';
+import { EmailV2TransientDraftService, type TransientEmailV2Message } from '../../../services/email-v2-transient-draft.service';
 import { AutosaveService, type SaveSnapshot, type AutosaveState } from '../../../services/autosave.service';
 import { EmailPreviewDialogComponent } from './email-preview-dialog.component';
 import { TestSendDialogComponent, type TestSendResultItem } from './test-send-dialog.component';
@@ -123,7 +124,9 @@ import { firstValueFrom } from 'rxjs';
 
       <div class="header-actions">
         <div class="save-status">
-          @if (saveState() === 'offline') {
+          @if (isTransientMode()) {
+            <span class="save-status-dirty" title="התוכן יימחק ברענון הדפדפן או ביציאה מהמערכת">מצב זמני — ללא שמירה</span>
+          } @else if (saveState() === 'offline') {
             <span class="save-status-offline">ללא חיבור</span>
           } @else if (saveState() === 'saving') {
             <span class="save-status-saving">שומר...</span>
@@ -137,12 +140,14 @@ import { firstValueFrom } from 'rxjs';
           }
         </div>
 
-        <button class="btn" (click)="manualSave()" [disabled]="saveState() === 'saving'" title="שמור שינויים">
-          <span class="material-symbols-outlined" style="font-size:16px">save</span> שמור
-        </button>
+        @if (!isTransientMode()) {
+          <button class="btn" (click)="manualSave()" [disabled]="saveState() === 'saving'" title="שמור שינויים">
+            <span class="material-symbols-outlined" style="font-size:16px">save</span> שמור
+          </button>
+        }
         <button class="btn" (click)="preview()" [disabled]="!editorComponent()?.editor">תצוגה מקדימה</button>
-        <button class="btn" (click)="openTestDialog()" [disabled]="!effectiveCampaignId()">שלח בדיקה</button>
-        <button class="btn btn-primary" (click)="goToSend()" [disabled]="!effectiveCampaignId() || saveState() === 'saving'">
+        <button class="btn" (click)="openTestDialog()" [disabled]="!editorComponent()?.editor">שלח בדיקה</button>
+        <button class="btn btn-primary" (click)="goToSend()" [disabled]="!editorComponent()?.editor || (!isTransientMode() && saveState() === 'saving')">
           המשך לבחירת נמענים
         </button>
       </div>
@@ -208,6 +213,7 @@ export class V2DesignStepComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private service = inject(EmailCampaignV2Service);
   private autosave = inject(AutosaveService);
+  private transientDraft = inject(EmailV2TransientDraftService);
 
   readonly editorComponent = viewChild(V2EditorComponent);
 
@@ -240,6 +246,7 @@ export class V2DesignStepComponent implements OnInit, OnDestroy {
   readonly saveState = this.autosave.saveState;
   readonly saveError = this.autosave.saveError;
   effectiveCampaignId = computed(() => this.campaignId() || this.autosave.getCampaignId());
+  readonly isTransientMode = computed(() => !this.campaignId());
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -365,11 +372,22 @@ export class V2DesignStepComponent implements OnInit, OnDestroy {
         this.previewHtml.set(result.html);
       } else {
         console.error('[Preview] Conversion rejected:', result?.error);
-        this.previewError.set('לא ניתן להמיר את תוכן המייל לתצוגה מקדימה. בדוק את הרכיב האחרון שהוספת ונסה שוב.');
+        this.previewError.set(
+          result?.error?.trim()
+          || 'לא ניתן להמיר את תוכן המייל לתצוגה מקדימה. בדוק את הרכיב האחרון שהוספת ונסה שוב.'
+        );
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error('[Preview] Conversion failed:', e);
-      this.previewError.set('יצירת התצוגה המקדימה נכשלה. בדוק את תוכן המייל ונסה שוב.');
+      const technicalError = [
+        typeof e?.error === 'string' ? e.error : '',
+        typeof e?.error?.error === 'string' ? e.error.error : '',
+        typeof e?.error?.message === 'string' ? e.error.message : '',
+        typeof e?.message === 'string' ? e.message : '',
+      ].find(Boolean);
+      this.previewError.set(
+        technicalError || 'יצירת התצוגה המקדימה נכשלה. בדוק את תוכן המייל ונסה שוב.'
+      );
     } finally {
       this.previewLoading.set(false);
     }
@@ -382,6 +400,17 @@ export class V2DesignStepComponent implements OnInit, OnDestroy {
   }
 
   async openTestDialog(): Promise<void> {
+    if (this.isTransientMode()) {
+      const message = await this._prepareTransientMessage();
+      if (!message) return;
+      this.transientDraft.set(message);
+      this.showTestDialog.set(true);
+      this.testResults.set([]);
+      this.testError.set('');
+      this.testSendIndex.set(0);
+      return;
+    }
+
     const snapshot = this._buildSnapshot();
     if (snapshot && this.autosave.isChanged(snapshot)) {
       const saved = await this.autosave.flush(snapshot);
@@ -403,7 +432,9 @@ export class V2DesignStepComponent implements OnInit, OnDestroy {
   }
 
   async handleTestSend(emails: string[]): Promise<void> {
-    if (!this.campaignId() || emails.length === 0) return;
+    if (emails.length === 0) return;
+    const transient = this.isTransientMode() ? this.transientDraft.get() : null;
+    if (!this.campaignId() && !transient) return;
 
     this.testSending.set(true);
     this.testResults.set([]);
@@ -416,9 +447,15 @@ export class V2DesignStepComponent implements OnInit, OnDestroy {
       this.testSendIndex.set(i + 1);
 
       try {
-        const result = await firstValueFrom(
-          this.service.sendTest({ campaignId: this.campaignId()!, recipientEmail: email }),
-        );
+        const result = transient
+          ? await firstValueFrom(this.service.sendTransientTest({
+              subject: transient.subject,
+              htmlBody: transient.htmlBody,
+              fromName: transient.fromName,
+              fromEmail: transient.fromEmail,
+              recipientEmail: email,
+            }))
+          : await firstValueFrom(this.service.sendTest({ campaignId: this.campaignId()!, recipientEmail: email }));
         results.push({ email, success: !!result?.success, error: result?.error });
       } catch (e: any) {
         let message = 'שליחה נכשלה';
@@ -445,7 +482,13 @@ export class V2DesignStepComponent implements OnInit, OnDestroy {
   }
 
   async goToSend(): Promise<void> {
-    if (!this.campaignId() && !this.autosave.getCampaignId()) return;
+    if (this.isTransientMode()) {
+      const message = await this._prepareTransientMessage();
+      if (!message) return;
+      this.transientDraft.set(message);
+      await this.router.navigate(['../', 'send'], { relativeTo: this.route });
+      return;
+    }
 
     if (this._hasUnsavedChanges()) {
       const snapshot = this._buildSnapshot();
@@ -507,7 +550,57 @@ export class V2DesignStepComponent implements OnInit, OnDestroy {
     }
   }
 
+  private async _prepareTransientMessage(): Promise<TransientEmailV2Message | null> {
+    if (!this.subject().trim()) {
+      this._showTransientPreparationError('יש להזין נושא לפני שליחה.');
+      return null;
+    }
+
+    try {
+      const mjml = await this.editorComponent()?.generateMjml() ?? '';
+      if (!mjml) {
+        this._showTransientPreparationError('לא ניתן ליצור את תוכן המייל כרגע. נסה שוב בעוד רגע.');
+        return null;
+      }
+
+      this.currentMjml.set(mjml);
+      const result = await firstValueFrom(this.service.convertToHtml({
+        subject: this.subject(),
+        fromName: 'אקורדישקייט',
+        designJson: '',
+        mjml,
+      }));
+      if (!result?.success || !result.html) {
+        this._showTransientPreparationError(
+          result?.error || 'לא ניתן להמיר את תוכן המייל. בדוק את הרכיב האחרון שהוספת.'
+        );
+        return null;
+      }
+
+      return {
+        subject: this.subject().trim(),
+        htmlBody: result.html,
+        fromName: 'אקורדישקייט',
+      };
+    } catch (e: any) {
+      const error = typeof e?.error?.error === 'string'
+        ? e.error.error
+        : typeof e?.error?.message === 'string'
+          ? e.error.message
+          : 'יצירת המייל נכשלה. בדוק את תוכן המייל ונסה שוב.';
+      this._showTransientPreparationError(error);
+      return null;
+    }
+  }
+
+  private _showTransientPreparationError(message: string): void {
+    this.previewHtml.set('');
+    this.previewError.set(message);
+    this.showPreview.set(true);
+  }
+
   private _hasUnsavedChanges(): boolean {
+    if (this.isTransientMode()) return false;
     if (this.saveState() === 'saved' || this.saveState() === 'idle') {
       return false;
     }
@@ -536,6 +629,7 @@ export class V2DesignStepComponent implements OnInit, OnDestroy {
   }
 
   private _scheduleAutosave(): void {
+    if (this.isTransientMode()) return;
     if (!this._editorReady) return;
 
     const autosaveDelay = 2000;

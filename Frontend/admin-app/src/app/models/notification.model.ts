@@ -121,6 +121,30 @@ export interface BroadcastNotificationResultDto {
   audienceLabel: string;
 }
 
+export interface BroadcastNotificationAnalyticsDto {
+  sentAt: string;
+  title: string;
+  message: string;
+  campaignName?: string | null;
+  audienceLabel?: string | null;
+  sentCount: number;
+  readCount: number;
+  unreadCount: number;
+  openRate: number;
+  totalClicks: number;
+  uniqueClickers: number;
+  clickRate: number;
+  hasClickableContent: boolean;
+}
+
+export interface BroadcastNotificationAnalyticsSummaryDto {
+  campaignCount: number;
+  recipientCount: number;
+  readCount: number;
+  totalClicks: number;
+  campaigns: BroadcastNotificationAnalyticsDto[];
+}
+
 export interface UnreadNotificationCountDto {
   count: number;
 }

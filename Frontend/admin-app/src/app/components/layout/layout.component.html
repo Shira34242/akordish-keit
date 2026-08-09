@@ -188,13 +188,13 @@
                     <span class="notification-marketing-tag" *ngIf="notification.category === 7">{{ 'notif.marketing' | translate }}</span>
                     <strong *ngIf="shouldShowNotificationTitle(notification)">{{ notification.title }}</strong>
                     <small *ngIf="notification.message?.trim()">{{ notification.message }}</small>
-                    <a *ngIf="notification.mediaUrl && notification.mediaType === 'image' && notification.actionUrl" [href]="notification.actionUrl" target="_blank" rel="noopener" (click)="$event.stopPropagation()">
+                    <a *ngIf="notification.mediaUrl && notification.mediaType === 'image' && notification.actionUrl" [href]="notification.actionUrl" target="_blank" rel="noopener" (click)="onNotificationResourceClick($event, notification)">
                         <img [src]="notification.mediaUrl" [alt]="notification.mediaAltText || notification.message" class="notification-media-preview" [class.notification-media-preview--small]="notification.mediaDisplaySize === 'small'" [class.notification-media-preview--large]="notification.mediaDisplaySize === 'large'">
                     </a>
                     <img *ngIf="notification.mediaUrl && notification.mediaType === 'image' && !notification.actionUrl" [src]="notification.mediaUrl" [alt]="notification.mediaAltText || notification.message" class="notification-media-preview" [class.notification-media-preview--small]="notification.mediaDisplaySize === 'small'" [class.notification-media-preview--large]="notification.mediaDisplaySize === 'large'">
-                    <span *ngIf="notification.mediaUrl && notification.mediaType !== 'image'" class="notification-media-link">{{ 'notif.media' | translate }}</span>
+                    <a *ngIf="notification.mediaUrl && notification.mediaType !== 'image'" [href]="notification.mediaUrl" target="_blank" rel="noopener" class="notification-media-link" (click)="onNotificationResourceClick($event, notification)">{{ 'notif.media' | translate }}</a>
                     <span class="notification-attachment-chips" *ngIf="notification.attachments?.length">
-                        <a *ngFor="let item of notification.attachments" [href]="item.clickUrl || item.url" target="_blank" rel="noopener" (click)="$event.stopPropagation()">
+                        <a *ngFor="let item of notification.attachments" [href]="item.clickUrl || item.url" target="_blank" rel="noopener" (click)="onNotificationResourceClick($event, notification)">
                             <span class="material-icons">{{ getNotificationAttachmentIcon(item.type) }}</span>
                             <span>{{ item.label || ('notif.attachment' | translate) }}</span>
                         </a>
@@ -237,13 +237,13 @@
                         <span class="notification-marketing-tag" *ngIf="notification.category === 7">{{ 'notif.marketing' | translate }}</span>
                         <strong *ngIf="shouldShowNotificationTitle(notification)">{{ notification.title }}</strong>
                         <small *ngIf="notification.message?.trim()">{{ notification.message }}</small>
-                        <a *ngIf="notification.mediaUrl && notification.mediaType === 'image' && notification.actionUrl" [href]="notification.actionUrl" target="_blank" rel="noopener" (click)="$event.stopPropagation()">
+                        <a *ngIf="notification.mediaUrl && notification.mediaType === 'image' && notification.actionUrl" [href]="notification.actionUrl" target="_blank" rel="noopener" (click)="onNotificationResourceClick($event, notification)">
                             <img [src]="notification.mediaUrl" [alt]="notification.mediaAltText || notification.message" class="notification-media-preview" [class.notification-media-preview--small]="notification.mediaDisplaySize === 'small'" [class.notification-media-preview--large]="notification.mediaDisplaySize === 'large'">
                         </a>
                         <img *ngIf="notification.mediaUrl && notification.mediaType === 'image' && !notification.actionUrl" [src]="notification.mediaUrl" [alt]="notification.mediaAltText || notification.message" class="notification-media-preview" [class.notification-media-preview--small]="notification.mediaDisplaySize === 'small'" [class.notification-media-preview--large]="notification.mediaDisplaySize === 'large'">
-                        <span *ngIf="notification.mediaUrl && notification.mediaType !== 'image'" class="notification-media-link">{{ 'notif.media' | translate }}</span>
+                        <a *ngIf="notification.mediaUrl && notification.mediaType !== 'image'" [href]="notification.mediaUrl" target="_blank" rel="noopener" class="notification-media-link" (click)="onNotificationResourceClick($event, notification)">{{ 'notif.media' | translate }}</a>
                         <span class="notification-attachment-chips" *ngIf="notification.attachments?.length">
-                            <a *ngFor="let item of notification.attachments" [href]="item.clickUrl || item.url" target="_blank" rel="noopener" (click)="$event.stopPropagation()">
+                            <a *ngFor="let item of notification.attachments" [href]="item.clickUrl || item.url" target="_blank" rel="noopener" (click)="onNotificationResourceClick($event, notification)">
                                 <span class="material-icons">{{ getNotificationAttachmentIcon(item.type) }}</span>
                                 <span>{{ item.label || ('notif.attachment' | translate) }}</span>
                             </a>

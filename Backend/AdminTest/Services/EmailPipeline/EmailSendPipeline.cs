@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using System.Collections.Concurrent;
 using AkordishKeit.Data;
 using AkordishKeit.Models.DTOs;
 using AkordishKeit.Models.Entities;
@@ -9,6 +10,8 @@ namespace AkordishKeit.Services.EmailPipeline;
 
 public class EmailSendPipeline : IEmailSendPipeline
 {
+    private static readonly ConcurrentDictionary<string, DateTime> RecentTransientSends = new();
+    private static readonly TimeSpan TransientDuplicateWindow = TimeSpan.FromMinutes(2);
     private readonly IBrevoEmailSender _brevoSender;
     private readonly IMessageTracker _messageTracker;
     private readonly IEmailPersonalizationStep _personalization;
@@ -243,6 +246,156 @@ public class EmailSendPipeline : IEmailSendPipeline
             : new EmailV2ConversionResultDto { Success = false, Error = result.Error };
     }
 
+    public async Task<EmailSendResultDto> SendTransientCampaignAsync(SendEmailRequestDto request)
+    {
+        var apiKey = _configuration["Brevo:ApiKey"];
+        if (string.IsNullOrEmpty(apiKey) || apiKey.StartsWith("REPLACE"))
+            return new EmailSendResultDto { Success = false, Message = "Brevo API key not configured" };
+
+        if (!TryClaimTransientSend(request))
+            return new EmailSendResultDto
+            {
+                Success = false,
+                Message = "A matching temporary send is already running or was just sent."
+            };
+
+        try
+        {
+            var fromEmail = request.FromEmail ?? _configuration["Brevo:FromEmail"] ?? "noreply@akordishkeit.com";
+            var fromName = request.FromName ?? _configuration["Brevo:FromName"] ?? "akordishkejit";
+
+            List<(string Email, string? Name)> recipients;
+            if (request.RecipientGroup == EmailRecipientGroup.ManualOneTime)
+            {
+                recipients = (request.ManualRecipients ?? [])
+                    .Select(e => (e, (string?)null))
+                    .ToList();
+            }
+            else
+            {
+                var emailService = _serviceProvider.GetRequiredService<IEmailService>();
+                recipients = request.RecipientGroup == EmailRecipientGroup.CustomGroup && request.EmailGroupId.HasValue
+                    ? await ResolveCustomGroupAsync(request.EmailGroupId.Value)
+                    : await ResolveRecipientsAsync(emailService, request.RecipientGroup, request.EmailGroupId);
+            }
+
+            if (request.ExcludedEmails is { Count: > 0 })
+            {
+                var excluded = new HashSet<string>(request.ExcludedEmails, StringComparer.OrdinalIgnoreCase);
+                recipients = recipients.Where(r => !excluded.Contains(r.Email)).ToList();
+            }
+
+            recipients = await ExcludeUnsubscribedAsync(recipients);
+            if (recipients.Count == 0)
+                return new EmailSendResultDto { Success = false, Message = "no recipients found" };
+
+            var html = _utm.Apply(request.HtmlBody, ResolveTransientUtmSettings());
+            var sentCount = 0;
+            var failedCount = 0;
+            using var semaphore = new SemaphoreSlim(20);
+
+            var tasks = recipients.Select(async recipient =>
+            {
+                await semaphore.WaitAsync();
+                try
+                {
+                    var variables = await BuildPersonalizationVariables(recipient.Email, 0);
+                    var personalized = _personalization.Apply(html, variables);
+                    var unsubscribeUrl = BuildUnsubscribeUrl(recipient.Email);
+                    personalized = ReplaceUnsubscribePlaceholder(personalized, unsubscribeUrl);
+
+                    var result = await _brevoSender.SendAsync(new BrevoSendRequest
+                    {
+                        ApiKey = apiKey,
+                        FromEmail = fromEmail,
+                        FromName = fromName,
+                        ToEmail = recipient.Email,
+                        ToName = recipient.Name,
+                        Subject = request.Subject,
+                        HtmlContent = personalized,
+                        Tags = ["email_v2_transient"],
+                        Params = new Dictionary<string, object> { ["unsubscribe_url"] = unsubscribeUrl }
+                    });
+
+                    if (result.Success)
+                    {
+                        Interlocked.Increment(ref sentCount);
+                    }
+                    else
+                    {
+                        Interlocked.Increment(ref failedCount);
+                        _logger.LogWarning("Transient Email V2 send failed for {Email}: {Error}", recipient.Email, result.Error);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Interlocked.Increment(ref failedCount);
+                    _logger.LogError(ex, "Transient Email V2 send exception for {Email}", recipient.Email);
+                }
+                finally
+                {
+                    semaphore.Release();
+                }
+            });
+
+            await Task.WhenAll(tasks);
+            return new EmailSendResultDto
+            {
+                Success = sentCount > 0,
+                SentCount = sentCount,
+                FailedCount = failedCount,
+                Message = failedCount > 0
+                    ? $"sent to {sentCount}, {failedCount} failed"
+                    : $"sent to {sentCount}"
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Transient Email V2 campaign send failed");
+            return new EmailSendResultDto { Success = false, Message = "The email could not be sent." };
+        }
+    }
+
+    public async Task<EmailV2ConversionResultDto> SendTransientTestEmailAsync(EmailV2TransientTestDto dto)
+    {
+        var apiKey = _configuration["Brevo:ApiKey"];
+        if (string.IsNullOrEmpty(apiKey) || apiKey.StartsWith("REPLACE"))
+            return new EmailV2ConversionResultDto { Success = false, Error = "Brevo API key not configured" };
+
+        try
+        {
+            var fromEmail = dto.FromEmail ?? _configuration["Brevo:FromEmail"] ?? "noreply@akordishkeit.com";
+            var fromName = dto.FromName ?? _configuration["Brevo:FromName"] ?? "akordishkejit";
+            var html = _utm.Apply(dto.HtmlBody, ResolveTransientUtmSettings());
+            var variables = await BuildPersonalizationVariables(dto.RecipientEmail, 0);
+            html = _personalization.Apply(html, variables);
+            var unsubscribeUrl = BuildUnsubscribeUrl(dto.RecipientEmail);
+            html = ReplaceUnsubscribePlaceholder(html, unsubscribeUrl);
+
+            var result = await _brevoSender.SendAsync(new BrevoSendRequest
+            {
+                ApiKey = apiKey,
+                FromEmail = fromEmail,
+                FromName = fromName,
+                ToEmail = dto.RecipientEmail,
+                ToName = dto.RecipientEmail,
+                Subject = $"[TEST] {dto.Subject}",
+                HtmlContent = html,
+                Tags = ["email_v2_transient", "test_send"],
+                Params = new Dictionary<string, object> { ["unsubscribe_url"] = unsubscribeUrl }
+            });
+
+            return result.Success
+                ? new EmailV2ConversionResultDto { Success = true }
+                : new EmailV2ConversionResultDto { Success = false, Error = result.Error };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Transient Email V2 test send failed");
+            return new EmailV2ConversionResultDto { Success = false, Error = "The test email could not be sent." };
+        }
+    }
+
     private UtmSettings ResolveUtmSettings(int campaignId)
     {
         return new UtmSettings
@@ -252,6 +405,35 @@ public class EmailSendPipeline : IEmailSendPipeline
             Medium = "email",
             Campaign = $"campaign-{campaignId}"
         };
+    }
+
+    private static UtmSettings ResolveTransientUtmSettings() => new()
+    {
+        Enabled = true,
+        Source = "akordishkayt",
+        Medium = "email",
+        Campaign = "email-v2-transient"
+    };
+
+    private static bool TryClaimTransientSend(SendEmailRequestDto request)
+    {
+        var value = $"{request.Subject}\n{request.HtmlBody}\n{request.RecipientGroup}\n{request.EmailGroupId}\n{request.FromEmail}";
+        var fingerprint = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(value)));
+        var now = DateTime.UtcNow;
+
+        foreach (var entry in RecentTransientSends)
+        {
+            if (now - entry.Value > TransientDuplicateWindow)
+                RecentTransientSends.TryRemove(entry.Key, out _);
+        }
+
+        while (true)
+        {
+            if (RecentTransientSends.TryAdd(fingerprint, now)) return true;
+            if (!RecentTransientSends.TryGetValue(fingerprint, out var previous)) continue;
+            if (now - previous < TransientDuplicateWindow) return false;
+            if (RecentTransientSends.TryUpdate(fingerprint, now, previous)) return true;
+        }
     }
 
     private async Task<Dictionary<string, string>> BuildPersonalizationVariables(string email, int campaignId)

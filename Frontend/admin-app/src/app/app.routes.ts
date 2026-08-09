@@ -472,11 +472,12 @@ export const routes: Routes = [
                     {
                         path: 'reports',
                         loadComponent: () => import('./components/admin/reports/reports-list.component').then(m => m.ReportsListComponent),
-                        title: 'ניהול דיווחים - אקורדישקייט'
+                        title: 'אנליטיקס התראות - אקורדישקייט'
                     },
                     {
                         path: 'email',
                         loadComponent: () => import('./components/admin/email-campaign/email-campaign.component').then(m => m.EmailCampaignComponent),
+                        canDeactivate: [() => import('./guards/unsaved-email-changes.guard').then(m => m.unsavedEmailChangesGuard)],
                         title: 'שליחת מייל - אקורדישקייט'
                     },
                     {
@@ -504,6 +505,11 @@ export const routes: Routes = [
                                 path: ':id/send',
                                 loadComponent: () => import('./components/admin/email-campaign-v2/v2-send-step.component').then(m => m.V2SendStepComponent),
                                 title: 'הגדרות ושליחה - אקורדישקייט'
+                            },
+                            {
+                                path: 'send',
+                                loadComponent: () => import('./components/admin/email-campaign-v2/v2-send-step.component').then(m => m.V2SendStepComponent),
+                                title: 'הגדרות ושליחה זמנית - אקורדישקייט'
                             },
                             {
                                 path: ':id/results',

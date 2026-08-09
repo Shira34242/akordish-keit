@@ -122,7 +122,8 @@ public class SitemapController : ControllerBase
 
         foreach (var podcast in podcasts)
         {
-            sb.AppendLine($"  <url><loc>{BaseUrl}/podcasts/{podcast.Slug}</loc><priority>0.6</priority></url>");
+            var seriesSlug = Uri.EscapeDataString(podcast.Slug);
+            sb.AppendLine($"  <url><loc>{BaseUrl}/podcasts?series={seriesSlug}</loc><priority>0.6</priority></url>");
         }
 
         // פרקי פודקאסט
@@ -133,7 +134,9 @@ public class SitemapController : ControllerBase
 
         foreach (var ep in episodes)
         {
-            sb.AppendLine($"  <url><loc>{BaseUrl}/podcasts/{ep.PodcastSlug}/{ep.Slug}</loc><priority>0.5</priority></url>");
+            var seriesSlug = Uri.EscapeDataString(ep.PodcastSlug);
+            var episodeSlug = Uri.EscapeDataString(ep.Slug);
+            sb.AppendLine($"  <url><loc>{BaseUrl}/podcasts?series={seriesSlug}&amp;episode={episodeSlug}</loc><priority>0.5</priority></url>");
         }
 
         sb.AppendLine("</urlset>");

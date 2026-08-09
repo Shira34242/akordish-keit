@@ -87,22 +87,15 @@ export const EVENTS_BLOCK: CustomBlockDefinition = {
     {% assign item = items[i] %}
     {% assign col_idx = i | modulo: 5 %}
 
-    {% if col_idx == 0 %}
-      {% if i > 0 %}
-      </tr>
-      {% endif %}
-    <tr>
-    {% endif %}
+    {% if col_idx == 0 %}<tr>{% endif %}
 
     <td width="20%" valign="top" class="akd-event-cell" style="padding:{{ gap | divided_by: 2 }}px;direction:rtl;">
-
-      <a href="{{ item.publicUrl }}" target="_blank" style="text-decoration:none;display:block;direction:rtl;">
 
         <table width="100%" cellpadding="0" cellspacing="0" border="0" dir="rtl" style="border-radius:{{ radius }}px;overflow:hidden;background-color:#F2F2F2;">
           <tr>
             <td style="line-height:0;padding:0;position:relative;">
               {% if item.imageUrl and item.imageUrl != '' %}
-              <img src="{{ item.imageUrl }}" alt="{{ item.altText }}" width="120" style="display:block;width:100%;height:auto;aspect-ratio:3/4;object-fit:cover;border:0;" />
+              <a href="{{ item.publicUrl | escape }}" target="_blank" style="display:block;text-decoration:none;"><img src="{{ item.imageUrl | escape }}" alt="{{ item.altText | escape }}" width="120" style="display:block;width:100%;height:auto;aspect-ratio:3/4;object-fit:cover;border:0;" /></a>
               {% else %}
               <table width="100%" cellpadding="0" cellspacing="0" border="0" style="aspect-ratio:3/4;background-color:#ddff53;">
                 <tr>
@@ -115,7 +108,7 @@ export const EVENTS_BLOCK: CustomBlockDefinition = {
               {% if item.eventDate and item.eventDate != '' %}
               <table cellpadding="0" cellspacing="0" border="0" style="position:absolute;bottom:4px;right:4px;background-color:#ddff53;border-radius:999px;overflow:hidden;">
                 <tr>
-                  <td style="padding:1px 6px;font-family:'Open Sans',Arial,sans-serif;font-size:9px;font-weight:800;color:#000000;line-height:1.3;">{{ item.eventDate }}</td>
+                  <td style="padding:1px 6px;font-family:'Open Sans',Arial,sans-serif;font-size:9px;font-weight:800;color:#000000;line-height:1.3;">{{ item.eventDate | escape }}</td>
                 </tr>
               </table>
               {% endif %}
@@ -126,13 +119,13 @@ export const EVENTS_BLOCK: CustomBlockDefinition = {
               <table width="100%" cellpadding="0" cellspacing="0" border="0" dir="rtl">
                 <tr>
                   <td style="padding:0;text-align:right;">
-                    <span style="font-family:'Open Sans',Arial,sans-serif;font-size:11px;font-weight:700;color:#000000;line-height:1.3;">{{ item.title }}</span>
+                    <a href="{{ item.publicUrl | escape }}" target="_blank" style="font-family:'Open Sans',Arial,sans-serif;font-size:11px;font-weight:700;color:#000000;line-height:1.3;text-decoration:none;">{{ item.title | escape }}</a>
                   </td>
                 </tr>
                 {% if item.artistNames and item.artistNames != '' %}
                 <tr>
                   <td style="padding:2px 0 0;text-align:right;">
-                    <span style="font-family:'Open Sans',Arial,sans-serif;font-size:9px;font-weight:300;color:#404040;line-height:1.2;">{{ item.artistNames }}</span>
+                    <span style="font-family:'Open Sans',Arial,sans-serif;font-size:9px;font-weight:300;color:#404040;line-height:1.2;">{{ item.artistNames | escape }}</span>
                   </td>
                 </tr>
                 {% endif %}
@@ -140,8 +133,6 @@ export const EVENTS_BLOCK: CustomBlockDefinition = {
             </td>
           </tr>
         </table>
-
-      </a>
 
     </td>
 

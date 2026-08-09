@@ -281,7 +281,9 @@ export class ContentApiService {
   }
 
   private mapPodcastEpisodeToContentItem(episode: PodcastEpisodeResponse): ContentItem {
-    const publicUrl = `https://akordishkayt.com/podcasts/${episode.podcastSlug}/${episode.slug}`;
+    const seriesSlug = encodeURIComponent(episode.podcastSlug);
+    const episodeSlug = encodeURIComponent(episode.slug);
+    const publicUrl = `https://akordishkayt.com/podcasts?series=${seriesSlug}&episode=${episodeSlug}`;
 
     return {
       id: episode.id,

@@ -189,6 +189,14 @@ public class NotificationsController : ControllerBase
         return Ok(groups);
     }
 
+    [HttpGet("admin/broadcast-analytics")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<BroadcastNotificationAnalyticsSummaryDto>> GetBroadcastAnalytics()
+    {
+        var analytics = await _notificationService.GetBroadcastAnalyticsAsync();
+        return Ok(analytics);
+    }
+
     [HttpPost("admin/groups")]
     [Authorize(Roles = "Admin")]
     public async Task<ActionResult<NotificationGroupDto>> CreateGroup([FromBody] SaveNotificationGroupDto dto)

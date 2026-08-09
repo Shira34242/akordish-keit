@@ -29,10 +29,10 @@ const TEMPLATE = `{% assign style = linkStyle | default: 'articles' %}
 <mj-section padding="{{ space }}px 0" direction="rtl">
   <mj-column>
     {% if label and label != '' %}
-    <mj-text font-size="11px" font-weight="600" color="#6b7280" align="right" padding="0 0 4px" font-family="Open Sans, Arial, sans-serif">{{ label }}</mj-text>
+    <mj-text font-size="11px" font-weight="600" color="#6b7280" align="right" padding="0 0 4px" font-family="Open Sans, Arial, sans-serif">{{ label | escape }}</mj-text>
     {% endif %}
     {% if buttonUrl and buttonUrl != '' and buttonText and buttonText != '' %}
-    <mj-button href="{{ buttonUrl }}" background-color="{{ bg }}" color="{{ accent }}" font-weight="800" font-family="Open Sans, Arial, sans-serif" border-radius="{{ radius }}px" font-size="14px" align="right" padding="0">{{ buttonText }} &larr;</mj-button>
+    <mj-button href="{{ buttonUrl | escape }}" background-color="{{ bg }}" color="{{ accent }}" font-weight="800" font-family="Open Sans, Arial, sans-serif" border-radius="{{ radius }}px" font-size="14px" align="right" padding="0">{{ buttonText | escape }} &larr;</mj-button>
     {% endif %}
   </mj-column>
 </mj-section>`;

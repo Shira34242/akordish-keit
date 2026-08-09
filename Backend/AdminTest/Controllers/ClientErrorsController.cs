@@ -17,7 +17,8 @@ namespace AkordishKeit.Controllers
             string Message,
             string? Stack,
             string? Url,
-            string? UserAgent
+            string? UserAgent,
+            string? ErrorId
         );
 
         [HttpPost]
@@ -33,8 +34,8 @@ namespace AkordishKeit.Controllers
                 : null;
 
             _logger.LogWarning(
-                "CLIENT_ERROR | IP={IP} | URL={Url} | Message={Message} | Stack={Stack}",
-                ip, dto.Url, msg, stack);
+                "CLIENT_ERROR | ErrorId={ErrorId} | IP={IP} | URL={Url} | Message={Message} | Stack={Stack}",
+                dto.ErrorId, ip, dto.Url, msg, stack);
 
             return Ok();
         }

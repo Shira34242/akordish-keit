@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
@@ -25,6 +25,12 @@ interface SavedEmail {
   savedAt: string;
 }
 
+interface PreflightCheck {
+  label: string;
+  detail: string;
+  status: 'pass' | 'warning' | 'error';
+}
+
 @Component({
   selector: 'app-email-campaign',
   standalone: true,
@@ -32,7 +38,8 @@ interface SavedEmail {
   templateUrl: './email-campaign.component.html',
   styleUrls: ['./email-campaign.component.css'],
 })
-export class EmailCampaignComponent implements OnInit {
+export class EmailCampaignComponent implements OnInit, AfterViewInit {
+  readonly imageMaxWidth = 300;
   @ViewChild('editorBody') editorBody!: ElementRef<HTMLDivElement>;
 
   // ── Tabs ──────────────────────────────────────────────────────────
@@ -93,6 +100,23 @@ export class EmailCampaignComponent implements OnInit {
   drafts: SavedEmail[] = [];
   sentEmails: SavedEmail[] = [];
   mobilePreview = false;
+  showPreview = false;
+  previewHtml = '';
+  previewLoading = false;
+  previewError = '';
+  previewDevice: 'desktop' | 'mobile' = 'desktop';
+
+  isDirty = false;
+  lastSavedAt: Date | null = null;
+  showUnsavedDialog = false;
+  private unsavedResolve: ((value: boolean) => void) | null = null;
+
+  showTestDialog = false;
+  testRecipientEmail = '';
+  isSendingTest = false;
+  testSendMessage = '';
+  testSendSucceeded = false;
+  private lastTestedSnapshot = '';
 
   readonly RecipientGroup = EmailRecipientGroup;
 
@@ -106,6 +130,8 @@ export class EmailCampaignComponent implements OnInit {
   activeFontSize = '';
   activeFontFamily = '';
   activeFontWeight = '';
+  activeCommands = new Set<string>();
+  activeAlignment = '';
 
   private readonly FONT_STACKS: string[] = [
     'Open Sans, Arial, Helvetica, sans-serif',
@@ -193,6 +219,49 @@ export class EmailCampaignComponent implements OnInit {
     this.setupUserSearch();
     this.drafts = this.readSavedEmails('akordish-email-drafts');
     this.sentEmails = this.readSavedEmails('akordish-email-history');
+  }
+
+  ngAfterViewInit(): void {
+    setTimeout(() => { this.isDirty = false; });
+  }
+
+  markDirty(): void {
+    this.isDirty = true;
+    this.testSendMessage = '';
+    this.testSendSucceeded = false;
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  onBeforeUnload(event: BeforeUnloadEvent): void {
+    if (this.isDirty) event.preventDefault();
+  }
+
+  canDeactivate(): boolean | Promise<boolean> {
+    if (!this.isDirty) return true;
+    return new Promise<boolean>((resolve) => {
+      this.unsavedResolve = resolve;
+      this.showUnsavedDialog = true;
+    });
+  }
+
+  stayOnPage(): void {
+    this.showUnsavedDialog = false;
+    this.unsavedResolve?.(false);
+    this.unsavedResolve = null;
+  }
+
+  exitWithoutSaving(): void {
+    this.isDirty = false;
+    this.showUnsavedDialog = false;
+    this.unsavedResolve?.(true);
+    this.unsavedResolve = null;
+  }
+
+  saveAndExit(): void {
+    this.saveDraft();
+    this.showUnsavedDialog = false;
+    this.unsavedResolve?.(true);
+    this.unsavedResolve = null;
   }
 
   // ── Tab navigation ────────────────────────────────────────────────
@@ -367,6 +436,8 @@ export class EmailCampaignComponent implements OnInit {
     this.restoreSelection();
     document.execCommand(command, false, value ?? undefined);
     this.editorBody.nativeElement.focus();
+    this.markDirty();
+    this.updateActiveStyleState();
   }
 
   undo() { this.editorBody.nativeElement.focus(); document.execCommand('undo'); }
@@ -382,6 +453,7 @@ export class EmailCampaignComponent implements OnInit {
     };
     document.execCommand('insertHTML', false, blocks[type]);
     this.editorBody.nativeElement.focus();
+    this.markDirty();
   }
 
   saveDraft() {
@@ -390,24 +462,65 @@ export class EmailCampaignComponent implements OnInit {
     const draft: SavedEmail = { id: Date.now(), subject, htmlBody: rawHtml, fromName: this.fromName, savedAt: new Date().toISOString() };
     this.drafts = [draft, ...this.drafts].slice(0, 20);
     localStorage.setItem('akordish-email-drafts', JSON.stringify(this.drafts));
+    this.lastSavedAt = new Date();
+    this.isDirty = false;
   }
 
   loadSavedEmail(item: SavedEmail) {
     this.subject = item.subject;
     this.fromName = item.fromName;
     this.editorBody.nativeElement.innerHTML = item.htmlBody;
+    this.lastSavedAt = new Date(item.savedAt);
+    this.isDirty = false;
+    this.testSendMessage = '';
+  }
+
+  openTestDialog(): void {
+    this.showTestDialog = true;
   }
 
   sendTestEmail() {
-    const recipientEmail = window.prompt('לאיזו כתובת לשלוח מייל בדיקה?');
-    if (!recipientEmail) return;
+    const recipientEmail = this.testRecipientEmail.trim();
+    if (!recipientEmail || this.isSendingTest) return;
+    this.isSendingTest = true;
+    this.testSendMessage = '';
+    const testedSnapshot = this.currentMessageSnapshot();
     this.emailService.sendTestEmail({
       subject: this.subject,
       htmlBody: this.cleanupHTML(this.editorBody.nativeElement.innerHTML),
       recipientGroup: this.recipientGroup,
       fromName: this.fromName,
       recipientEmail,
-    }).subscribe({ next: result => alert(result.message), error: () => alert('שליחת מייל הבדיקה נכשלה') });
+    }).subscribe({
+      next: result => {
+        this.isSendingTest = false;
+        this.testSendSucceeded = result.success;
+        this.testSendMessage = result.success
+          ? `מייל הבדיקה נשלח אל ${recipientEmail}`
+          : result.message;
+        if (result.success) {
+          this.lastTestedSnapshot = testedSnapshot;
+          this.showTestDialog = false;
+        }
+      },
+      error: () => {
+        this.isSendingTest = false;
+        this.testSendSucceeded = false;
+        this.testSendMessage = 'שליחת מייל הבדיקה נכשלה';
+      },
+    });
+  }
+
+  private currentMessageSnapshot(): string {
+    return JSON.stringify({
+      subject: this.subject.trim(),
+      fromName: this.fromName.trim(),
+      html: this.editorBody ? this.cleanupHTML(this.editorBody.nativeElement.innerHTML) : '',
+    });
+  }
+
+  get hasCurrentTestEmail(): boolean {
+    return !!this.lastTestedSnapshot && this.lastTestedSnapshot === this.currentMessageSnapshot();
   }
 
   private readSavedEmails(key: string): SavedEmail[] {
@@ -521,6 +634,20 @@ export class EmailCampaignComponent implements OnInit {
       const num = parseInt(v, 10);
       return Number.isFinite(num) ? String(num) : '';
     });
+    this.activeCommands = new Set(
+      ['bold', 'italic', 'underline', 'strikeThrough', 'insertUnorderedList', 'insertOrderedList']
+        .filter(command => {
+          try { return document.queryCommandState(command); } catch { return false; }
+        })
+    );
+    this.activeAlignment = ['justifyRight', 'justifyCenter', 'justifyLeft']
+      .find(command => {
+        try { return document.queryCommandState(command); } catch { return false; }
+      }) ?? '';
+  }
+
+  isCommandActive(command: string): boolean {
+    return this.activeCommands.has(command) || this.activeAlignment === command;
   }
 
   private cleanupHTML(html: string): string {
@@ -553,6 +680,68 @@ export class EmailCampaignComponent implements OnInit {
     this.editorMenuVisible = true;
   }
 
+  onEditorPaste(event: ClipboardEvent): void {
+    event.preventDefault();
+    const clipboard = event.clipboardData;
+    if (!clipboard) return;
+    const html = clipboard.getData('text/html');
+    const text = clipboard.getData('text/plain');
+    const cleaned = html
+      ? this.cleanPastedHtml(html)
+      : this.escapeHtml(text).replace(/\r?\n/g, '<br>');
+    document.execCommand('insertHTML', false, cleaned);
+    this.markDirty();
+  }
+
+  private cleanPastedHtml(html: string): string {
+    const root = document.createElement('div');
+    root.innerHTML = html;
+    root.querySelectorAll('script, style, meta, link, iframe, object').forEach(node => node.remove());
+    const allowedTags = new Set([
+      'P', 'BR', 'HR', 'STRONG', 'B', 'EM', 'I', 'U', 'S', 'STRIKE', 'SPAN', 'DIV',
+      'A', 'H1', 'H2', 'H3', 'H4', 'UL', 'OL', 'LI', 'IMG',
+    ]);
+
+    Array.from(root.querySelectorAll('*')).reverse().forEach(element => {
+      if (!allowedTags.has(element.tagName)) {
+        element.replaceWith(...Array.from(element.childNodes));
+        return;
+      }
+
+      const href = element.tagName === 'A' ? element.getAttribute('href') ?? '' : '';
+      const src = element.tagName === 'IMG' ? element.getAttribute('src') ?? '' : '';
+      const alt = element.tagName === 'IMG' ? element.getAttribute('alt') ?? '' : '';
+      const style = element instanceof HTMLElement ? element.style : null;
+      const preservedStyles: Record<string, string> = {};
+      if (style) {
+        const fontWeight = style.getPropertyValue('font-weight');
+        if (fontWeight === 'bold' || Number(fontWeight) >= 600) preservedStyles['font-weight'] = '700';
+        if (style.getPropertyValue('font-style') === 'italic') preservedStyles['font-style'] = 'italic';
+        const decoration = style.getPropertyValue('text-decoration');
+        if (decoration.includes('underline')) preservedStyles['text-decoration'] = 'underline';
+        if (decoration.includes('line-through')) preservedStyles['text-decoration'] = 'line-through';
+        const textAlign = style.getPropertyValue('text-align');
+        if (['right', 'center', 'left'].includes(textAlign)) preservedStyles['text-align'] = textAlign;
+      }
+
+      Array.from(element.attributes).forEach(attribute => element.removeAttribute(attribute.name));
+      for (const [property, value] of Object.entries(preservedStyles)) {
+        (element as HTMLElement).style.setProperty(property, value);
+      }
+      if (element.tagName === 'A' && /^(https?:|mailto:|tel:)/i.test(href)) {
+        element.setAttribute('href', href);
+        element.setAttribute('target', '_blank');
+        element.setAttribute('rel', 'noopener noreferrer');
+      }
+      if (element.tagName === 'IMG' && /^https?:/i.test(src)) {
+        element.setAttribute('src', src);
+        element.setAttribute('alt', alt);
+        element.setAttribute('style', 'max-width:100%;height:auto;display:block;border:0;');
+      }
+    });
+    return root.innerHTML;
+  }
+
   onToolbarMouseDown(event: MouseEvent) {
     if ((event.target as HTMLElement).closest('button')) event.preventDefault();
   }
@@ -574,6 +763,8 @@ export class EmailCampaignComponent implements OnInit {
     this.restoreSelection();
     document.execCommand(align, false, undefined);
     this.editorBody.nativeElement.focus();
+    this.markDirty();
+    this.updateActiveStyleState();
   }
 
   private saveSelection() {
@@ -615,6 +806,7 @@ export class EmailCampaignComponent implements OnInit {
         const anchor = window.getSelection()?.anchorNode?.parentElement?.closest('a');
         if (anchor) anchor.target = '_blank';
       }
+      this.markDirty();
     }, 50);
   }
 
@@ -630,6 +822,23 @@ export class EmailCampaignComponent implements OnInit {
     this.imageWidth = 100;
     this.imageAlign = 'center';
     this.showImageDialog = true;
+  }
+
+  get isEditingImage(): boolean {
+    return !!this.editingImage;
+  }
+
+  setImageWidth(width: number): void {
+    this.imageWidth = Math.min(this.imageMaxWidth, Math.max(30, width));
+  }
+
+  removeEditingImage(): void {
+    if (!this.editingImage) return;
+    const wrapper = this.editingImage.closest('table[role="presentation"], div[style*="text-align"]');
+    (wrapper ?? this.editingImage).remove();
+    this.editingImage = null;
+    this.showImageDialog = false;
+    this.markDirty();
   }
 
   onEditorClick(event: MouseEvent) {
@@ -655,7 +864,7 @@ export class EmailCampaignComponent implements OnInit {
     this.imageUrl = image.src;
     this.imageAlt = image.alt;
     const wrapper = image.closest('table[role="presentation"], div[style*="text-align"]') as HTMLElement | null;
-    this.imageWidth = Math.min(200, Math.max(30, parseInt(wrapper?.getAttribute('width') || image.style.width, 10) || 100));
+    this.imageWidth = Math.min(this.imageMaxWidth, Math.max(30, parseInt(wrapper?.getAttribute('width') || image.style.width, 10) || 100));
     const align = wrapper?.getAttribute('align') || wrapper?.style.textAlign;
     this.imageAlign = align === 'right' || align === 'left' ? align : 'center';
     this.imageLink = image.closest('a')?.href || '';
@@ -666,7 +875,7 @@ export class EmailCampaignComponent implements OnInit {
   insertImage() {
     const url   = this.imageUrl;
     const alt   = this.imageAlt;
-    const width = Math.min(200, Math.max(30, Number(this.imageWidth) || 100));
+    const width = Math.min(this.imageMaxWidth, Math.max(30, Number(this.imageWidth) || 100));
     const align = this.imageAlign;
     const caption = this.escapeHtml(this.imageCaption);
     const link = this.safeUrl(this.imageLink);
@@ -683,6 +892,7 @@ export class EmailCampaignComponent implements OnInit {
       } else {
         document.execCommand('insertHTML', false, html);
       }
+      this.markDirty();
     }, 50);
   }
 
@@ -691,7 +901,9 @@ export class EmailCampaignComponent implements OnInit {
     const image = `<img src="${this.escapeHtml(url)}" alt="${this.escapeHtml(alt)}" width="${pixelWidth}" style="width:100%;max-width:${pixelWidth}px;height:auto;display:block;border:0;" />`;
     const linkedImage = link ? `<a href="${link}" target="_blank" rel="noopener noreferrer">${image}</a>` : image;
     const tableAlign = align === 'left' ? 'left' : align === 'right' ? 'right' : 'center';
-    return `<table role="presentation" class="email-img-table" cellpadding="0" cellspacing="0" border="0" width="${width}%" align="${tableAlign}" style="width:${width}%;max-width:${pixelWidth}px;margin:16px ${align === 'center' ? 'auto' : '0'};"><tr><td align="${tableAlign}">${linkedImage}${caption ? `<div style="font-size:13px;color:#404040;margin-top:6px;text-align:${align};">${caption}</div>` : ''}</td></tr></table>`;
+    const transparentTableStyles = 'background:transparent!important;border:0!important;border-collapse:collapse!important;border-spacing:0!important;box-shadow:none!important;outline:0!important;';
+    const transparentCellStyles = 'background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;padding:0!important;';
+    return `<table role="presentation" class="email-img-table" cellpadding="0" cellspacing="0" border="0" width="${width}%" align="${tableAlign}" style="${transparentTableStyles}width:${width}%;max-width:${pixelWidth}px;margin:16px ${align === 'center' ? 'auto' : '0'};"><tr style="background:transparent!important;"><td align="${tableAlign}" style="${transparentCellStyles}">${linkedImage}${caption ? `<div style="font-size:13px;color:#404040;margin-top:6px;text-align:${align};">${caption}</div>` : ''}</td></tr></table>`;
   }
 
   openVideoDialog() {
@@ -711,6 +923,7 @@ export class EmailCampaignComponent implements OnInit {
       this.restoreSelection();
       const html = `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:16px auto;"><tr><td style="background-color:#000000;border-radius:999px;padding:12px 22px;text-align:center;"><a href="${url}" target="_blank" rel="noopener noreferrer" style="color:#ddff53;text-decoration:none;font-weight:700;font-family:Arial,Helvetica,sans-serif;">▶ ${label}</a></td></tr></table>`;
       document.execCommand('insertHTML', false, html);
+      this.markDirty();
     }, 50);
   }
 
@@ -745,6 +958,7 @@ export class EmailCampaignComponent implements OnInit {
       } else {
         document.execCommand('insertHTML', false, html);
       }
+      this.markDirty();
     }, 50);
   }
 
@@ -761,20 +975,82 @@ export class EmailCampaignComponent implements OnInit {
     return value.replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]!));
   }
 
+  openPreview(): void {
+    this.showPreview = true;
+    this.previewLoading = true;
+    this.previewError = '';
+    this.previewHtml = '';
+    this.emailService.previewEmail(
+      this.subject,
+      this.cleanupHTML(this.editorBody.nativeElement.innerHTML),
+    ).subscribe({
+      next: result => {
+        this.previewHtml = result.html;
+        this.previewLoading = false;
+      },
+      error: () => {
+        this.previewError = 'לא ניתן ליצור תצוגה מקדימה כרגע.';
+        this.previewLoading = false;
+      },
+    });
+  }
+
   openConfirmDialog() {
-    const warnings = this.getPreflightWarnings();
-    if (warnings.length && !window.confirm(`בדיקה לפני שליחה:\n${warnings.join('\n')}\n\nלהמשיך בכל זאת?`)) return;
     this.showConfirmDialog = true;
   }
 
-  private getPreflightWarnings(): string[] {
+  get preflightChecks(): PreflightCheck[] {
     const root = document.createElement('div');
     root.innerHTML = this.editorBody.nativeElement.innerHTML;
-    const warnings: string[] = [];
-    if (root.querySelectorAll('img:not([alt]), img[alt=""]').length) warnings.push('• יש תמונה ללא טקסט חלופי');
-    if (!root.querySelector('a')) warnings.push('• אין במייל קישור או לחצן');
-    if (root.querySelectorAll('a[href=""], a:not([href])').length) warnings.push('• יש קישור ללא כתובת');
-    return warnings;
+    const imagesWithoutAlt = root.querySelectorAll('img:not([alt]), img[alt=""]').length;
+    const emptyLinks = root.querySelectorAll('a[href=""], a[href="#"], a:not([href])').length;
+    const links = root.querySelectorAll('a').length;
+    const oversizedImages = Array.from(root.querySelectorAll<HTMLElement>('.email-img-table'))
+      .filter(table => (parseInt(table.getAttribute('width') ?? table.style.width, 10) || 100) > 100)
+      .length;
+    const hasBody = !!root.textContent?.trim() || !!root.querySelector('img');
+
+    return [
+      {
+        label: 'נושא המייל',
+        detail: this.subject.trim() ? 'הנושא הוגדר' : 'חסר נושא למייל',
+        status: this.subject.trim() ? 'pass' : 'error',
+      },
+      {
+        label: 'תוכן המייל',
+        detail: hasBody ? 'יש תוכן מוכן לשליחה' : 'גוף המייל ריק',
+        status: hasBody ? 'pass' : 'error',
+      },
+      {
+        label: 'תמונות וטקסט חלופי',
+        detail: imagesWithoutAlt ? `${imagesWithoutAlt} תמונות ללא טקסט חלופי` : 'לכל התמונות יש טקסט חלופי',
+        status: imagesWithoutAlt ? 'warning' : 'pass',
+      },
+      {
+        label: 'קישורים',
+        detail: emptyLinks ? `${emptyLinks} קישורים ללא כתובת` : links ? `${links} קישורים תקינים` : 'לא נוספו קישורים למייל',
+        status: emptyLinks ? 'error' : links ? 'pass' : 'warning',
+      },
+      {
+        label: 'רוחב תמונות',
+        detail: oversizedImages ? `${oversizedImages} תמונות רחבות מ־100% ועלולות להיחתך` : 'רוחב התמונות מתאים למסגרת המייל',
+        status: oversizedImages ? 'warning' : 'pass',
+      },
+      {
+        label: 'נמענים',
+        detail: `${this.effectiveRecipientCount.toLocaleString('he-IL')} נמענים יקבלו את המייל`,
+        status: this.effectiveRecipientCount > 0 ? 'pass' : 'error',
+      },
+      {
+        label: 'מייל בדיקה',
+        detail: this.hasCurrentTestEmail ? 'נשלח מייל בדיקה לגרסה הנוכחית' : 'טרם נשלח מייל בדיקה לגרסה הנוכחית',
+        status: this.hasCurrentTestEmail ? 'pass' : 'warning',
+      },
+    ];
+  }
+
+  get hasPreflightErrors(): boolean {
+    return this.preflightChecks.some(check => check.status === 'error');
   }
 
   sendEmail() {
@@ -802,6 +1078,7 @@ export class EmailCampaignComponent implements OnInit {
             const item: SavedEmail = { id: Date.now(), subject: this.subject, htmlBody: this.cleanupHTML(this.editorBody.nativeElement.innerHTML), fromName: this.fromName, savedAt: new Date().toISOString() };
             this.sentEmails = [item, ...this.sentEmails].slice(0, 30);
             localStorage.setItem('akordish-email-history', JSON.stringify(this.sentEmails));
+            this.isDirty = false;
           }
           this.sendResult = result;
           this.isSending = false;
@@ -833,6 +1110,10 @@ export class EmailCampaignComponent implements OnInit {
     this.manualSuppressedCount = 0;
     this.manualEligibleCount = 0;
     this.manualPermissionConfirmed = false;
+    this.isDirty = false;
+    this.lastSavedAt = null;
+    this.lastTestedSnapshot = '';
+    this.testSendMessage = '';
   }
 
   get selectedGroupLabel(): string {

@@ -31,6 +31,23 @@ export interface EmailV2SendTestDto {
   recipientEmail: string;
 }
 
+export interface EmailV2TransientSendDto {
+  subject: string;
+  htmlBody: string;
+  fromName?: string;
+  fromEmail?: string;
+  recipientGroup: number;
+  emailGroupId?: number;
+}
+
+export interface EmailV2TransientTestDto {
+  subject: string;
+  htmlBody: string;
+  fromName?: string;
+  fromEmail?: string;
+  recipientEmail: string;
+}
+
 export interface EmailV2ConversionResultDto {
   success: boolean;
   html?: string;
@@ -95,6 +112,10 @@ export class EmailCampaignV2Service {
     return this.http.post<EmailV2ConversionResultDto>(`${this.apiUrl}/send-test`, dto, { withCredentials: true });
   }
 
+  sendTransientTest(dto: EmailV2TransientTestDto): Observable<EmailV2ConversionResultDto> {
+    return this.http.post<EmailV2ConversionResultDto>(`${this.apiUrl}/send-test-now`, dto, { withCredentials: true });
+  }
+
   getTemplates(): Observable<EmailV2TemplateDto[]> {
     return this.http.get<EmailV2TemplateDto[]>(`${this.apiUrl}/templates`, { withCredentials: true });
   }
@@ -121,5 +142,9 @@ export class EmailCampaignV2Service {
 
   sendCampaign(dto: { campaignId: number; subject: string; htmlBody: string; fromName?: string; fromEmail?: string; recipientGroup: number; emailGroupId?: number; utmEnabled?: boolean }): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/send-campaign`, dto, { withCredentials: true });
+  }
+
+  sendTransientCampaign(dto: EmailV2TransientSendDto): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/send-now`, dto, { withCredentials: true });
   }
 }

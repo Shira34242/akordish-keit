@@ -23,6 +23,27 @@ public class CreateReportDto
     [Required(ErrorMessage = "תיאור הבעיה הוא שדה חובה")]
     [StringLength(1000, MinimumLength = 10, ErrorMessage = "התיאור חייב להיות בין 10 ל-1000 תווים")]
     public string Description { get; set; } = string.Empty;
+
+    [StringLength(500)]
+    public string? SourcePageUrl { get; set; }
+
+    [StringLength(200)]
+    public string? SourcePageTitle { get; set; }
+
+    [StringLength(100)]
+    public string? SourceContext { get; set; }
+
+    [StringLength(250)]
+    public string? LastAction { get; set; }
+
+    [StringLength(300)]
+    public string? ClientEnvironment { get; set; }
+
+    [StringLength(50)]
+    public string? ErrorId { get; set; }
+
+    [StringLength(200)]
+    public string? ErrorSummary { get; set; }
 }
 
 /// <summary>
@@ -46,6 +67,13 @@ public class ReportDto
     public string? ResolvedByUsername { get; set; }
     public string? AdminNotes { get; set; }
     public int? SongCount { get; set; }
+    public string? SourcePageUrl { get; set; }
+    public string? SourcePageTitle { get; set; }
+    public string? SourceContext { get; set; }
+    public string? LastAction { get; set; }
+    public string? ClientEnvironment { get; set; }
+    public string? ErrorId { get; set; }
+    public string? ErrorSummary { get; set; }
 }
 
 public class ChordRequestDto

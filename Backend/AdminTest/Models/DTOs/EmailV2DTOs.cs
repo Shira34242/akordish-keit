@@ -31,6 +31,25 @@ public class EmailV2SendTestDto
     public string RecipientEmail { get; set; } = string.Empty;
 }
 
+public class EmailV2TransientSendDto
+{
+    public string Subject { get; set; } = string.Empty;
+    public string HtmlBody { get; set; } = string.Empty;
+    public string? FromName { get; set; }
+    public string? FromEmail { get; set; }
+    public EmailRecipientGroup RecipientGroup { get; set; }
+    public int? EmailGroupId { get; set; }
+}
+
+public class EmailV2TransientTestDto
+{
+    public string Subject { get; set; } = string.Empty;
+    public string HtmlBody { get; set; } = string.Empty;
+    public string? FromName { get; set; }
+    public string? FromEmail { get; set; }
+    public string RecipientEmail { get; set; } = string.Empty;
+}
+
 public class EmailV2ConversionResultDto
 {
     public bool Success { get; set; }

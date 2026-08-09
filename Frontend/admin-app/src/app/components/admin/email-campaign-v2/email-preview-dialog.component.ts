@@ -123,13 +123,18 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
     .preview-error {
       align-self: center;
       margin: auto;
-      max-width: 32rem;
+      max-width: min(48rem, calc(100% - 2rem));
+      max-height: 70%;
+      overflow: auto;
       padding: 1rem;
       color: #991b1b;
       background: #fef2f2;
       border: 1px solid #fecaca;
       border-radius: 6px;
-      text-align: center;
+      direction: ltr;
+      text-align: left;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
     }
 
     iframe {

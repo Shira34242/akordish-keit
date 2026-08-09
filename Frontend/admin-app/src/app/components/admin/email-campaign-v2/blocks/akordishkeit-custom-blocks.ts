@@ -106,116 +106,32 @@ export const ARTICLES_BLOCK: CustomBlockDefinition = {
   template: `{% assign radius = borderRadius | default: 24 | plus: 0 %}
 {% assign gap = cardGap | default: 12 | plus: 0 %}
 {% assign total = items | size %}
-
 {% if total > 0 %}
 <table width="100%" cellpadding="0" cellspacing="0" border="0" dir="rtl" style="table-layout:fixed;">
   {% assign max_idx = total | minus: 1 %}
   {% for i in (0..max_idx) %}
     {% assign item = items[i] %}
     {% assign col_idx = i | modulo: 2 %}
-
-    {% if col_idx == 0 %}
-      {% if i > 0 %}
-      </tr>
-      {% endif %}
-    <tr>
-    {% endif %}
-
+    {% if col_idx == 0 %}<tr>{% endif %}
     <td width="50%" valign="top" class="akd-article-cell" style="padding:{{ gap | divided_by: 2 }}px;direction:rtl;">
-
-      <a href="{{ item.publicUrl }}" target="_blank" style="text-decoration:none;display:block;direction:rtl;">
-
-        <table width="100%" cellpadding="0" cellspacing="0" border="0" dir="rtl" style="border-radius:{{ radius }}px;overflow:hidden;background-color:#000000;">
-          <tr>
-            <td style="padding:0;line-height:0;">
-              <!--[if !mso]><!-->
-              <div style="position:relative;max-width:100%;overflow:hidden;border-radius:{{ radius }}px;">
-              <!--<![endif]-->
-                {% if item.imageUrl and item.imageUrl != '' %}
-                <img src="{{ item.imageUrl }}" alt="{{ item.altText }}" width="300" style="display:block;width:100%;height:auto;aspect-ratio:1.35/1;object-fit:cover;border:0;" />
-                {% else %}
-                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="aspect-ratio:1.35/1;background-color:#ddff53;">
-                  <tr>
-                    <td style="text-align:center;vertical-align:middle;padding:20px;">
-                      <span style="font-family:'Open Sans',Arial,sans-serif;font-size:32px;font-weight:800;color:#000000;">&#9835;</span>
-                    </td>
-                  </tr>
-                </table>
-                {% endif %}
-                <!--[if !mso]><!-->
-                <table width="100%" cellpadding="0" cellspacing="0" border="0" dir="rtl" style="position:absolute;bottom:0;right:0;left:0;background:linear-gradient(to top, rgba(0,0,0,0.80) 0%, rgba(0,0,0,0.30) 50%, rgba(0,0,0,0.05) 100%);padding:14px;">
-                  <tr>
-                    <td style="padding:0 0 4px;text-align:right;">
-                      <span style="font-family:'Open Sans',Arial,sans-serif;font-size:14px;font-weight:800;color:#ffffff;line-height:1.35;">{{ item.title }}</span>
-                    </td>
-                    <td width="40" style="vertical-align:bottom;text-align:left;padding:0 0 0 8px;">
-                      <table width="36" height="36" cellpadding="0" cellspacing="0" border="0" style="width:36px;height:36px;border-radius:10px;background-color:#ddff53;overflow:hidden;">
-                        <tr>
-                          <td style="text-align:center;vertical-align:middle;color:#000000;font-family:'Open Sans',Arial,sans-serif;font-size:18px;font-weight:800;line-height:1;">&#8249;</td>
-                        </tr>
-                      </table>
-                    </td>
-                  </tr>
-                  {% if showCategory and item.categoryName and item.categoryName != '' %}
-                  <tr>
-                    <td style="padding:0;text-align:right;">
-                      <span style="font-family:'Open Sans',Arial,sans-serif;font-size:12px;font-weight:300;color:rgba(255,255,255,0.85);line-height:1.3;">{{ item.categoryName }}</span>
-                    </td>
-                  </tr>
-                  {% endif %}
-                  {% if showDescription and item.shortDescription and item.shortDescription != '' %}
-                  <tr>
-                    <td style="padding:2px 0 0;text-align:right;">
-                      <span style="font-family:'Open Sans',Arial,sans-serif;font-size:11px;font-weight:300;color:rgba(255,255,255,0.75);line-height:1.3;">{{ item.shortDescription }}</span>
-                    </td>
-                  </tr>
-                  {% endif %}
-                </table>
-              </div>
-              <!--<![endif]-->
-              <!--[if mso]>
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" dir="rtl" style="background-color:#000000;">
-                <tr>
-                  <td style="padding:14px;background:linear-gradient(to top, rgba(0,0,0,0.80) 0%, rgba(0,0,0,0.30) 50%, rgba(0,0,0,0.05) 100%);">
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" dir="rtl">
-                      <tr>
-                        <td style="padding:0 0 4px;text-align:right;font-family:'Open Sans',Arial,sans-serif;font-size:14px;font-weight:800;color:#ffffff;line-height:1.35;">{{ item.title }}</td>
-                        <td width="40" style="vertical-align:bottom;text-align:left;padding:0 0 0 8px;">
-                          <table width="36" height="36" cellpadding="0" cellspacing="0" border="0" style="width:36px;height:36px;border-radius:10px;background-color:#ddff53;overflow:hidden;">
-                            <tr>
-                              <td style="text-align:center;vertical-align:middle;color:#000000;font-family:'Open Sans',Arial,sans-serif;font-size:18px;font-weight:800;line-height:1;">&#8249;</td>
-                            </tr>
-                          </table>
-                        </td>
-                      </tr>
-                      {% if showCategory and item.categoryName and item.categoryName != '' %}
-                      <tr>
-                        <td style="padding:0;text-align:right;font-family:'Open Sans',Arial,sans-serif;font-size:12px;font-weight:300;color:rgba(255,255,255,0.85);line-height:1.3;">{{ item.categoryName }}</td>
-                      </tr>
-                      {% endif %}
-                      {% if showDescription and item.shortDescription and item.shortDescription != '' %}
-                      <tr>
-                        <td style="padding:2px 0 0;text-align:right;font-family:'Open Sans',Arial,sans-serif;font-size:11px;font-weight:300;color:rgba(255,255,255,0.75);line-height:1.3;">{{ item.shortDescription }}</td>
-                      </tr>
-                      {% endif %}
-                    </table>
-                  </td>
-                </tr>
-              </table>
-              <![endif]-->
-            </td>
-          </tr>
-        </table>
-
-      </a>
-
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" dir="rtl" style="background-color:#000000;border-radius:{{ radius }}px;overflow:hidden;">
+        <tr><td style="padding:0;line-height:0;">
+          {% if item.imageUrl and item.imageUrl != '' %}
+          <a href="{{ item.publicUrl | escape }}" target="_blank" style="display:block;text-decoration:none;"><img src="{{ item.imageUrl | escape }}" alt="{{ item.altText | escape }}" width="300" style="display:block;width:100%;height:auto;border:0;" /></a>
+          {% else %}
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#ddff53;"><tr><td style="padding:42px 20px;text-align:center;font-family:Arial,sans-serif;font-size:32px;font-weight:800;color:#000000;">&#9835;</td></tr></table>
+          {% endif %}
+        </td></tr>
+        <tr><td style="padding:14px 14px 8px;background-color:#000000;text-align:right;direction:rtl;">
+          <a href="{{ item.publicUrl | escape }}" target="_blank" style="color:#ffffff;text-decoration:none;font-family:Arial,sans-serif;font-size:15px;font-weight:800;line-height:1.4;">{{ item.title | escape }}</a>
+          {% if showCategory and item.categoryName and item.categoryName != '' %}<div style="padding-top:5px;font-family:Arial,sans-serif;font-size:12px;line-height:1.35;color:#dddddd;">{{ item.categoryName | escape }}</div>{% endif %}
+          {% if showDescription and item.shortDescription and item.shortDescription != '' %}<div style="padding-top:5px;font-family:Arial,sans-serif;font-size:12px;line-height:1.4;color:#dddddd;">{{ item.shortDescription | escape }}</div>{% endif %}
+        </td></tr>
+        <tr><td style="padding:0 14px 14px;background-color:#000000;text-align:left;"><a href="{{ item.publicUrl | escape }}" target="_blank" style="display:inline-block;width:36px;height:36px;line-height:36px;border-radius:10px;background-color:#ddff53;color:#000000;text-align:center;text-decoration:none;font-family:Arial,sans-serif;font-size:22px;font-weight:800;">&#8249;</a></td></tr>
+      </table>
     </td>
-
-    {% assign next_idx = i | plus: 1 %}
-    {% assign next_mod = next_idx | modulo: 2 %}
-    {% if next_mod == 0 or i == max_idx %}
-    </tr>
-    {% endif %}
+    {% assign next_idx = i | plus: 1 %}{% assign next_mod = next_idx | modulo: 2 %}
+    {% if next_mod == 0 or i == max_idx %}</tr>{% endif %}
   {% endfor %}
 </table>
 {% endif %}`,

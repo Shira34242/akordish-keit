@@ -113,6 +113,32 @@ public class BroadcastNotificationResultDto
     public string AudienceLabel { get; set; } = string.Empty;
 }
 
+public class BroadcastNotificationAnalyticsDto
+{
+    public DateTime SentAt { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string Message { get; set; } = string.Empty;
+    public string? CampaignName { get; set; }
+    public string? AudienceLabel { get; set; }
+    public int SentCount { get; set; }
+    public int ReadCount { get; set; }
+    public int UnreadCount => Math.Max(0, SentCount - ReadCount);
+    public decimal OpenRate => SentCount == 0 ? 0 : Math.Round((decimal)ReadCount / SentCount * 100, 1);
+    public int TotalClicks { get; set; }
+    public int UniqueClickers { get; set; }
+    public decimal ClickRate => SentCount == 0 ? 0 : Math.Round((decimal)UniqueClickers / SentCount * 100, 1);
+    public bool HasClickableContent { get; set; }
+}
+
+public class BroadcastNotificationAnalyticsSummaryDto
+{
+    public int CampaignCount { get; set; }
+    public int RecipientCount { get; set; }
+    public int ReadCount { get; set; }
+    public int TotalClicks { get; set; }
+    public List<BroadcastNotificationAnalyticsDto> Campaigns { get; set; } = new();
+}
+
 public class UnreadNotificationCountDto
 {
     public int Count { get; set; }

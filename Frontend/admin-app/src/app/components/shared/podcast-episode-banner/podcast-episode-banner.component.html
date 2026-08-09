@@ -1,4 +1,8 @@
-<a class="episode-banner" [routerLink]="['/podcasts/', episode.podcastSlug, episode.slug]">
+<a
+  class="episode-banner"
+  [routerLink]="['/podcasts']"
+  [queryParams]="{ series: episode.podcastSlug, episode: episode.slug }"
+>
 
   <img
     class="banner-bg"

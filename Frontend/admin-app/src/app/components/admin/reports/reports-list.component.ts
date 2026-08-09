@@ -157,7 +157,23 @@ export class ReportsListComponent implements OnInit {
   }
   getReportAgeLabel(report: Report): string { const hours = Math.max(0, Math.floor((Date.now() - new Date(report.reportedAt).getTime()) / 36e5)); return hours < 1 ? 'עכשיו' : hours < 24 ? `לפני ${hours} שעות` : `לפני ${Math.floor(hours / 24)} ימים`; }
   isNewContentReport(report: Report): boolean { return ['NewArtist', 'NewGenre', 'NewTag', 'NewPerson'].includes(report.reportType); }
-  getQuickSuggestion(report: Report): string { if (report.reportType === 'ContentError') return 'כדאי לפתוח את התוכן ולבדוק את הבעיה.'; if (report.reportType === 'InappropriateContent') return 'יש לבדוק במהירות בהתאם למדיניות האתר.'; return 'יש לקרוא את הפנייה ולבחור פעולה מתאימה.'; }
+  getQuickSuggestion(report: Report): string {
+    const contextLines: string[] = [];
+    if (report.sourcePageUrl) contextLines.push(`הדף המדויק: ${report.sourcePageUrl}`);
+    if (report.sourceContext) contextLines.push(`מקור הדיווח: ${report.sourceContext}`);
+    if (report.lastAction) contextLines.push(`פעולה קודמת: ${report.lastAction}`);
+    if (report.clientEnvironment) contextLines.push(`סביבת משתמש: ${report.clientEnvironment}`);
+    if (report.errorId) contextLines.push(`מזהה שגיאה: ${report.errorId}`);
+    if (report.errorSummary) contextLines.push(`שגיאה שנקלטה: ${report.errorSummary}`);
+
+    const suggestion = report.reportType === 'ContentError'
+      ? 'כדאי לפתוח את התוכן ולבדוק את הבעיה.'
+      : report.reportType === 'InappropriateContent'
+        ? 'יש לבדוק במהירות בהתאם למדיניות האתר.'
+        : 'יש לקרוא את הפנייה ולבחור פעולה מתאימה.';
+
+    return contextLines.length ? `${contextLines.join('\n')}\n\n${suggestion}` : suggestion;
+  }
   goToPage(page: number): void { if (page < 1 || page > this.totalPages) return; this.currentPage = page; this.clearSelection(); this.loadReports(); }
   trackByReportId(_: number, report: Report): number { return report.id; }
   trackByPage(_: number, page: number): number { return page; }

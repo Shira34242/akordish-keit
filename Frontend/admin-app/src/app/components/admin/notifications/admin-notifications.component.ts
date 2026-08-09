@@ -9,6 +9,7 @@ import { UserListDto } from '../../../models/user.model';
 import { MediaService } from '../../../services/admin/media.service';
 import { NotificationService } from '../../../services/notification.service';
 import { UserService } from '../../../services/user.service';
+import { NotificationAnalyticsComponent } from './notification-analytics/notification-analytics.component';
 
 type ComposerMode = 'private' | 'group';
 type SidebarMode = 'chats' | 'groups';
@@ -31,11 +32,12 @@ interface MessageDraft {
 @Component({
   selector: 'app-admin-notifications',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NotificationAnalyticsComponent],
   templateUrl: './admin-notifications.component.html',
   styleUrls: ['./admin-notifications.component.css']
 })
 export class AdminNotificationsComponent implements OnInit, OnDestroy {
+  showAnalytics = false;
   users: UserListDto[] = [];
   groups: NotificationGroupDto[] = [];
   selectedUser: UserListDto | null = null;
@@ -91,6 +93,14 @@ export class AdminNotificationsComponent implements OnInit, OnDestroy {
   groupMemberIds = new Set<number>();
   successMessage = '';
   errorMessage = '';
+
+  openAnalytics(): void {
+    this.showAnalytics = true;
+  }
+
+  closeAnalytics(): void {
+    this.showAnalytics = false;
+  }
 
   private drafts: Record<string, MessageDraft> = {};
   private pendingQuickUserId: number | null = null;

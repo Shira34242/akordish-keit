@@ -33,27 +33,27 @@ const TEMPLATE = `{% assign type = recType | default: 'editor-pick' %}
 <mj-section padding="{{ space }}px 0" direction="rtl">
   <mj-column background-color="{{ bg }}" border-radius="{{ radius }}px">
     <mj-text font-size="11px" font-weight="800" color="#1a1a1a" align="right" padding="12px 16px 4px" font-family="Open Sans, Arial, sans-serif" container-background-color="{{ accent }}" border-radius="999px" width="auto">
-      &nbsp;{{ labelText }}&nbsp;
+      &nbsp;{{ labelText | escape }}&nbsp;
     </mj-text>
     {% if imageUrl and imageUrl != '' %}
     {% if buttonUrl and buttonUrl != '' %}
-    <mj-image src="{{ imageUrl }}" alt="{{ altText }}" href="{{ buttonUrl }}" width="568px" padding="12px 16px 0" border-radius="12px"></mj-image>
+    <mj-image src="{{ imageUrl | escape }}" alt="{{ altText | escape }}" href="{{ buttonUrl | escape }}" width="568px" padding="12px 16px 0" border-radius="12px"></mj-image>
     {% else %}
-    <mj-image src="{{ imageUrl }}" alt="{{ altText }}" width="568px" padding="12px 16px 0" border-radius="12px"></mj-image>
+    <mj-image src="{{ imageUrl | escape }}" alt="{{ altText | escape }}" width="568px" padding="12px 16px 0" border-radius="12px"></mj-image>
     {% endif %}
     {% endif %}
     {% if buttonUrl and buttonUrl != '' %}
     <mj-text font-size="16px" font-weight="800" color="#1a1a1a" align="right" padding="12px 16px 4px" font-family="Open Sans, Arial, sans-serif">
-      <a href="{{ buttonUrl }}" style="color:#1a1a1a;text-decoration:none;direction:rtl;">{{ title }}</a>
+      <a href="{{ buttonUrl | escape }}" style="color:#1a1a1a;text-decoration:none;direction:rtl;">{{ title | escape }}</a>
     </mj-text>
     {% else %}
-    <mj-text font-size="16px" font-weight="800" color="#1a1a1a" align="right" padding="12px 16px 4px" font-family="Open Sans, Arial, sans-serif">{{ title }}</mj-text>
+    <mj-text font-size="16px" font-weight="800" color="#1a1a1a" align="right" padding="12px 16px 4px" font-family="Open Sans, Arial, sans-serif">{{ title | escape }}</mj-text>
     {% endif %}
     {% if description and description != '' %}
-    <mj-text font-size="14px" font-weight="300" color="#4b5563" align="right" padding="4px 16px 12px" font-family="Open Sans, Arial, sans-serif" line-height="1.5">{{ description }}</mj-text>
+    <mj-text font-size="14px" font-weight="300" color="#4b5563" align="right" padding="4px 16px 12px" font-family="Open Sans, Arial, sans-serif" line-height="1.5">{{ description | escape }}</mj-text>
     {% endif %}
     {% if buttonUrl and buttonUrl != '' and buttonText and buttonText != '' %}
-    <mj-button href="{{ buttonUrl }}" background-color="#1a1a1a" color="{{ accent }}" font-weight="800" font-family="Open Sans, Arial, sans-serif" border-radius="999px" font-size="14px" align="right" padding="0 0 16px">{{ buttonText }} &larr;</mj-button>
+    <mj-button href="{{ buttonUrl | escape }}" background-color="#1a1a1a" color="{{ accent }}" font-weight="800" font-family="Open Sans, Arial, sans-serif" border-radius="999px" font-size="14px" align="right" padding="0 0 16px">{{ buttonText | escape }} &larr;</mj-button>
     {% endif %}
   </mj-column>
 </mj-section>`;

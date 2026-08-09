@@ -1,10 +1,13 @@
 import { ErrorHandler, Injectable } from '@angular/core';
+import { ReportContextService } from './report-context.service';
 
 const RELOAD_KEY = 'chunk-error-reload';
 let _reportingError = false;
 
 @Injectable()
 export class ChunkErrorHandler implements ErrorHandler {
+  constructor(private reportContext: ReportContextService) {}
+
   handleError(error: any): void {
     const msg: string = error?.message ?? String(error ?? '');
 
@@ -22,10 +25,11 @@ export class ChunkErrorHandler implements ErrorHandler {
     }
 
     console.error(error);
-    this._sendToServer(msg, error?.stack);
+    const captured = this.reportContext.recordError(msg);
+    this._sendToServer(msg, error?.stack, captured.id);
   }
 
-  private _sendToServer(message: string, stack?: string): void {
+  private _sendToServer(message: string, stack?: string, errorId?: string): void {
     if (_reportingError) return;
     _reportingError = true;
 
@@ -33,7 +37,8 @@ export class ChunkErrorHandler implements ErrorHandler {
       message,
       stack: stack ?? null,
       url: window.location.href,
-      userAgent: navigator.userAgent
+      userAgent: navigator.userAgent,
+      errorId: errorId ?? null
     });
 
     fetch('/api/ClientErrors', {

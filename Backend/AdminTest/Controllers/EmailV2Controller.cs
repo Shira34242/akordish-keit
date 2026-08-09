@@ -126,6 +126,42 @@ public class EmailV2Controller : ControllerBase
         return Ok(result);
     }
 
+    [HttpPost("send-now")]
+    public async Task<ActionResult<EmailSendResultDto>> SendTransientCampaign(
+        [FromBody] EmailV2TransientSendDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.Subject))
+            return BadRequest("subject required");
+        if (string.IsNullOrWhiteSpace(dto.HtmlBody))
+            return BadRequest("content required");
+        if (dto.RecipientGroup == EmailRecipientGroup.CustomGroup && !dto.EmailGroupId.HasValue)
+            return BadRequest("email group required");
+
+        var result = await _pipeline.SendTransientCampaignAsync(new SendEmailRequestDto
+        {
+            Subject = dto.Subject,
+            HtmlBody = dto.HtmlBody,
+            RecipientGroup = dto.RecipientGroup,
+            EmailGroupId = dto.EmailGroupId,
+            FromName = dto.FromName,
+            FromEmail = dto.FromEmail
+        });
+        return Ok(result);
+    }
+
+    [HttpPost("send-test-now")]
+    public async Task<ActionResult<EmailV2ConversionResultDto>> SendTransientTest(
+        [FromBody] EmailV2TransientTestDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.Subject) || string.IsNullOrWhiteSpace(dto.HtmlBody))
+            return BadRequest("content required");
+        if (string.IsNullOrWhiteSpace(dto.RecipientEmail) || !dto.RecipientEmail.Contains('@'))
+            return BadRequest("invalid");
+
+        var result = await _pipeline.SendTransientTestEmailAsync(dto);
+        return result.Success ? Ok(result) : BadRequest(result);
+    }
+
     [HttpGet("{campaignId}/analytics")]
     public async Task<ActionResult<EmailCampaignAnalyticsDto>> GetAnalytics(int campaignId)
     {

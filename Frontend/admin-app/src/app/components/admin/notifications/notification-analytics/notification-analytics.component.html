@@ -1,0 +1,115 @@
+<section class="notification-analytics" dir="rtl">
+  <header class="analytics-header">
+    <div>
+      <p class="eyebrow">אנליטיקס בסיסי</p>
+      <h1>ביצועי התראות קבוצתיות</h1>
+      <p>נתוני פתיחה ולחיצה מתעדכנים בכל רענון של הדוח.</p>
+    </div>
+    <button class="refresh-button" type="button" (click)="loadAnalytics()" [disabled]="isLoading">
+      <span class="material-icons">refresh</span>
+      רענון נתונים
+    </button>
+  </header>
+
+  <div class="summary-grid" aria-label="סיכום ביצועי ההתראות">
+    <article class="summary-card">
+      <span>שליחות</span>
+      <strong>{{ analytics.campaignCount | number }}</strong>
+      <small>לקבוצות או לכולם</small>
+    </article>
+    <article class="summary-card">
+      <span>נמענים</span>
+      <strong>{{ analytics.recipientCount | number }}</strong>
+      <small>התראות שנוצרו</small>
+    </article>
+    <article class="summary-card featured">
+      <span>נקראו</span>
+      <strong>{{ analytics.readCount | number }}</strong>
+      <small>{{ overallOpenRate | number:'1.0-1' }}% פתיחה</small>
+    </article>
+    <article class="summary-card">
+      <span>לחיצות</span>
+      <strong>{{ analytics.totalClicks | number }}</strong>
+      <small>כל הלחיצות שנרשמו</small>
+    </article>
+  </div>
+
+  <div class="analytics-toolbar">
+    <label class="search-box">
+      <span class="material-icons">search</span>
+      <input type="search" [(ngModel)]="searchTerm" placeholder="חיפוש לפי קמפיין, קבוצה או הודעה">
+    </label>
+    <select [(ngModel)]="filter" aria-label="סינון שליחות">
+      <option value="all">כל השליחות</option>
+      <option value="clickable">כוללות קישור</option>
+      <option value="read">עם פתיחות</option>
+    </select>
+  </div>
+
+  <div class="analytics-state" *ngIf="isLoading">
+    <span class="spinner" aria-hidden="true"></span>
+    טוען נתונים...
+  </div>
+
+  <div class="analytics-state error" *ngIf="!isLoading && errorMessage">
+    <span>{{ errorMessage }}</span>
+    <button type="button" (click)="loadAnalytics()">נסה שוב</button>
+  </div>
+
+  <div class="analytics-state" *ngIf="!isLoading && !errorMessage && filteredCampaigns.length === 0">
+    <span class="material-icons">bar_chart</span>
+    אין שליחות קבוצתיות שמתאימות לסינון.
+  </div>
+
+  <div class="campaign-list" *ngIf="!isLoading && !errorMessage && filteredCampaigns.length > 0">
+    <article class="campaign-card" *ngFor="let campaign of filteredCampaigns; trackBy: trackByCampaign">
+      <header class="campaign-header">
+        <div>
+          <span class="campaign-label">{{ campaign.campaignName || 'שליחה קבוצתית' }}</span>
+          <h2>{{ campaign.title }}</h2>
+          <p>{{ campaign.audienceLabel || 'קהל יעד קבוצתי' }} · {{ formatDate(campaign.sentAt) }}</p>
+        </div>
+        <span class="link-badge" *ngIf="campaign.hasClickableContent">
+          <span class="material-icons">link</span>
+          כולל קישור
+        </span>
+      </header>
+
+      <p class="message-preview" *ngIf="campaign.message">{{ campaign.message }}</p>
+
+      <div class="campaign-metrics">
+        <div class="metric-block">
+          <span>נשלחו</span>
+          <strong>{{ campaign.sentCount | number }}</strong>
+        </div>
+        <div class="metric-block">
+          <span>נקראו</span>
+          <strong>{{ campaign.readCount | number }}</strong>
+          <small>{{ campaign.openRate | number:'1.0-1' }}%</small>
+        </div>
+        <div class="metric-block">
+          <span>לא נקראו</span>
+          <strong>{{ campaign.unreadCount | number }}</strong>
+        </div>
+        <div class="metric-block" [class.muted]="!campaign.hasClickableContent">
+          <span>לוחצים ייחודיים</span>
+          <strong>{{ campaign.uniqueClickers | number }}</strong>
+          <small *ngIf="campaign.hasClickableContent">{{ campaign.clickRate | number:'1.0-1' }}%</small>
+          <small *ngIf="!campaign.hasClickableContent">אין יעד לחיץ</small>
+        </div>
+        <div class="metric-block" [class.muted]="!campaign.hasClickableContent">
+          <span>לחיצות כולל</span>
+          <strong>{{ campaign.totalClicks | number }}</strong>
+        </div>
+      </div>
+
+      <div class="open-progress" [attr.aria-label]="'אחוז פתיחה ' + campaign.openRate + '%'">
+        <span [style.width.%]="campaign.openRate"></span>
+      </div>
+    </article>
+  </div>
+
+  <p class="tracking-note" *ngIf="!isLoading && analytics.campaigns.length > 0">
+    נתוני לחיצה היסטוריים עשויים להיות חלקיים. מעכשיו נמדדות לחיצות מכל תצוגות ההתראה באתר.
+  </p>
+</section>

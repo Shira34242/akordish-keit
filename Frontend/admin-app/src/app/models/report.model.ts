@@ -3,6 +3,13 @@ export interface CreateReportDto {
     contentId: number;
     reportType: 'ContentError' | 'InappropriateContent' | 'Other' | 'ChordRequest';
     description: string;
+    sourcePageUrl?: string;
+    sourcePageTitle?: string;
+    sourceContext?: string;
+    lastAction?: string;
+    clientEnvironment?: string;
+    errorId?: string;
+    errorSummary?: string;
 }
 
 export interface Report {
@@ -22,6 +29,13 @@ export interface Report {
     resolvedByUsername?: string;
     adminNotes?: string;
     songCount?: number;
+    sourcePageUrl?: string;
+    sourcePageTitle?: string;
+    sourceContext?: string;
+    lastAction?: string;
+    clientEnvironment?: string;
+    errorId?: string;
+    errorSummary?: string;
 }
 
 export interface UpdateReportStatusDto {

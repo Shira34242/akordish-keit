@@ -98,17 +98,12 @@ export const CHORDS_BLOCK: CustomBlockDefinition = {
     {% assign col_idx = i | modulo: cols_int %}
 
     {% if col_idx == 0 %}
-      {% if i > 0 %}
-</table>
-      {% endif %}
 <table width="100%" cellpadding="0" cellspacing="0" border="0" dir="rtl" style="margin-bottom:{{ gap }}px;">
   <tr>
     {% endif %}
 
     {% assign col_width = 100 | divided_by: cols_int %}
     <td width="{{ col_width }}%" valign="top" class="akd-chord-cell" style="padding:0 {{ gap | divided_by: 2 }}px;direction:rtl;">
-
-      <a href="{{ item.publicUrl }}" target="_blank" style="text-decoration:none;display:block;direction:rtl;">
 
         <table width="100%" cellpadding="0" cellspacing="0" border="0" dir="rtl" style="background-color:#F2F2F2;border-radius:{{ radius }}px;overflow:hidden;">
           <tr>
@@ -117,7 +112,7 @@ export const CHORDS_BLOCK: CustomBlockDefinition = {
                 <tr>
                   <td style="padding:0;line-height:0;">
                     {% if item.imageUrl and item.imageUrl != '' %}
-                    <img src="{{ item.imageUrl }}" alt="{{ item.altText }}" width="140" height="140" style="display:block;width:100%;height:auto;aspect-ratio:1/1;object-fit:cover;border-radius:12px;border:0;background-color:#ddff53;" />
+                    <a href="{{ item.publicUrl | escape }}" target="_blank" style="display:block;text-decoration:none;"><img src="{{ item.imageUrl | escape }}" alt="{{ item.altText | escape }}" width="140" height="140" style="display:block;width:100%;height:auto;aspect-ratio:1/1;object-fit:cover;border-radius:12px;border:0;background-color:#ddff53;" /></a>
                     {% else %}
                     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;aspect-ratio:1/1;border-radius:12px;background-color:#ddff53;">
                       <tr>
@@ -140,13 +135,13 @@ export const CHORDS_BLOCK: CustomBlockDefinition = {
                 </tr>
                 <tr>
                   <td style="padding:0 0 2px;text-align:right;">
-                    <span style="font-family:'Open Sans',Arial,sans-serif;font-size:14px;font-weight:800;color:#000000;line-height:1.2;">{{ item.title }}</span>
+                    <a href="{{ item.publicUrl | escape }}" target="_blank" style="font-family:'Open Sans',Arial,sans-serif;font-size:14px;font-weight:800;color:#000000;line-height:1.2;text-decoration:none;">{{ item.title | escape }}</a>
                   </td>
                 </tr>
                 {% if item.artistNames and item.artistNames != '' %}
                 <tr>
                   <td style="padding:0 0 4px;text-align:right;">
-                    <span style="font-family:'Open Sans',Arial,sans-serif;font-size:12px;font-weight:300;color:#404040;line-height:1.3;">{{ item.artistNames }}</span>
+                    <span style="font-family:'Open Sans',Arial,sans-serif;font-size:12px;font-weight:300;color:#404040;line-height:1.3;">{{ item.artistNames | escape }}</span>
                   </td>
                 </tr>
                 {% endif %}
@@ -159,8 +154,6 @@ export const CHORDS_BLOCK: CustomBlockDefinition = {
             </td>
           </tr>
         </table>
-
-      </a>
 
     </td>
 

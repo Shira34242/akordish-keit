@@ -100,13 +100,10 @@ export const ADVERTISEMENT_BLOCK: CustomBlockDefinition = {
 {% assign show_label = showAdLabel | default: false %}
 
 {% if type == 'banner' and imageUrl and imageUrl != '' %}
-  {% if destinationUrl and destinationUrl != '' %}
-<a href="{{ destinationUrl }}" target="_blank" style="text-decoration:none;display:block;direction:rtl;">
-  {% endif %}
   <table width="100%" cellpadding="0" cellspacing="0" border="0" dir="rtl" style="border-radius:{{ radius }}px;overflow:hidden;{% if space > 0 %}margin:{{ space }}px 0;{% endif %}">
     <tr>
       <td style="line-height:0;padding:0;">
-        <img src="{{ imageUrl }}" alt="{{ altText }}" width="600" style="display:block;width:100%;height:auto;border:0;border-radius:{{ radius }}px;" />
+        {% if destinationUrl and destinationUrl != '' %}<a href="{{ destinationUrl | escape }}" target="_blank" style="display:block;text-decoration:none;">{% endif %}<img src="{{ imageUrl | escape }}" alt="{{ altText | escape }}" width="600" style="display:block;width:100%;height:auto;border:0;border-radius:{{ radius }}px;" />{% if destinationUrl and destinationUrl != '' %}</a>{% endif %}
       </td>
     </tr>
     {% if show_label %}
@@ -117,19 +114,13 @@ export const ADVERTISEMENT_BLOCK: CustomBlockDefinition = {
     </tr>
     {% endif %}
   </table>
-  {% if destinationUrl and destinationUrl != '' %}
-</a>
-  {% endif %}
 
 {% elsif type == 'card' %}
-  {% if destinationUrl and destinationUrl != '' %}
-<a href="{{ destinationUrl }}" target="_blank" style="text-decoration:none;display:block;direction:rtl;">
-  {% endif %}
   <table width="100%" cellpadding="0" cellspacing="0" border="0" dir="rtl" style="border-radius:{{ radius }}px;overflow:hidden;background-color:{{ bg }};{% if space > 0 %}margin:{{ space }}px 0;{% endif %}">
     {% if imageUrl and imageUrl != '' %}
     <tr>
       <td style="line-height:0;padding:0;">
-        <img src="{{ imageUrl }}" alt="{{ altText }}" width="600" style="display:block;width:100%;height:auto;border:0;" />
+        {% if destinationUrl and destinationUrl != '' %}<a href="{{ destinationUrl | escape }}" target="_blank" style="display:block;text-decoration:none;">{% endif %}<img src="{{ imageUrl | escape }}" alt="{{ altText | escape }}" width="600" style="display:block;width:100%;height:auto;border:0;" />{% if destinationUrl and destinationUrl != '' %}</a>{% endif %}
       </td>
     </tr>
     {% endif %}
@@ -139,14 +130,14 @@ export const ADVERTISEMENT_BLOCK: CustomBlockDefinition = {
           {% if title and title != '' %}
           <tr>
             <td style="padding:0 0 8px;text-align:right;">
-              <span style="font-family:'Open Sans',Arial,sans-serif;font-size:16px;font-weight:800;color:{{ txt }};line-height:1.3;">{{ title }}</span>
+              <span style="font-family:'Open Sans',Arial,sans-serif;font-size:16px;font-weight:800;color:{{ txt }};line-height:1.3;">{{ title | escape }}</span>
             </td>
           </tr>
           {% endif %}
           {% if description and description != '' %}
           <tr>
             <td style="padding:0 0 12px;text-align:right;">
-              <span style="font-family:'Open Sans',Arial,sans-serif;font-size:14px;font-weight:300;color:{{ txt }};line-height:1.5;">{{ description }}</span>
+              <span style="font-family:'Open Sans',Arial,sans-serif;font-size:14px;font-weight:300;color:{{ txt }};line-height:1.5;">{{ description | escape }}</span>
             </td>
           </tr>
           {% endif %}
@@ -155,7 +146,7 @@ export const ADVERTISEMENT_BLOCK: CustomBlockDefinition = {
             <td style="padding:0;text-align:right;">
               <table cellpadding="0" cellspacing="0" border="0" dir="rtl" style="display:inline-table;border-radius:999px;overflow:hidden;background-color:{{ btn }};">
                 <tr>
-                  <td style="padding:8px 20px;font-family:'Open Sans',Arial,sans-serif;font-size:14px;font-weight:800;color:{% if btn == '#000000' %}#ddff53{% else %}#ffffff{% endif %};line-height:1.2;">{{ buttonText }}</td>
+                  <td style="padding:8px 20px;font-family:'Open Sans',Arial,sans-serif;font-size:14px;font-weight:800;line-height:1.2;"><a href="{{ destinationUrl | escape }}" target="_blank" style="color:{% if btn == '#000000' %}#ddff53{% else %}#ffffff{% endif %};text-decoration:none;">{{ buttonText | escape }}</a></td>
                 </tr>
               </table>
             </td>
@@ -172,9 +163,6 @@ export const ADVERTISEMENT_BLOCK: CustomBlockDefinition = {
     </tr>
     {% endif %}
   </table>
-  {% if destinationUrl and destinationUrl != '' %}
-</a>
-  {% endif %}
 {% endif %}`,
   stylesheet: '',
   defaultStyles: {
