@@ -784,6 +784,9 @@ public class EmailV2Service : IEmailV2Service
             string.Empty,
             RegexOptions.IgnoreCase);
         compact = Regex.Replace(compact, @">\s+<", "><");
+        compact = MinifyCssBlocks(compact);
+        compact = MinifyInlineStyles(compact);
+        compact = Regex.Replace(compact, "\\s+(?:class|id|style)=\\\"\\\"", string.Empty);
 
         // `direction` on <mjml> is not inherited consistently by email
         // clients. Put the direction on the generated document as well.
@@ -791,6 +794,30 @@ public class EmailV2Service : IEmailV2Service
         compact = AddRtlAttribute(compact, "body");
         compact = InjectRtlTextRules(compact);
         return compact;
+    }
+
+    private static string MinifyCssBlocks(string html) =>
+        Regex.Replace(
+            html,
+            @"(<style\b[^>]*>)(?<css>[\s\S]*?)(</style>)",
+            match => match.Groups[1].Value + MinifyCss(match.Groups["css"].Value) + match.Groups[3].Value,
+            RegexOptions.IgnoreCase,
+            TimeSpan.FromSeconds(1));
+
+    private static string MinifyInlineStyles(string html) =>
+        Regex.Replace(
+            html,
+            "\\sstyle=\\\"(?<css>[^\\\"]*)\\\"",
+            match => $" style=\"{MinifyCss(match.Groups["css"].Value)}\"",
+            RegexOptions.IgnoreCase,
+            TimeSpan.FromSeconds(1));
+
+    private static string MinifyCss(string css)
+    {
+        var compact = Regex.Replace(css, @"/\*[\s\S]*?\*/", string.Empty);
+        compact = Regex.Replace(compact, @"\s+", " ");
+        compact = Regex.Replace(compact, @"\s*([:;,{}])\s*", "$1");
+        return Regex.Replace(compact, @"(?<=[:\s])0px\b", "0", RegexOptions.IgnoreCase);
     }
 
     private static string InjectRtlTextRules(string html)
