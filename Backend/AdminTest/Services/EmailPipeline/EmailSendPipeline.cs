@@ -113,6 +113,10 @@ public class EmailSendPipeline : IEmailSendPipeline
         var tags = new List<string> { $"campaign_{campaignId}" };
         if (isTest) tags.Add("test_send");
 
+        // EF Core DbContext is scoped and is not thread-safe. Resolve every value
+        // needed for personalization before the parallel Brevo work begins.
+        var personalizationByEmail = await BuildPersonalizationVariablesForRecipientsAsync(recipients.Select(r => r.Email));
+
         int sentCount = 0, failedCount = 0;
         var semaphore = new SemaphoreSlim(MaxConcurrentBrevoSends);
 
@@ -121,7 +125,7 @@ public class EmailSendPipeline : IEmailSendPipeline
             await semaphore.WaitAsync();
             try
             {
-                var variables = await BuildPersonalizationVariables(r.Email, campaignId);
+                var variables = personalizationByEmail[r.Email.Trim()];
                 var personalized = _personalization.Apply(html, variables);
 
                 var unsubscribeUrl = BuildUnsubscribeUrl(r.Email);
@@ -288,6 +292,8 @@ public class EmailSendPipeline : IEmailSendPipeline
                 return new EmailSendResultDto { Success = false, Message = "no recipients found" };
 
             var html = _utm.Apply(request.HtmlBody, ResolveTransientUtmSettings());
+            // Do not query the scoped DbContext from the parallel send tasks.
+            var personalizationByEmail = await BuildPersonalizationVariablesForRecipientsAsync(recipients.Select(r => r.Email));
             var sentCount = 0;
             var failedCount = 0;
             var recipientResults = new ConcurrentBag<EmailRecipientSendResultDto>();
@@ -298,7 +304,7 @@ public class EmailSendPipeline : IEmailSendPipeline
                 await semaphore.WaitAsync();
                 try
                 {
-                    var variables = await BuildPersonalizationVariables(recipient.Email, 0);
+                    var variables = personalizationByEmail[recipient.Email.Trim()];
                     var personalized = _personalization.Apply(html, variables);
                     var unsubscribeUrl = BuildUnsubscribeUrl(recipient.Email);
                     personalized = ReplaceUnsubscribePlaceholder(personalized, unsubscribeUrl);
@@ -496,6 +502,87 @@ public class EmailSendPipeline : IEmailSendPipeline
         }
 
         return variables;
+    }
+
+    /// <summary>
+    /// Builds all per-recipient values while this pipeline's scoped DbContext is used
+    /// sequentially. The returned dictionaries are read-only by convention and may be
+    /// safely consumed by the parallel Brevo send tasks.
+    /// </summary>
+    private async Task<Dictionary<string, Dictionary<string, string>>> BuildPersonalizationVariablesForRecipientsAsync(
+        IEnumerable<string> recipientEmails)
+    {
+        var emails = recipientEmails
+            .Where(email => !string.IsNullOrWhiteSpace(email))
+            .Select(email => email.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var variablesByEmail = emails.ToDictionary(
+            email => email,
+            email => new Dictionary<string, string> { ["email"] = email },
+            StringComparer.OrdinalIgnoreCase);
+        if (emails.Count == 0)
+            return variablesByEmail;
+
+        try
+        {
+            var normalizedEmails = emails.Select(email => email.ToLowerInvariant()).ToList();
+            var users = await _context.Users
+                .AsNoTracking()
+                .Where(user => !user.IsDeleted && normalizedEmails.Contains(user.Email.ToLower()))
+                .Select(user => new { user.Id, user.Email, user.Username, user.Points })
+                .ToListAsync();
+
+            if (users.Count == 0)
+                return variablesByEmail;
+
+            var userIds = users.Select(user => user.Id).ToList();
+            var referralCodes = await _context.UserReferralCodes
+                .AsNoTracking()
+                .Where(code => userIds.Contains(code.UserId))
+                .Select(code => new { code.UserId, code.Code })
+                .ToDictionaryAsync(code => code.UserId, code => code.Code);
+
+            // Preserve the existing behaviour of creating a referral code if a user
+            // does not yet have one. This is deliberately sequential because the
+            // referral service shares this request's scoped DbContext.
+            if (referralCodes.Count < users.Count)
+            {
+                var referralService = _serviceProvider.GetRequiredService<IReferralService>();
+                foreach (var user in users.Where(user => !referralCodes.ContainsKey(user.Id)))
+                {
+                    var summary = await referralService.GetSummaryAsync(user.Id, null);
+                    referralCodes[user.Id] = summary.Code;
+                }
+            }
+
+            var referralCounts = await _context.UserReferrals
+                .AsNoTracking()
+                .Where(referral => userIds.Contains(referral.ReferrerUserId))
+                .GroupBy(referral => referral.ReferrerUserId)
+                .Select(group => new { UserId = group.Key, Count = group.Count() })
+                .ToDictionaryAsync(group => group.UserId, group => group.Count);
+
+            foreach (var user in users)
+            {
+                if (!variablesByEmail.TryGetValue(user.Email, out var variables))
+                    continue;
+
+                variables["username"] = user.Username;
+                variables["promotionPoints"] = user.Points.ToString();
+                variables["referralUrl"] = $"/?ref={Uri.EscapeDataString(referralCodes[user.Id])}";
+                variables["referralCount"] = referralCounts.GetValueOrDefault(user.Id).ToString();
+                variables["unsubscribeUrl"] = BuildUnsubscribeUrl(user.Email);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Database error while preparing Email V2 personalization for {RecipientCount} recipients", emails.Count);
+            throw;
+        }
+
+        return variablesByEmail;
     }
 
     private async Task<List<(string Email, string? Name)>> ResolveCustomGroupAsync(int emailGroupId)
