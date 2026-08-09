@@ -647,7 +647,7 @@ import { TestSendDialogComponent, type TestSendResultItem } from './test-send-di
             </span>
           </div>
         </div>
-        <a class="btn-edit" [routerLink]="['../edit']">
+        <a class="btn-edit" [routerLink]="isTransientMode() ? ['../new'] : ['../edit']">
           <span style="font-size:16px">&#9998;</span>
           עריכת המייל
         </a>

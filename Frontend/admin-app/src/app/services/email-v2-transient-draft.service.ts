@@ -10,6 +10,8 @@ export interface TransientEmailV2Message {
   htmlBody: string;
   fromName: string;
   fromEmail?: string;
+  /** Editor state for the design ↔ send round trip; never persisted. */
+  designJson?: string;
 }
 
 @Injectable({ providedIn: 'root' })

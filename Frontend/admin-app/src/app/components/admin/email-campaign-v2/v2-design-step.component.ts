@@ -263,6 +263,12 @@ export class V2DesignStepComponent implements OnInit, OnDestroy {
           }
         });
       }
+    } else {
+      const transient = this.transientDraft.get();
+      if (transient?.designJson) {
+        this.subject.set(transient.subject);
+        this.designJson.set(transient.designJson);
+      }
     }
     window.addEventListener('online', this._onOnline);
     window.addEventListener('offline', this._onOffline);
@@ -581,6 +587,7 @@ export class V2DesignStepComponent implements OnInit, OnDestroy {
         subject: this.subject().trim(),
         htmlBody: result.html,
         fromName: 'אקורדישקייט',
+        designJson: JSON.stringify(this.editorComponent()?._editor?.getContent() ?? {}),
       };
     } catch (e: any) {
       const error = typeof e?.error?.error === 'string'
