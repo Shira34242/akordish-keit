@@ -71,6 +71,7 @@ interface TeacherListResponse {
 export class ContentApiService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiBaseUrl}/api`;
+  private readonly publicSiteUrl = 'https://akordishkayt.com';
 
   searchArticles(
     search: string,
@@ -238,7 +239,7 @@ export class ContentApiService {
     return {
       id: article.id,
       title: article.title,
-      imageUrl: article.featuredImageUrl || '',
+      imageUrl: this.toPublicAssetUrl(article.featuredImageUrl),
       publicUrl,
       altText: article.title,
       categoryName: catName,
@@ -255,7 +256,7 @@ export class ContentApiService {
     return {
       id: song.id,
       title: song.title,
-      imageUrl: song.imageUrl || '',
+      imageUrl: this.toPublicAssetUrl(song.imageUrl),
       publicUrl,
       altText: song.title,
       artistNames,
@@ -265,13 +266,13 @@ export class ContentApiService {
   }
 
   private mapEventToContentItem(event: EventResponse): ContentItem {
-    const publicUrl = event.ticketUrl || `https://akordishkayt.com/events`;
+    const publicUrl = this.toPublicAssetUrl(event.ticketUrl) || `${this.publicSiteUrl}/events`;
     const eventDate = event.eventDate ? new Date(event.eventDate).toLocaleDateString('he-IL') : '';
 
     return {
       id: event.id,
       title: event.name,
-      imageUrl: event.bannerImageUrl || event.imageUrl || '',
+      imageUrl: this.toPublicAssetUrl(event.bannerImageUrl || event.imageUrl),
       publicUrl,
       altText: event.name,
       artistNames: event.artistName,
@@ -288,7 +289,7 @@ export class ContentApiService {
     return {
       id: episode.id,
       title: episode.title,
-      imageUrl: episode.thumbnailUrl || '',
+      imageUrl: this.toPublicAssetUrl(episode.thumbnailUrl),
       publicUrl,
       altText: episode.title,
       podcastName: episode.podcastName,
@@ -302,7 +303,7 @@ export class ContentApiService {
     return {
       id: artist.id,
       title: artist.name,
-      imageUrl: artist.imageUrl || '',
+      imageUrl: this.toPublicAssetUrl(artist.imageUrl),
       publicUrl,
       altText: artist.name,
       shortDescription: artist.shortBio,
@@ -316,7 +317,7 @@ export class ContentApiService {
     return {
       id: provider.id,
       title: provider.displayName,
-      imageUrl: provider.profileImageUrl || '',
+      imageUrl: this.toPublicAssetUrl(provider.profileImageUrl),
       publicUrl,
       altText: provider.displayName,
       cityName: provider.cityName,
@@ -355,11 +356,31 @@ export class ContentApiService {
     return {
       id: teacher.id,
       title: teacher.displayName,
-      imageUrl: teacher.profileImageUrl || '',
+      imageUrl: this.toPublicAssetUrl(teacher.profileImageUrl),
       publicUrl,
       altText: teacher.displayName,
       cityName: teacher.cityName,
       categoryName: teacher.categoryName,
     };
+  }
+
+  /** Email clients cannot resolve /uploads paths, unlike the admin browser. */
+  private toPublicAssetUrl(value?: string): string {
+    const url = value?.trim();
+    if (!url) return '';
+    if (url.startsWith('//')) return `https:${url}`;
+    if (/^https:\/\//i.test(url)) return url;
+
+    // Never embed a development-only localhost address in an email.
+    if (/^http:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?\//i.test(url)) {
+      try {
+        const parsed = new URL(url);
+        return `${this.publicSiteUrl}${parsed.pathname}${parsed.search}${parsed.hash}`;
+      } catch {
+        return '';
+      }
+    }
+
+    return url.startsWith('/') ? `${this.publicSiteUrl}${url}` : '';
   }
 }

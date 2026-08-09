@@ -85,18 +85,18 @@ export const PODCASTS_BLOCK: CustomBlockDefinition = {
     {% if col_idx == 0 %}<tr>{% endif %}
     <td width="50%" valign="top" class="akd-podcast-cell" style="padding:{{ gap | divided_by: 2 }}px;direction:rtl;">
       <table width="100%" cellpadding="0" cellspacing="0" border="0" dir="rtl" style="background-color:#000000;border-radius:{{ radius }}px;overflow:hidden;">
-        <tr><td style="padding:0;line-height:0;">
+        <tr><td height="156" style="height:156px;padding:0;line-height:0;background-color:#000000;">
           {% if item.imageUrl and item.imageUrl != '' %}
-          <a href="{{ item.publicUrl | escape }}" target="_blank" style="display:block;text-decoration:none;"><img src="{{ item.imageUrl | escape }}" alt="{{ item.altText | escape }}" width="300" style="display:block;width:100%;height:auto;border:0;" /></a>
+          <a href="{{ item.publicUrl | escape }}" target="_blank" style="display:block;text-decoration:none;"><img src="{{ item.imageUrl | escape }}" alt="{{ item.altText | escape }}" width="300" height="156" style="display:block;width:100%;height:156px;object-fit:cover;border:0;" /></a>
           {% else %}
-          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#ddff53;"><tr><td style="padding:42px 20px;text-align:center;font-family:Arial,sans-serif;font-size:32px;font-weight:800;color:#000000;">&#9835;</td></tr></table>
+          <table width="100%" height="156" cellpadding="0" cellspacing="0" border="0" style="height:156px;background-color:#ddff53;"><tr><td height="156" style="height:156px;padding:0 20px;text-align:center;font-family:Arial,sans-serif;font-size:32px;font-weight:800;color:#000000;">&#9835;</td></tr></table>
           {% endif %}
         </td></tr>
-        <tr><td style="padding:14px 14px 8px;background-color:#000000;text-align:right;direction:rtl;">
-          <a href="{{ item.publicUrl | escape }}" target="_blank" style="color:#ffffff;text-decoration:none;font-family:Arial,sans-serif;font-size:15px;font-weight:800;line-height:1.4;">{{ item.title | escape }}</a>
-          {% if item.podcastName and item.podcastName != '' %}<div style="padding-top:5px;font-family:Arial,sans-serif;font-size:12px;line-height:1.35;color:#dddddd;">{{ item.podcastName | escape }}</div>{% endif %}
+        <tr><td height="72" style="height:72px;padding:12px 14px 6px;background-color:#000000;text-align:right;direction:rtl;vertical-align:top;overflow:hidden;">
+          <a href="{{ item.publicUrl | escape }}" target="_blank" style="display:block;height:40px;overflow:hidden;color:#ffffff;text-decoration:none;font-family:Arial,sans-serif;font-size:15px;font-weight:800;line-height:20px;">{{ item.title | truncate: 60 | escape }}</a>
+          {% if item.podcastName and item.podcastName != '' %}<div style="height:16px;overflow:hidden;padding-top:4px;font-family:Arial,sans-serif;font-size:12px;line-height:16px;color:#dddddd;white-space:nowrap;">{{ item.podcastName | truncate: 42 | escape }}</div>{% endif %}
         </td></tr>
-        <tr><td style="padding:0 14px 14px;background-color:#000000;text-align:left;"><a href="{{ item.publicUrl | escape }}" target="_blank" style="display:inline-block;width:36px;height:36px;line-height:36px;border-radius:10px;background-color:#ddff53;color:#000000;text-align:center;text-decoration:none;font-family:Arial,sans-serif;font-size:22px;font-weight:800;">&#8249;</a></td></tr>
+        <tr><td height="50" style="height:50px;padding:0 14px 14px;background-color:#000000;text-align:left;"><a href="{{ item.publicUrl | escape }}" target="_blank" style="display:inline-block;width:36px;height:36px;line-height:36px;border-radius:10px;background-color:#ddff53;color:#000000;text-align:center;text-decoration:none;font-family:Arial,sans-serif;font-size:22px;font-weight:800;">&#8249;</a></td></tr>
       </table>
     </td>
     {% assign next_idx = i | plus: 1 %}{% assign next_mod = next_idx | modulo: 2 %}
