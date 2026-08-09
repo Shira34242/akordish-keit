@@ -112,6 +112,8 @@ export const ARTICLES_BLOCK: CustomBlockDefinition = {
   {% for i in (0..max_idx) %}
     {% assign item = items[i] %}
     {% assign col_idx = i | modulo: 2 %}
+    {% assign title_length = item.title | size %}
+    {% if title_length > 52 %}{% assign title_font_size = 11 %}{% assign title_line_height = 13 %}{% elsif title_length > 34 %}{% assign title_font_size = 12 %}{% assign title_line_height = 15 %}{% else %}{% assign title_font_size = 14 %}{% assign title_line_height = 16 %}{% endif %}
     {% if col_idx == 0 %}<tr>{% endif %}
     <td width="50%" valign="top" class="akd-article-cell" style="padding:{{ gap | divided_by: 2 }}px;direction:rtl;">
       <table width="100%" cellpadding="0" cellspacing="0" border="0" dir="rtl" style="background-color:#000000;border-radius:{{ radius }}px;overflow:hidden;">
@@ -122,12 +124,12 @@ export const ARTICLES_BLOCK: CustomBlockDefinition = {
           <table width="100%" height="156" cellpadding="0" cellspacing="0" border="0" style="height:156px;background-color:#ddff53;"><tr><td height="156" style="height:156px;padding:0 20px;text-align:center;font-family:Arial,sans-serif;font-size:32px;font-weight:800;color:#000000;">&#9835;</td></tr></table>
           {% endif %}
         </td></tr>
-        <tr><td height="88" style="height:88px;padding:12px 14px 6px;background-color:#000000;text-align:right;direction:rtl;vertical-align:top;overflow:hidden;">
-          <a href="{{ item.publicUrl | escape }}" target="_blank" style="display:block;height:40px;overflow:hidden;color:#ffffff;text-decoration:none;font-family:Arial,sans-serif;font-size:15px;font-weight:800;line-height:20px;">{{ item.title | truncate: 60 | escape }}</a>
-          {% if showCategory and item.categoryName and item.categoryName != '' %}<div style="height:16px;overflow:hidden;padding-top:4px;font-family:Arial,sans-serif;font-size:12px;line-height:16px;color:#dddddd;white-space:nowrap;">{{ item.categoryName | truncate: 42 | escape }}</div>{% endif %}
-          {% if showDescription and item.shortDescription and item.shortDescription != '' %}<div style="height:16px;overflow:hidden;padding-top:2px;font-family:Arial,sans-serif;font-size:12px;line-height:16px;color:#dddddd;white-space:nowrap;">{{ item.shortDescription | truncate: 52 | escape }}</div>{% endif %}
+        <tr><td height="46" style="height:46px;padding:7px 12px;background-color:#000000;text-align:right;direction:rtl;vertical-align:middle;">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" dir="rtl"><tr>
+            <td valign="middle" style="padding:0 0 0 8px;text-align:right;"><a href="{{ item.publicUrl | escape }}" target="_blank" style="display:block;height:32px;overflow:hidden;color:#ffffff;text-decoration:none;font-family:Arial,sans-serif;font-size:{{ title_font_size }}px;font-weight:800;line-height:{{ title_line_height }}px;">{{ item.title | truncate: 68 | escape }}</a></td>
+            <td width="32" valign="middle" style="width:32px;padding:0;text-align:left;"><a href="{{ item.publicUrl | escape }}" target="_blank" style="display:inline-block;width:32px;height:32px;line-height:32px;border-radius:9px;background-color:#ddff53;color:#000000;text-align:center;text-decoration:none;font-family:Arial,sans-serif;font-size:20px;font-weight:800;">&#8249;</a></td>
+          </tr></table>
         </td></tr>
-        <tr><td height="50" style="height:50px;padding:0 14px 14px;background-color:#000000;text-align:left;"><a href="{{ item.publicUrl | escape }}" target="_blank" style="display:inline-block;width:36px;height:36px;line-height:36px;border-radius:10px;background-color:#ddff53;color:#000000;text-align:center;text-decoration:none;font-family:Arial,sans-serif;font-size:22px;font-weight:800;">&#8249;</a></td></tr>
       </table>
     </td>
     {% assign next_idx = i | plus: 1 %}{% assign next_mod = next_idx | modulo: 2 %}
