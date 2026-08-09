@@ -93,20 +93,20 @@ export const EVENTS_BLOCK: CustomBlockDefinition = {
 
         <table width="100%" cellpadding="0" cellspacing="0" border="0" dir="rtl" style="border-radius:{{ radius }}px;overflow:hidden;background-color:#F2F2F2;">
           <tr>
-            <td style="line-height:0;padding:0;position:relative;">
+            <td height="110" style="height:110px;line-height:0;padding:0;background-color:#F2F2F2;">
               {% if item.imageUrl and item.imageUrl != '' %}
-              <a href="{{ item.publicUrl | escape }}" target="_blank" style="display:block;text-decoration:none;"><img src="{{ item.imageUrl | escape }}" alt="{{ item.altText | escape }}" width="120" style="display:block;width:100%;height:auto;aspect-ratio:3/4;object-fit:cover;border:0;" /></a>
+              <a href="{{ item.publicUrl | escape }}" target="_blank" style="display:block;text-decoration:none;"><img src="{{ item.imageUrl | escape }}" alt="{{ item.altText | escape }}" width="120" height="110" style="display:block;width:100%;height:110px;object-fit:cover;border:0;" /></a>
               {% else %}
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="aspect-ratio:3/4;background-color:#ddff53;">
+              <table width="100%" height="110" cellpadding="0" cellspacing="0" border="0" style="height:110px;background-color:#ddff53;">
                 <tr>
-                  <td style="text-align:center;vertical-align:middle;padding:10px;">
+                  <td height="110" style="height:110px;text-align:center;vertical-align:middle;padding:0 10px;">
                     <span style="font-family:'Open Sans',Arial,sans-serif;font-size:20px;font-weight:800;color:#000000;">&#9835;</span>
                   </td>
                 </tr>
               </table>
               {% endif %}
               {% if item.eventDate and item.eventDate != '' %}
-              <table cellpadding="0" cellspacing="0" border="0" style="position:absolute;bottom:4px;right:4px;background-color:#ddff53;border-radius:999px;overflow:hidden;">
+              <table cellpadding="0" cellspacing="0" border="0" style="background-color:#ddff53;border-radius:999px;overflow:hidden;">
                 <tr>
                   <td style="padding:1px 6px;font-family:'Open Sans',Arial,sans-serif;font-size:9px;font-weight:800;color:#000000;line-height:1.3;">{{ item.eventDate | escape }}</td>
                 </tr>
@@ -115,11 +115,11 @@ export const EVENTS_BLOCK: CustomBlockDefinition = {
             </td>
           </tr>
           <tr>
-            <td style="padding:6px 8px 8px;text-align:right;direction:rtl;">
+            <td height="42" style="height:42px;padding:5px 7px 7px;text-align:right;direction:rtl;vertical-align:top;overflow:hidden;">
               <table width="100%" cellpadding="0" cellspacing="0" border="0" dir="rtl">
                 <tr>
                   <td style="padding:0;text-align:right;">
-                    <a href="{{ item.publicUrl | escape }}" target="_blank" style="font-family:'Open Sans',Arial,sans-serif;font-size:11px;font-weight:700;color:#000000;line-height:1.3;text-decoration:none;">{{ item.title | escape }}</a>
+                    <a href="{{ item.publicUrl | escape }}" target="_blank" style="display:block;height:28px;overflow:hidden;font-family:'Open Sans',Arial,sans-serif;font-size:11px;font-weight:700;color:#000000;line-height:14px;text-decoration:none;">{{ item.title | truncate: 38 | escape }}</a>
                   </td>
                 </tr>
                 {% if item.artistNames and item.artistNames != '' %}

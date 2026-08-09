@@ -105,18 +105,18 @@ export const CHORDS_BLOCK: CustomBlockDefinition = {
     {% assign col_width = 100 | divided_by: cols_int %}
     <td width="{{ col_width }}%" valign="top" class="akd-chord-cell" style="padding:0 {{ gap | divided_by: 2 }}px;direction:rtl;">
 
-        <table width="100%" cellpadding="0" cellspacing="0" border="0" dir="rtl" style="background-color:#F2F2F2;border-radius:{{ radius }}px;overflow:hidden;">
+        <table width="100%" height="112" cellpadding="0" cellspacing="0" border="0" dir="rtl" style="height:112px;background-color:#F2F2F2;border-radius:{{ radius }}px;overflow:hidden;">
           <tr>
-            <td style="width:45%;padding:8px;vertical-align:middle;" valign="middle">
+            <td width="45%" style="width:45%;padding:8px;vertical-align:middle;" valign="middle">
               <table width="100%" cellpadding="0" cellspacing="0" border="0" dir="rtl">
                 <tr>
                   <td style="padding:0;line-height:0;">
                     {% if item.imageUrl and item.imageUrl != '' %}
-                    <a href="{{ item.publicUrl | escape }}" target="_blank" style="display:block;text-decoration:none;"><img src="{{ item.imageUrl | escape }}" alt="{{ item.altText | escape }}" width="140" height="140" style="display:block;width:100%;height:auto;aspect-ratio:1/1;object-fit:cover;border-radius:12px;border:0;background-color:#ddff53;" /></a>
+                    <a href="{{ item.publicUrl | escape }}" target="_blank" style="display:block;text-decoration:none;"><img src="{{ item.imageUrl | escape }}" alt="{{ item.altText | escape }}" width="88" height="88" style="display:block;width:100%;height:88px;object-fit:cover;border-radius:10px;border:0;background-color:#ddff53;" /></a>
                     {% else %}
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;aspect-ratio:1/1;border-radius:12px;background-color:#ddff53;">
+                    <table width="100%" height="88" cellpadding="0" cellspacing="0" border="0" style="width:100%;height:88px;border-radius:10px;background-color:#ddff53;">
                       <tr>
-                        <td style="text-align:center;vertical-align:middle;padding:20px;">
+                        <td height="88" style="height:88px;text-align:center;vertical-align:middle;padding:0 12px;">
                           <span style="font-family:'Open Sans',Arial,sans-serif;font-size:14px;font-weight:700;color:#000000;">&#9835;</span>
                         </td>
                       </tr>
@@ -126,7 +126,7 @@ export const CHORDS_BLOCK: CustomBlockDefinition = {
                 </tr>
               </table>
             </td>
-            <td style="width:55%;padding:8px 4px 8px 8px;text-align:right;direction:rtl;vertical-align:middle;" valign="middle">
+            <td width="55%" style="width:55%;padding:8px 4px 8px 8px;text-align:right;direction:rtl;vertical-align:middle;" valign="middle">
               <table width="100%" cellpadding="0" cellspacing="0" border="0" dir="rtl">
                 <tr>
                   <td style="padding:0 0 2px;text-align:right;">
@@ -135,13 +135,13 @@ export const CHORDS_BLOCK: CustomBlockDefinition = {
                 </tr>
                 <tr>
                   <td style="padding:0 0 2px;text-align:right;">
-                    <a href="{{ item.publicUrl | escape }}" target="_blank" style="font-family:'Open Sans',Arial,sans-serif;font-size:14px;font-weight:800;color:#000000;line-height:1.2;text-decoration:none;">{{ item.title | escape }}</a>
+                    <a href="{{ item.publicUrl | escape }}" target="_blank" style="display:block;height:34px;overflow:hidden;font-family:'Open Sans',Arial,sans-serif;font-size:13px;font-weight:800;color:#000000;line-height:16px;text-decoration:none;">{{ item.title | truncate: 46 | escape }}</a>
                   </td>
                 </tr>
                 {% if item.artistNames and item.artistNames != '' %}
                 <tr>
                   <td style="padding:0 0 4px;text-align:right;">
-                    <span style="font-family:'Open Sans',Arial,sans-serif;font-size:12px;font-weight:300;color:#404040;line-height:1.3;">{{ item.artistNames | escape }}</span>
+                    <span style="display:block;height:16px;overflow:hidden;font-family:'Open Sans',Arial,sans-serif;font-size:12px;font-weight:300;color:#404040;line-height:16px;white-space:nowrap;">{{ item.artistNames | truncate: 32 | escape }}</span>
                   </td>
                 </tr>
                 {% endif %}

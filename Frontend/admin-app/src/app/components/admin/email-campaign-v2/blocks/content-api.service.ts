@@ -7,6 +7,7 @@ import { ContentItem } from './types';
 import { getArticlePath } from '../../../../utils/article-route.utils';
 import { songSlug, artistPath } from '../../../../utils/slug';
 import type { Article } from '../../../../models/article.model';
+import { cloudflareImageUrl } from '../../../../pipes/cloudflare-image.pipe';
 
 interface SongResponse {
   id: number;
@@ -239,7 +240,7 @@ export class ContentApiService {
     return {
       id: article.id,
       title: article.title,
-      imageUrl: this.toPublicAssetUrl(article.featuredImageUrl),
+      imageUrl: this.toOptimizedEmailImageUrl(article.featuredImageUrl, 480),
       publicUrl,
       altText: article.title,
       categoryName: catName,
@@ -256,7 +257,7 @@ export class ContentApiService {
     return {
       id: song.id,
       title: song.title,
-      imageUrl: this.toPublicAssetUrl(song.imageUrl),
+      imageUrl: this.toOptimizedEmailImageUrl(song.imageUrl, 240),
       publicUrl,
       altText: song.title,
       artistNames,
@@ -272,7 +273,7 @@ export class ContentApiService {
     return {
       id: event.id,
       title: event.name,
-      imageUrl: this.toPublicAssetUrl(event.bannerImageUrl || event.imageUrl),
+      imageUrl: this.toOptimizedEmailImageUrl(event.bannerImageUrl || event.imageUrl, 240),
       publicUrl,
       altText: event.name,
       artistNames: event.artistName,
@@ -289,7 +290,7 @@ export class ContentApiService {
     return {
       id: episode.id,
       title: episode.title,
-      imageUrl: this.toPublicAssetUrl(episode.thumbnailUrl),
+      imageUrl: this.toOptimizedEmailImageUrl(episode.thumbnailUrl, 480),
       publicUrl,
       altText: episode.title,
       podcastName: episode.podcastName,
@@ -303,7 +304,7 @@ export class ContentApiService {
     return {
       id: artist.id,
       title: artist.name,
-      imageUrl: this.toPublicAssetUrl(artist.imageUrl),
+      imageUrl: this.toOptimizedEmailImageUrl(artist.imageUrl, 200),
       publicUrl,
       altText: artist.name,
       shortDescription: artist.shortBio,
@@ -317,7 +318,7 @@ export class ContentApiService {
     return {
       id: provider.id,
       title: provider.displayName,
-      imageUrl: this.toPublicAssetUrl(provider.profileImageUrl),
+      imageUrl: this.toOptimizedEmailImageUrl(provider.profileImageUrl, 200),
       publicUrl,
       altText: provider.displayName,
       cityName: provider.cityName,
@@ -356,7 +357,7 @@ export class ContentApiService {
     return {
       id: teacher.id,
       title: teacher.displayName,
-      imageUrl: this.toPublicAssetUrl(teacher.profileImageUrl),
+      imageUrl: this.toOptimizedEmailImageUrl(teacher.profileImageUrl, 200),
       publicUrl,
       altText: teacher.displayName,
       cityName: teacher.cityName,
@@ -382,5 +383,14 @@ export class ContentApiService {
     }
 
     return url.startsWith('/') ? `${this.publicSiteUrl}${url}` : '';
+  }
+
+  /**
+   * Email clients display these cards at 88–300px wide. Requesting a small,
+   * high-density derivative avoids downloading an original upload per card.
+   */
+  private toOptimizedEmailImageUrl(value: string | undefined, width: number): string {
+    const publicUrl = this.toPublicAssetUrl(value);
+    return publicUrl ? cloudflareImageUrl(publicUrl, width, 72) : '';
   }
 }

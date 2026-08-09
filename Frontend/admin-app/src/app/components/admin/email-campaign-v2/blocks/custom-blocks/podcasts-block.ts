@@ -87,14 +87,14 @@ export const PODCASTS_BLOCK: CustomBlockDefinition = {
     {% if col_idx == 0 %}<tr>{% endif %}
     <td width="50%" valign="top" class="akd-podcast-cell" style="padding:{{ gap | divided_by: 2 }}px;direction:rtl;">
       <table width="100%" cellpadding="0" cellspacing="0" border="0" dir="rtl" style="background-color:#000000;border-radius:{{ radius }}px;overflow:hidden;">
-        <tr><td height="156" style="height:156px;padding:0;line-height:0;background-color:#000000;">
+        <tr><td height="128" style="height:128px;padding:0;line-height:0;background-color:#000000;">
           {% if item.imageUrl and item.imageUrl != '' %}
-          <a href="{{ item.publicUrl | escape }}" target="_blank" style="display:block;text-decoration:none;"><img src="{{ item.imageUrl | escape }}" alt="{{ item.altText | escape }}" width="300" height="156" style="display:block;width:100%;height:156px;object-fit:cover;border:0;" /></a>
+          <a href="{{ item.publicUrl | escape }}" target="_blank" style="display:block;text-decoration:none;"><img src="{{ item.imageUrl | escape }}" alt="{{ item.altText | escape }}" width="300" height="128" style="display:block;width:100%;height:128px;object-fit:cover;border:0;" /></a>
           {% else %}
-          <table width="100%" height="156" cellpadding="0" cellspacing="0" border="0" style="height:156px;background-color:#ddff53;"><tr><td height="156" style="height:156px;padding:0 20px;text-align:center;font-family:Arial,sans-serif;font-size:32px;font-weight:800;color:#000000;">&#9835;</td></tr></table>
+          <table width="100%" height="128" cellpadding="0" cellspacing="0" border="0" style="height:128px;background-color:#ddff53;"><tr><td height="128" style="height:128px;padding:0 20px;text-align:center;font-family:Arial,sans-serif;font-size:28px;font-weight:800;color:#000000;">&#9835;</td></tr></table>
           {% endif %}
         </td></tr>
-        <tr><td height="46" style="height:46px;padding:7px 12px;background-color:#000000;text-align:right;direction:rtl;vertical-align:middle;">
+        <tr><td height="42" style="height:42px;padding:5px 10px;background-color:#000000;text-align:right;direction:rtl;vertical-align:middle;">
           <table width="100%" cellpadding="0" cellspacing="0" border="0" dir="rtl"><tr>
             <td valign="middle" style="padding:0 0 0 8px;text-align:right;"><a href="{{ item.publicUrl | escape }}" target="_blank" style="display:block;height:32px;overflow:hidden;color:#ffffff;text-decoration:none;font-family:Arial,sans-serif;font-size:{{ title_font_size }}px;font-weight:800;line-height:{{ title_line_height }}px;">{{ item.title | truncate: 68 | escape }}</a></td>
             <td width="32" valign="middle" style="width:32px;padding:0;text-align:left;"><a href="{{ item.publicUrl | escape }}" target="_blank" style="display:inline-block;width:32px;height:32px;line-height:32px;border-radius:9px;background-color:#ddff53;color:#000000;text-align:center;text-decoration:none;font-family:Arial,sans-serif;font-size:20px;font-weight:800;">&#8249;</a></td>

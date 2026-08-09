@@ -172,7 +172,9 @@ public class EmailV2Service : IEmailV2Service
             }
 
             result.Success = true;
-            result.Html = renderResult.Html;
+            result.Html = FinalizeEmailHtml(renderResult.Html);
+            if (Encoding.UTF8.GetByteCount(result.Html) > 95_000)
+                warnings.Add("The email is large and may be clipped by Gmail. Reduce the number of content cards or large HTML blocks.");
             result.Warnings = warnings;
         }
         catch (Exception ex)
@@ -771,6 +773,43 @@ public class EmailV2Service : IEmailV2Service
         return mjml[..(idx + openingTag.Length)] + " direction=\"rtl\"" + mjml[(idx + openingTag.Length)..];
     }
 
+    private static string FinalizeEmailHtml(string html)
+    {
+        // Gmail clips messages over roughly 102 KB. Mjml.Net already avoids
+        // pretty-printing, but comments and whitespace between tags can still
+        // materially inflate newsletters with many content cards.
+        var compact = Regex.Replace(
+            html,
+            @"<!--(?!\[if\s|<!\[endif\])[\s\S]*?-->",
+            string.Empty,
+            RegexOptions.IgnoreCase);
+        compact = Regex.Replace(compact, @">\s+<", "><");
+
+        // `direction` on <mjml> is not inherited consistently by email
+        // clients. Put the direction on the generated document as well.
+        compact = AddRtlAttribute(compact, "html");
+        compact = AddRtlAttribute(compact, "body");
+        compact = InjectRtlTextRules(compact);
+        return compact;
+    }
+
+    private static string InjectRtlTextRules(string html)
+    {
+        const string rules = "<style type=\"text/css\">h1,h2,h3,h4,h5,h6,p{direction:rtl!important;unicode-bidi:plaintext!important;text-align:right;}[dir=\"rtl\"]{unicode-bidi:plaintext;}</style>";
+        var headEnd = html.IndexOf("</head>", StringComparison.OrdinalIgnoreCase);
+        return headEnd >= 0
+            ? html.Insert(headEnd, rules)
+            : rules + html;
+    }
+
+    private static string AddRtlAttribute(string html, string tagName) =>
+        Regex.Replace(
+            html,
+            $@"<{tagName}\b(?<attributes>(?![^>]*\bdir\s*=)[^>]*)>",
+            match => $"<{tagName}{match.Groups["attributes"].Value} dir=\"rtl\">",
+            RegexOptions.IgnoreCase,
+            TimeSpan.FromSeconds(1));
+
         private static string InjectUnsubscribeFooter(string mjml)
         {
             if (mjml.Contains("אקורדישקייט — כל הזכויות שמורות", StringComparison.Ordinal))
@@ -780,13 +819,11 @@ public class EmailV2Service : IEmailV2Service
 <mj-section background-color=""#F2F2F2"" padding=""18px 32px"" text-align=""center"">
   <mj-column>
     <mj-text font-size=""12px"" color=""#404040"" align=""center"" direction=""rtl"">
-      &copy; אקורדישקייט — כל הזכויות שמורות
+      <span dir=""rtl"" style=""direction:rtl;unicode-bidi:plaintext;"">&rlm;&copy; אקורדישקייט — כל הזכויות שמורות</span>
     </mj-text>
     <mj-text font-size=""12px"" color=""#404040"" align=""center"" direction=""rtl"">
-      לא רוצה לקבל מאיתנו דיוור שיווקי?
-      <a href=""{{ params.unsubscribe_url }}"" style=""color:#000000;font-weight:700;text-decoration:underline;"">
-        להסרה מרשימת התפוצה
-      </a>
+      <span dir=""rtl"" style=""direction:rtl;unicode-bidi:plaintext;"">לא רוצה לקבל מאיתנו דיוור שיווקי?</span><br />
+      <a dir=""rtl"" href=""{{ params.unsubscribe_url }}"" style=""direction:rtl;unicode-bidi:plaintext;color:#000000;font-weight:700;text-decoration:underline;"">להסרה מרשימת התפוצה</a>
     </mj-text>
   </mj-column>
 </mj-section>";
