@@ -912,8 +912,10 @@ export class V2SendStepComponent implements OnInit, OnDestroy {
 
   template = signal<EmailV2TemplateDto | null>(null);
 
-  fromName = signal('אקורדישקייט');
-  fromEmail = signal('');
+  // Marketing campaigns use the verified Brevo sender. The server enforces these
+  // values as well, so a stale draft cannot accidentally use an unverified sender.
+  fromName = signal('AKORDISHKAYT');
+  fromEmail = signal('newsletter@akordishkayt.com');
 
   recipientGroup = signal<EmailRecipientGroup>(EmailRecipientGroup.AllUsers);
   selectedEmailGroupId = signal<number | null>(null);
@@ -1017,8 +1019,8 @@ export class V2SendStepComponent implements OnInit, OnDestroy {
           status: 'transient',
           createdAt: new Date().toISOString(),
         });
-        this.fromName.set(transient.fromName);
-        this.fromEmail.set(transient.fromEmail || '');
+        this.fromName.set('AKORDISHKAYT');
+        this.fromEmail.set('newsletter@akordishkayt.com');
         this.loadRecipientCount();
       }
     });
@@ -1033,8 +1035,8 @@ export class V2SendStepComponent implements OnInit, OnDestroy {
     this.v2Service.getTemplate(id).subscribe({
       next: (tmpl) => {
         this.template.set(tmpl);
-        this.fromName.set(tmpl.fromName || 'אקורדישקייט');
-        this.fromEmail.set(tmpl.fromEmail || '');
+        this.fromName.set('AKORDISHKAYT');
+        this.fromEmail.set('newsletter@akordishkayt.com');
         this.pageLoading.set(false);
         this.loadRecipientCount();
       },

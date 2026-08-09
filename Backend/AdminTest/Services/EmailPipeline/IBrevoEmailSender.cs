@@ -10,6 +10,7 @@ public class BrevoSendRequest
     public string ApiKey { get; set; } = string.Empty;
     public string FromEmail { get; set; } = string.Empty;
     public string FromName { get; set; } = string.Empty;
+    public string? ReplyToEmail { get; set; }
     public string ToEmail { get; set; } = string.Empty;
     public string? ToName { get; set; }
     public string Subject { get; set; } = string.Empty;

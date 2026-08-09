@@ -70,12 +70,12 @@ public class EmailService : IEmailService
         if (recipients.Count == 0)
             return new EmailSendResultDto { Success = false, Message = "לא נמצאו נמענים עם כתובת מייל" };
 
-        var fromEmail = request.FromEmail ?? _configuration["Brevo:FromEmail"] ?? "noreply@akordishkeit.com";
-        var fromName  = request.FromName  ?? _configuration["Brevo:FromName"]  ?? "אקורדישקייט";
+        var fromEmail = MarketingEmailSender.FromEmail;
+        var fromName  = MarketingEmailSender.FromName;
         var sanitizedContent = SanitizeEmailContent(request.HtmlBody);
         int sentCount = 0, failedCount = 0;
 
-        var semaphore = new SemaphoreSlim(20);
+        var semaphore = new SemaphoreSlim(5);
         var tasks = recipients.Select(async r =>
         {
             await semaphore.WaitAsync();
@@ -87,7 +87,7 @@ public class EmailService : IEmailService
                     ? null
                     : $"{request.PlainTextBody.Trim()}\n\nלהסרה מדיוור שיווקי: {unsubscribeUrl}";
                 return await SendBrevoEmailAsync(apiKey, fromEmail, fromName,
-                    r.Email, r.Name, request.Subject, htmlBody, plainText);
+                    r.Email, r.Name, request.Subject, htmlBody, plainText, MarketingEmailSender.ReplyToEmail);
             }
             finally { semaphore.Release(); }
         });
@@ -215,11 +215,11 @@ public class EmailService : IEmailService
         if (string.IsNullOrEmpty(apiKey) || apiKey.StartsWith("REPLACE"))
             return new EmailSendResultDto { Success = false, Message = "Brevo API key לא מוגדר" };
 
-        var fromEmail = request.FromEmail ?? _configuration["Brevo:FromEmail"] ?? "noreply@akordishkeit.com";
-        var fromName = request.FromName ?? _configuration["Brevo:FromName"] ?? "אקורדישקייט";
+        var fromEmail = MarketingEmailSender.FromEmail;
+        var fromName = MarketingEmailSender.FromName;
         var html = WrapInEmailTemplate(SanitizeEmailContent(request.HtmlBody), request.Subject, BuildUnsubscribeUrl(recipientEmail));
         var sent = await SendBrevoEmailAsync(apiKey, fromEmail, fromName, recipientEmail, null,
-            $"[בדיקה] {request.Subject}", html);
+            $"[בדיקה] {request.Subject}", html, replyToEmail: MarketingEmailSender.ReplyToEmail);
         return new EmailSendResultDto { Success = sent, SentCount = sent ? 1 : 0, FailedCount = sent ? 0 : 1,
             Message = sent ? "מייל בדיקה נשלח" : "שליחת מייל הבדיקה נכשלה" };
     }
@@ -1127,7 +1127,8 @@ public class EmailService : IEmailService
         string fromEmail, string fromName,
         string toEmail,   string? toName,
         string subject,   string htmlContent,
-        string? plainText = null)
+        string? plainText = null,
+        string? replyToEmail = null)
     {
         var payload = new
         {
@@ -1135,7 +1136,8 @@ public class EmailService : IEmailService
             to          = new[] { new { email = toEmail, name = toName ?? toEmail } },
             subject,
             htmlContent,
-            textContent = plainText
+            textContent = plainText,
+            replyTo = string.IsNullOrWhiteSpace(replyToEmail) ? null : new { email = replyToEmail, name = fromName }
         };
 
         try

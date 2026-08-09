@@ -10,6 +10,9 @@ namespace AkordishKeit.Services.EmailPipeline;
 
 public class EmailSendPipeline : IEmailSendPipeline
 {
+    // Brevo rejects bursts above the account's throughput allowance. A conservative
+    // limit keeps a large campaign progressing instead of producing hundreds of 429s.
+    private const int MaxConcurrentBrevoSends = 5;
     private static readonly ConcurrentDictionary<string, DateTime> RecentTransientSends = new();
     private static readonly TimeSpan TransientDuplicateWindow = TimeSpan.FromMinutes(2);
     private readonly IBrevoEmailSender _brevoSender;
@@ -47,8 +50,8 @@ public class EmailSendPipeline : IEmailSendPipeline
         if (string.IsNullOrEmpty(apiKey) || apiKey.StartsWith("REPLACE"))
             return new EmailSendResultDto { Success = false, Message = "Brevo API key not configured" };
 
-        var fromEmail = request.FromEmail ?? _configuration["Brevo:FromEmail"] ?? "noreply@akordishkeit.com";
-        var fromName = request.FromName ?? _configuration["Brevo:FromName"] ?? "akordishkejit";
+        var fromEmail = MarketingEmailSender.FromEmail;
+        var fromName = MarketingEmailSender.FromName;
 
         // Claim the draft atomically before resolving recipients or calling Brevo.  This
         // protects against double-clicks and concurrent admin sessions sending the same
@@ -111,7 +114,7 @@ public class EmailSendPipeline : IEmailSendPipeline
         if (isTest) tags.Add("test_send");
 
         int sentCount = 0, failedCount = 0;
-        var semaphore = new SemaphoreSlim(20);
+        var semaphore = new SemaphoreSlim(MaxConcurrentBrevoSends);
 
         var tasks = recipients.Select(async r =>
         {
@@ -129,6 +132,7 @@ public class EmailSendPipeline : IEmailSendPipeline
                     ApiKey = apiKey,
                     FromEmail = fromEmail,
                     FromName = fromName,
+                    ReplyToEmail = MarketingEmailSender.ReplyToEmail,
                     ToEmail = r.Email,
                     ToName = r.Name,
                     Subject = subject,
@@ -200,8 +204,8 @@ public class EmailSendPipeline : IEmailSendPipeline
         if (campaign == null)
             return new EmailV2ConversionResultDto { Success = false, Error = "Campaign not found" };
 
-        var fromEmail = _configuration["Brevo:FromEmail"] ?? "noreply@akordishkeit.com";
-        var fromName = campaign.FromName;
+        var fromEmail = MarketingEmailSender.FromEmail;
+        var fromName = MarketingEmailSender.FromName;
         var unsubscribeUrl = BuildUnsubscribeUrl(dto.RecipientEmail);
 
         var utmSettings = ResolveUtmSettings(dto.CampaignId);
@@ -216,6 +220,7 @@ public class EmailSendPipeline : IEmailSendPipeline
             ApiKey = apiKey,
             FromEmail = fromEmail,
             FromName = fromName,
+            ReplyToEmail = MarketingEmailSender.ReplyToEmail,
             ToEmail = dto.RecipientEmail,
             ToName = dto.RecipientEmail,
             Subject = $"[TEST] {campaign.Subject}",
@@ -254,8 +259,8 @@ public class EmailSendPipeline : IEmailSendPipeline
 
         try
         {
-            var fromEmail = request.FromEmail ?? _configuration["Brevo:FromEmail"] ?? "noreply@akordishkeit.com";
-            var fromName = request.FromName ?? _configuration["Brevo:FromName"] ?? "akordishkejit";
+            var fromEmail = MarketingEmailSender.FromEmail;
+            var fromName = MarketingEmailSender.FromName;
 
             List<(string Email, string? Name)> recipients;
             if (request.RecipientGroup == EmailRecipientGroup.ManualOneTime)
@@ -286,7 +291,7 @@ public class EmailSendPipeline : IEmailSendPipeline
             var sentCount = 0;
             var failedCount = 0;
             var recipientResults = new ConcurrentBag<EmailRecipientSendResultDto>();
-            using var semaphore = new SemaphoreSlim(20);
+            using var semaphore = new SemaphoreSlim(MaxConcurrentBrevoSends);
 
             var tasks = recipients.Select(async recipient =>
             {
@@ -303,6 +308,7 @@ public class EmailSendPipeline : IEmailSendPipeline
                         ApiKey = apiKey,
                         FromEmail = fromEmail,
                         FromName = fromName,
+                        ReplyToEmail = MarketingEmailSender.ReplyToEmail,
                         ToEmail = recipient.Email,
                         ToName = recipient.Name,
                         Subject = request.Subject,
@@ -394,8 +400,8 @@ public class EmailSendPipeline : IEmailSendPipeline
 
         try
         {
-            var fromEmail = dto.FromEmail ?? _configuration["Brevo:FromEmail"] ?? "noreply@akordishkeit.com";
-            var fromName = dto.FromName ?? _configuration["Brevo:FromName"] ?? "akordishkejit";
+            var fromEmail = MarketingEmailSender.FromEmail;
+            var fromName = MarketingEmailSender.FromName;
             var html = _utm.Apply(dto.HtmlBody, ResolveTransientUtmSettings());
             var variables = await BuildPersonalizationVariables(dto.RecipientEmail, 0);
             html = _personalization.Apply(html, variables);
@@ -407,6 +413,7 @@ public class EmailSendPipeline : IEmailSendPipeline
                 ApiKey = apiKey,
                 FromEmail = fromEmail,
                 FromName = fromName,
+                ReplyToEmail = MarketingEmailSender.ReplyToEmail,
                 ToEmail = dto.RecipientEmail,
                 ToName = dto.RecipientEmail,
                 Subject = $"[TEST] {dto.Subject}",
