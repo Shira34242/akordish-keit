@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace AkordishKeit.Controllers;
 
@@ -25,8 +26,13 @@ public class AnalyticsController : ControllerBase
         ["agency_contact_phone", "agency_contact_whatsapp", "agency_contact_email", "agency_contact_website"];
 
     private readonly AkordishKeitDbContext _context;
+    private readonly IMemoryCache _cache;
 
-    public AnalyticsController(AkordishKeitDbContext context) => _context = context;
+    public AnalyticsController(AkordishKeitDbContext context, IMemoryCache cache)
+    {
+        _context = context;
+        _cache = cache;
+    }
 
     [HttpPost("event-view")]
     [AllowAnonymous]
@@ -123,6 +129,9 @@ public class AnalyticsController : ControllerBase
         var rangeResult = ResolveRange(dateFrom, dateTo);
         if (rangeResult.Error != null) return BadRequest(new { message = rangeResult.Error });
         var range = rangeResult.Range!;
+        var cacheKey = $"analytics-dashboard:{range.StartUtc.Ticks}:{range.EndUtc.Ticks}";
+        if (_cache.TryGetValue(cacheKey, out object? cachedDashboard))
+            return Ok(cachedDashboard);
 
         var eventListQuery = _context.EventViews.AsNoTracking()
             .Where(v => v.EventId == null && v.ViewedAt >= range.StartUtc && v.ViewedAt < range.EndUtc);
@@ -158,12 +167,22 @@ public class AnalyticsController : ControllerBase
 
         var buttonPeriodQuery = _context.ButtonClicks.AsNoTracking()
             .Where(c => c.ClickedAt >= range.StartUtc && c.ClickedAt < range.EndUtc);
-        var ticketClicks = await buttonPeriodQuery.CountAsync(c => c.ButtonType == "ticket");
-        var contactClicks = await buttonPeriodQuery.CountAsync(c => c.ButtonType == "contact");
-        var notificationClicks = await buttonPeriodQuery.CountAsync(c => c.ButtonType == "notification_link");
-        var ticketClicksTotal = await _context.ButtonClicks.CountAsync(c => c.ButtonType == "ticket");
-        var contactClicksTotal = await _context.ButtonClicks.CountAsync(c => c.ButtonType == "contact");
-        var notificationClicksTotal = await _context.ButtonClicks.CountAsync(c => c.ButtonType == "notification_link");
+        var buttonPeriodCounts = await buttonPeriodQuery
+            .Where(c => TrackedButtonTypes.Contains(c.ButtonType))
+            .GroupBy(c => c.ButtonType)
+            .Select(g => new { ButtonType = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.ButtonType, x => x.Count);
+        var buttonTotalCounts = await _context.ButtonClicks.AsNoTracking()
+            .Where(c => TrackedButtonTypes.Contains(c.ButtonType))
+            .GroupBy(c => c.ButtonType)
+            .Select(g => new { ButtonType = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.ButtonType, x => x.Count);
+        var ticketClicks = buttonPeriodCounts.GetValueOrDefault("ticket");
+        var contactClicks = buttonPeriodCounts.GetValueOrDefault("contact");
+        var notificationClicks = buttonPeriodCounts.GetValueOrDefault("notification_link");
+        var ticketClicksTotal = buttonTotalCounts.GetValueOrDefault("ticket");
+        var contactClicksTotal = buttonTotalCounts.GetValueOrDefault("contact");
+        var notificationClicksTotal = buttonTotalCounts.GetValueOrDefault("notification_link");
         var clickUniqueVisitors = await buttonPeriodQuery.Where(c => TrackedButtonTypes.Contains(c.ButtonType))
             .Select(v => new
             {
@@ -342,8 +361,12 @@ public class AnalyticsController : ControllerBase
 
         var adBlockQuery = _context.AdBlockChecks.AsNoTracking()
             .Where(x => x.CheckedAt >= range.StartUtc && x.CheckedAt < range.EndUtc);
-        var adBlockChecks = await adBlockQuery.CountAsync();
-        var adBlockDetected = await adBlockQuery.CountAsync(x => x.Detected);
+        var adBlockTotals = await adBlockQuery
+            .GroupBy(_ => 1)
+            .Select(g => new { Checks = g.Count(), Detected = g.Count(x => x.Detected) })
+            .SingleOrDefaultAsync();
+        var adBlockChecks = adBlockTotals?.Checks ?? 0;
+        var adBlockDetected = adBlockTotals?.Detected ?? 0;
         var adBlockDaily = await adBlockQuery.GroupBy(x => x.CheckedAt.Date)
             .Select(g => new { Date = g.Key, Checks = g.Count(), Detected = g.Count(x => x.Detected) })
             .OrderBy(x => x.Date).ToListAsync();
@@ -388,7 +411,7 @@ public class AnalyticsController : ControllerBase
             pages = pageBuckets.GetValueOrDefault(date)
         }).ToList();
 
-        return Ok(new
+        var dashboard = new
         {
             period = new
             {
@@ -528,7 +551,10 @@ public class AnalyticsController : ControllerBase
                 clicks = new { current = ticketClicks + contactClicks + notificationClicks, previous = previousClicks }
             },
             trend
-        });
+        };
+
+        _cache.Set(cacheKey, dashboard, TimeSpan.FromSeconds(30));
+        return Ok(dashboard);
     }
 
     [HttpGet("agencies")]

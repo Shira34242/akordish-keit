@@ -67,6 +67,14 @@ export class AdminContentLayoutComponent {
     }
 
     private getState(url: string): LayoutState {
+        if (url.includes('/content/social-design')) {
+            return {
+                title: 'עיצוב לשיתוף',
+                subtitle: 'יצירת תמונות מוכנות לפרסום ברשתות.',
+                hideSwitcher: true
+            };
+        }
+
         if (url.includes('/content/smart-add')) {
             return {
                 title: 'הוספה חכמה',

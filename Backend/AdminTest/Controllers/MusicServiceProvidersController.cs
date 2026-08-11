@@ -57,6 +57,96 @@ public class MusicServiceProvidersController : ControllerBase
         return Ok(result);
     }
 
+    // GET: api/MusicServiceProviders/home-showcase
+    [HttpGet("home-showcase")]
+    public async Task<ActionResult<List<HomeShowcaseProfileDto>>> GetHomeShowcase()
+    {
+        const int showcaseSize = 12;
+        const int featuredLimit = 6;
+        var now = DateTime.UtcNow;
+
+        var rankedProfiles = _context.ServiceProviders
+            .AsNoTracking()
+            .Where(sp => !sp.IsDeleted && sp.Status == ProfileStatus.Active)
+            .Select(sp => new
+            {
+                sp.Id,
+                sp.IsFeatured,
+                sp.CreatedAt,
+                sp.DisplayName,
+                RankingScore = sp.User != null ? sp.User.RankingScore : 0,
+                PromotionPriority = _context.ContentPromotions
+                    .Where(p => p.TargetId == sp.Id
+                        && ((sp.IsTeacher && p.TargetType == ContentPromotionTargetType.Teacher)
+                            || (!sp.IsTeacher && p.TargetType == ContentPromotionTargetType.ServiceProvider))
+                        && p.IsActive
+                        && (!p.StartsAt.HasValue || p.StartsAt.Value <= now)
+                        && (!p.EndsAt.HasValue || p.EndsAt.Value >= now)
+                        && (p.Placement == ContentPromotionPlacement.Home
+                            || p.Placement == ContentPromotionPlacement.General
+                            || p.ShowOnHome))
+                    .Select(p => (int?)p.Priority)
+                    .Max() ?? -1
+            });
+
+        var featuredIds = await rankedProfiles
+            .Where(profile => profile.IsFeatured)
+            .OrderByDescending(profile => profile.PromotionPriority)
+            .ThenByDescending(profile => profile.RankingScore)
+            .ThenBy(profile => profile.CreatedAt)
+            .ThenBy(profile => profile.DisplayName)
+            .Take(featuredLimit)
+            .Select(profile => profile.Id)
+            .ToListAsync();
+
+        var remainingIds = await rankedProfiles
+            .Where(profile => !profile.IsFeatured)
+            .OrderByDescending(profile => profile.PromotionPriority)
+            .ThenByDescending(profile => profile.RankingScore)
+            .ThenBy(profile => profile.CreatedAt)
+            .ThenBy(profile => profile.DisplayName)
+            .Take(showcaseSize - featuredIds.Count)
+            .Select(profile => profile.Id)
+            .ToListAsync();
+
+        var orderedIds = featuredIds.Concat(remainingIds).ToList();
+        var profiles = await _context.ServiceProviders
+            .AsNoTracking()
+            .Include(sp => sp.Categories)
+                .ThenInclude(mapping => mapping.Category)
+            .Include(sp => sp.TeacherProfile)
+                .ThenInclude(teacher => teacher!.Instruments)
+                    .ThenInclude(instrument => instrument.Instrument)
+            .AsSplitQuery()
+            .Where(sp => orderedIds.Contains(sp.Id))
+            .ToListAsync();
+
+        var profilesById = profiles.ToDictionary(profile => profile.Id);
+        var result = orderedIds
+            .Where(profilesById.ContainsKey)
+            .Select(id =>
+            {
+                var profile = profilesById[id];
+                var primaryInstrument = profile.TeacherProfile?.Instruments.FirstOrDefault(i => i.IsPrimary)
+                    ?? profile.TeacherProfile?.Instruments.FirstOrDefault();
+
+                return new HomeShowcaseProfileDto
+                {
+                    Id = profile.Id,
+                    DisplayName = profile.DisplayName,
+                    ProfileImageUrl = profile.ProfileImageUrl,
+                    IsTeacher = profile.IsTeacher,
+                    IsFeatured = profile.IsFeatured,
+                    Subtitle = profile.IsTeacher
+                        ? primaryInstrument?.Instrument?.Name
+                        : profile.Categories.FirstOrDefault()?.Category?.Name
+                };
+            })
+            .ToList();
+
+        return Ok(result);
+    }
+
     // GET: api/MusicServiceProviders/5
     [HttpGet("{id}")]
     public async Task<ActionResult<MusicServiceProviderDto>> GetServiceProvider(int id)

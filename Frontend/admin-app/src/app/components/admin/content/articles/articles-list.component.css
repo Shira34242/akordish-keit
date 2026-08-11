@@ -744,6 +744,13 @@
   line-height: var(--lh-small);
 }
 
+.grid-card-views {
+  display: inline-flex;
+  align-items: center;
+  color: rgba(0,0,0,0.4);
+  font-weight: 300;
+}
+
 .grid-card-actions {
   justify-content: flex-end;
   margin-top: auto;

@@ -1198,16 +1198,16 @@
 }
 
 .feedback-title {
-  font-size: var(--font-base);
+  font-size: var(--font-sm);
   font-weight: 300;
-  color: #000000;
+  color: rgba(0, 0, 0, 0.45);
   margin: 0 0 var(--space-lg);
   font-family: 'Open Sans', sans-serif;
 }
 
 .feedback-circles {
   display: flex;
-  gap: var(--space-lg);
+  gap: var(--space-2xl);
   justify-content: center;
   align-items: flex-end;
 }
@@ -1216,17 +1216,20 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: var(--space-sm);
 }
 
 .feedback-circle {
   border-radius: 50%;
-  border: 1px solid rgba(0, 0, 0, 0.65);
+  border: none;
   cursor: pointer;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  transition: width 0.45s ease, height 0.45s ease, background 0.2s, transform 0.2s;
-  background: #ffffff;
+  gap: 2px;
+  transition: width 0.45s ease, height 0.45s ease, background 0.2s, opacity 0.2s;
+  background: #F2F2F2;
   color: #000000;
   position: relative;
   isolation: isolate;
@@ -1239,7 +1242,7 @@
   inset: -3px;
   z-index: -1;
   border-radius: inherit;
-  background: rgba(221, 255, 83, 0.5);
+  background: #ddff53;
   animation: feedbackCirclePing 1.4s ease-out infinite;
 }
 
@@ -1248,8 +1251,7 @@
 }
 
 .feedback-circle:not(:disabled):hover {
-  background: rgba(221, 255, 83, 0.5);
-  transform: scale(1.02);
+  background: #ddff53;
 }
 
 .feedback-circle:disabled {
@@ -1257,25 +1259,21 @@
 }
 
 .feedback-circle.chosen-yes {
-  background: rgba(221, 255, 83, 0.5);
+  background: #ddff53;
 }
 
 .feedback-circle.chosen-no {
-  background: #F2F2F2;
-  color: #000000;
+  background: #404040;
+  color: #ffffff;
 }
 
 .feedback-circle .material-icons {
-  font-size: 24px;
+  font-size: 20px;
   pointer-events: none;
 }
 
 .circle-pct {
-  position: absolute;
-  top: calc(var(--space-md) * -1);
-  padding: 0 var(--space-xs);
-  background: #ffffff;
-  font-size: var(--font-sm);
+  font-size: var(--font-xs);
   font-weight: 800;
   font-family: 'Open Sans', sans-serif;
   line-height: 1;
@@ -1283,7 +1281,10 @@
 }
 
 .circle-label {
-  display: none;
+  color: rgba(0, 0, 0, 0.45);
+  font-size: var(--font-xs);
+  font-weight: 300;
+  font-family: 'Open Sans', sans-serif;
 }
 
 .feedback-thanks {
@@ -1984,6 +1985,6 @@
   }
 
   .feedback-circle .material-icons {
-    font-size: 20px;
+    font-size: 18px;
   }
 }

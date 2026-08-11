@@ -17,7 +17,6 @@
 
       <p class="hero-subtitle">
         <span>{{ 'home.subtitle' | translate }}</span>
-        <span class="hero-subtitle-badge">בהרצה</span>
       </p>
       <h1 class="hero-title">אקורדישקייט</h1>
 
@@ -459,7 +458,7 @@
       </div>
     </div>
 
-    <section class="home-section index-showcase-section" *ngIf="featuredSectionStarted && (featuredTeachers.length > 0 || featuredProviders.length > 0)">
+    <section class="home-section index-showcase-section" *ngIf="featuredSectionStarted && featuredProfiles.length > 0">
       <div class="section-header">
         <a routerLink="/professionals" class="section-title section-title-link">{{ 'home.featured_title' | translate }}</a>
         <div class="section-scroll-controls" *ngIf="canScrollBySelector('.index-showcase-row', 'right') || canScrollBySelector('.index-showcase-row', 'left')">
@@ -475,38 +474,24 @@
         <div *ngIf="!isMobile" class="index-showcase-row index-showcase-row--loop" appAutoScroll [autoScrollSpeed]="35" autoScrollDirection="right" [autoScrollCopies]="3" [autoScrollPaused]="isHomeAutoScrollPaused" (scroll)="refreshCarouselControls('.index-showcase-row')">
           <div class="index-showcase-track">
             <ng-container *ngFor="let copy of [0, 1, 2]">
-              <a class="person-card provider-showcase-card" *ngFor="let teacher of featuredTeachers; trackBy: trackById" [routerLink]="['/teacher', teacher.id]">
+              <a class="person-card provider-showcase-card" [class.provider-showcase-card--provider]="!profile.isTeacher" *ngFor="let profile of featuredProfiles; trackBy: trackById" [routerLink]="[profile.isTeacher ? '/teacher' : '/professional', profile.id]">
                 <div class="person-avatar">
-                  <app-profile-avatar [name]="teacher.displayName" [imageUrl]="teacher.profileImageUrl | cfImage:240:82" [identity]="'teacher-' + teacher.id" shape="rounded" size="fill"></app-profile-avatar>
+                  <app-profile-avatar [name]="profile.displayName" [imageUrl]="profile.profileImageUrl | cfImage:240:82" [identity]="(profile.isTeacher ? 'teacher-' : 'provider-') + profile.id" shape="rounded" size="fill"></app-profile-avatar>
                 </div>
-                <p class="person-name">{{ teacher.displayName }}</p>
-                <p class="person-sub">{{ teacher.primaryInstrument || ('home.default_teacher' | translate) }}</p>
-              </a>
-              <a class="person-card provider-showcase-card provider-showcase-card--provider" *ngFor="let pro of featuredProviders; trackBy: trackById" [routerLink]="['/professional', pro.id]" [attr.data-provider-city]="pro.cityName || ''">
-                <div class="person-avatar">
-                  <app-profile-avatar [name]="pro.displayName" [imageUrl]="pro.profileImageUrl | cfImage:240:82" [identity]="'provider-' + pro.id" shape="rounded" size="fill"></app-profile-avatar>
-                </div>
-                <p class="person-name">{{ pro.displayName }}</p>
-                <p class="person-sub">{{ pro.categoryName || ('home.default_pro' | translate) }}</p>
+                <p class="person-name">{{ profile.displayName }}</p>
+                <p class="person-sub">{{ profile.subtitle || ((profile.isTeacher ? 'home.default_teacher' : 'home.default_pro') | translate) }}</p>
               </a>
             </ng-container>
           </div>
         </div>
         <div *ngIf="isMobile" class="index-showcase-row" (scroll)="refreshCarouselControls('.index-showcase-row')">
           <div class="index-showcase-track">
-            <a class="person-card provider-showcase-card" *ngFor="let teacher of featuredTeachers; trackBy: trackById" [routerLink]="['/teacher', teacher.id]">
+            <a class="person-card provider-showcase-card" [class.provider-showcase-card--provider]="!profile.isTeacher" *ngFor="let profile of featuredProfiles; trackBy: trackById" [routerLink]="[profile.isTeacher ? '/teacher' : '/professional', profile.id]">
               <div class="person-avatar">
-                <app-profile-avatar [name]="teacher.displayName" [imageUrl]="teacher.profileImageUrl | cfImage:240:82" [identity]="'teacher-' + teacher.id" shape="rounded" size="fill"></app-profile-avatar>
+                <app-profile-avatar [name]="profile.displayName" [imageUrl]="profile.profileImageUrl | cfImage:240:82" [identity]="(profile.isTeacher ? 'teacher-' : 'provider-') + profile.id" shape="rounded" size="fill"></app-profile-avatar>
               </div>
-              <p class="person-name">{{ teacher.displayName }}</p>
-              <p class="person-sub">{{ teacher.primaryInstrument || ('home.default_teacher' | translate) }}</p>
-            </a>
-            <a class="person-card provider-showcase-card provider-showcase-card--provider" *ngFor="let pro of featuredProviders; trackBy: trackById" [routerLink]="['/professional', pro.id]" [attr.data-provider-city]="pro.cityName || ''">
-              <div class="person-avatar">
-                <app-profile-avatar [name]="pro.displayName" [imageUrl]="pro.profileImageUrl | cfImage:240:82" [identity]="'provider-' + pro.id" shape="rounded" size="fill"></app-profile-avatar>
-              </div>
-              <p class="person-name">{{ pro.displayName }}</p>
-              <p class="person-sub">{{ pro.categoryName || ('home.default_pro' | translate) }}</p>
+              <p class="person-name">{{ profile.displayName }}</p>
+              <p class="person-sub">{{ profile.subtitle || ((profile.isTeacher ? 'home.default_teacher' : 'home.default_pro') | translate) }}</p>
             </a>
             <a routerLink="/professionals" class="home-more-card home-more-card--showcase" aria-label="לכל בעלי המקצוע והמורים">
               <span>לכל בעלי המקצוע והמורים</span>

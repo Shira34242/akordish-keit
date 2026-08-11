@@ -36,7 +36,9 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
   recommendedEpisodes: PodcastEpisode[] = [];
   selectedPodcast: PodcastDetail | null = null;
   selectedEpisode: PodcastEpisodeDetail | null = null;
+  episodePlayableUrl: string | null = null;
   safeEmbedUrl: SafeResourceUrl | null = null;
+  isEpisodeVideoActive = false;
   seriesDescriptionExpanded = false;
   searchQuery = '';
   searchEpisodes: PodcastEpisode[] = [];
@@ -158,11 +160,18 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.openEpisodeBySlugs(episode.podcastSlug, episode.slug, true, episode);
   }
 
+  activateEpisodeVideo(): void {
+    if (!this.episodePlayableUrl || this.isEpisodeVideoActive) return;
+
+    this.safeEmbedUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.episodePlayableUrl);
+    this.isEpisodeVideoActive = true;
+  }
+
   resetViewer(updateUrl = true): void {
     this.episodeRequestId += 1;
     this.selectedPodcast = null;
     this.selectedEpisode = null;
-    this.safeEmbedUrl = null;
+    this.resetEpisodeVideo();
     this.seriesDescriptionExpanded = false;
     this.seriesLoading = false;
     this.episodeLoading = false;
@@ -173,7 +182,7 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
   closeEpisode(): void {
     this.episodeRequestId += 1;
     this.selectedEpisode = null;
-    this.safeEmbedUrl = null;
+    this.resetEpisodeVideo();
     this.episodeLoading = false;
     this.seriesDescriptionExpanded = false;
     if (this.selectedPodcast) this.applySeoForSeries(this.selectedPodcast);
@@ -284,6 +293,7 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     previewEpisode?: PodcastEpisode
   ): void {
     const requestId = ++this.episodeRequestId;
+    this.resetEpisodeVideo();
     this.episodeLoading = !previewEpisode;
 
     if (previewEpisode) {
@@ -299,9 +309,7 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
         this.selectedEpisode = episode;
         this.applySeoForEpisode(episode);
         const playableUrl = this.buildPlayableUrl(episode.embedUrl, episode.sourceUrl, episode.thumbnailUrl);
-        this.safeEmbedUrl = playableUrl
-          ? this.sanitizer.bypassSecurityTrustResourceUrl(playableUrl)
-          : null;
+        this.episodePlayableUrl = playableUrl;
         this.episodeLoading = false;
 
         if (
@@ -324,7 +332,7 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
         }
 
         this.selectedEpisode = null;
-        this.safeEmbedUrl = null;
+        this.resetEpisodeVideo();
         this.episodeLoading = false;
       }
     });
@@ -335,10 +343,14 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.ensurePodcastShellForEpisode(episode);
 
     const playableUrl = this.buildPlayableUrl(episode.embedUrl, episode.sourceUrl, episode.thumbnailUrl);
-    this.safeEmbedUrl = playableUrl
-      ? this.sanitizer.bypassSecurityTrustResourceUrl(playableUrl)
-      : null;
+    this.episodePlayableUrl = playableUrl;
     this.episodeLoading = false;
+  }
+
+  private resetEpisodeVideo(): void {
+    this.episodePlayableUrl = null;
+    this.safeEmbedUrl = null;
+    this.isEpisodeVideoActive = false;
   }
 
   private createEpisodePreview(episode: PodcastEpisode): PodcastEpisodeDetail {
@@ -479,15 +491,25 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
       if (!url || !/^https?:\/\//i.test(url)) continue;
 
       if (/youtube\.com\/embed\//i.test(url)) {
-        const separator = url.includes('?') ? '&' : '?';
-        return `${url}${separator}autoplay=1&rel=0`;
+        return this.withoutAutoplay(url);
       }
 
       const youtubeId = this.extractYouTubeId(url);
-      if (youtubeId) return `https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0`;
+      if (youtubeId) return `https://www.youtube.com/embed/${youtubeId}?rel=0`;
     }
 
     return null;
+  }
+
+  private withoutAutoplay(url: string): string {
+    try {
+      const parsedUrl = new URL(url);
+      parsedUrl.searchParams.delete('autoplay');
+      parsedUrl.searchParams.set('rel', '0');
+      return parsedUrl.toString();
+    } catch {
+      return url;
+    }
   }
 
   private buildYouTubeThumbnail(url: string): string | null {

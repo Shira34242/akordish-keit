@@ -1,6 +1,6 @@
 import { Component, OnInit, AfterViewInit, ViewChildren, ElementRef, QueryList, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 import { EventService } from '../../../services/admin/event.service';
 import { AnalyticsService } from '../../../services/analytics.service';
 import { Event } from '../../../models/event.model';
@@ -27,6 +27,7 @@ interface CarouselRenderItem {
 export class EventsPageComponent implements OnInit, AfterViewInit {
   private readonly eventService = inject(EventService);
   private readonly analytics = inject(AnalyticsService);
+  private readonly route = inject(ActivatedRoute);
 
   @ViewChildren('carouselItem') carouselItems!: QueryList<ElementRef>;
 
@@ -97,6 +98,16 @@ export class EventsPageComponent implements OnInit, AfterViewInit {
   private finishLoading(): void {
     this.updateFiltered();
     this.resetCarouselPosition();
+    const requestedEventId = Number(this.route.snapshot.queryParamMap.get('event'));
+    if (Number.isFinite(requestedEventId) && requestedEventId > 0) {
+      const requestedIndex = this.filteredEvents.findIndex(event => event.id === requestedEventId);
+      if (requestedIndex >= 0) {
+        this.activePosition = requestedIndex;
+        this.activeIndex = requestedIndex;
+        this.selectedEvent = this.filteredEvents[requestedIndex];
+        this.updateVisibleCarouselItems();
+      }
+    }
     this.loading = false;
     setTimeout(() => this.animate(), 0);
   }

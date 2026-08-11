@@ -115,6 +115,27 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
       color: #374151; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
 
+    .html-size-warning {
+      margin: 12px 24px 0;
+      padding: 12px 14px;
+      border: 1px solid #f59e0b;
+      border-radius: 8px;
+      background: #fffbeb;
+      color: #78350f;
+      font-size: 13px;
+      line-height: 1.5;
+      flex-shrink: 0;
+    }
+
+    .html-size-warning strong { display: block; color: #92400e; margin-bottom: 3px; }
+    .html-size-warning ul { margin: 7px 0 0; padding: 0 18px 0 0; }
+    .html-size-warning li { margin: 2px 0; }
+
+    .html-size-ok {
+      color: #047857;
+      font-weight: 600;
+    }
+
     .preview-wrapper {
       flex: 1; min-height: 0; display: flex; justify-content: center;
       background: #e5e7eb; overflow: auto; padding: 24px 0;
@@ -183,11 +204,25 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
           <div class="meta-item"><span class="meta-label">נושא:</span><span class="meta-value">{{ subject() || '—' }}</span></div>
           <div class="meta-item"><span class="meta-label">Preheader:</span><span class="meta-value">{{ previewText() || '—' }}</span></div>
           <div class="meta-item"><span class="meta-label">שולח:</span><span class="meta-value">{{ fromName() || '—' }}</span></div>
+          <div class="meta-item"><span class="meta-label">גודל HTML:</span><span class="meta-value" [class.html-size-ok]="!htmlSizeInfo().isOverSafetyTarget">{{ htmlSizeInfo().kilobytes }} KB</span></div>
           @if (darkMode()) {
             <div class="meta-item dark-mode-notice">&#9888; הדמיית Dark Mode משוערת</div>
           }
         </div>
       </div>
+
+      @if (htmlSizeInfo().isOverSafetyTarget) {
+        <aside class="html-size-warning" role="alert">
+          <strong>⚠️ המייל חורג מיעד הבטיחות של Gmail (90KB) ועלול להיחתך.</strong>
+          הגודל הסופי בתצוגה הוא {{ htmlSizeInfo().kilobytes }}KB. גורמי הנפח הבולטים במייל הזה:
+          <ul>
+            @for (insight of htmlSizeInsights(); track insight.label) {
+              <li><strong>{{ insight.label }}:</strong> {{ insight.detail }}</li>
+            }
+          </ul>
+          מומלץ קודם לצמצם כרטיסי תוכן חוזרים או לקצר כתובות קישור ארוכות. התמונות עצמן אינן נספרות לגודל ה־HTML.
+        </aside>
+      }
 
       @if (plainText()) {
         <div class="plain-text-preview">{{ plainTextContent() }}</div>
@@ -220,6 +255,58 @@ export class EmailPreviewDialogComponent {
   darkMode = signal(false);
   noImages = signal(false);
   plainText = signal(false);
+
+  htmlSizeInfo = computed(() => {
+    const bytes = new TextEncoder().encode(this.htmlBody() || '').length;
+    return {
+      bytes,
+      kilobytes: (bytes / 1024).toFixed(1),
+      isOverSafetyTarget: bytes > 90_000,
+    };
+  });
+
+  htmlSizeInsights = computed(() => {
+    const raw = this.htmlBody();
+    if (!raw) return [];
+
+    try {
+      const doc = new DOMParser().parseFromString(raw, 'text/html');
+      const byteLength = (value: string) => new TextEncoder().encode(value).length;
+      const images = Array.from(doc.querySelectorAll('img'));
+      const tables = doc.querySelectorAll('table').length;
+      const inlineStyleBytes = Array.from(doc.querySelectorAll<HTMLElement>('[style]'))
+        .reduce((total, element) => total + byteLength(element.getAttribute('style') || ''), 0);
+      const linkBytes = Array.from(doc.querySelectorAll<HTMLAnchorElement>('a[href]'))
+        .reduce((total, link) => total + byteLength(link.getAttribute('href') || ''), 0);
+
+      return [
+        {
+          label: 'כרטיסי תוכן ותמונות',
+          detail: `${images.length} תמונות/כרטיסים חוזרים. כל כרטיס מוסיף גם markup של תאימות למיילים.`,
+          bytes: images.reduce((total, image) => total + byteLength(image.outerHTML), 0),
+        },
+        {
+          label: 'מבנה תאימות',
+          detail: `${tables} טבלאות HTML נוצרו כדי לתמוך ב־Gmail וב־Outlook.`,
+          bytes: tables * 32,
+        },
+        {
+          label: 'עיצוב מוטמע',
+          detail: `${(inlineStyleBytes / 1024).toFixed(1)}KB של inline styles.`,
+          bytes: inlineStyleBytes,
+        },
+        {
+          label: 'קישורים ומעקב',
+          detail: `${(linkBytes / 1024).toFixed(1)}KB בכתובות קישור.`,
+          bytes: linkBytes,
+        },
+      ]
+        .sort((left, right) => right.bytes - left.bytes)
+        .map(({ label, detail }) => ({ label, detail }));
+    } catch {
+      return [{ label: 'מבנה המייל', detail: 'לא ניתן לנתח את רכיבי ה־HTML באופן מפורט.' }];
+    }
+  });
 
   iframeWidth = computed(() => {
     switch (this.viewMode()) {

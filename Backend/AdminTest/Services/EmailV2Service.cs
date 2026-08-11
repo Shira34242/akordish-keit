@@ -171,9 +171,14 @@ public class EmailV2Service : IEmailV2Service
                 return result;
             }
 
+            var renderedBytes = Encoding.UTF8.GetByteCount(renderResult.Html);
             result.Success = true;
             result.Html = FinalizeEmailHtml(renderResult.Html);
-            if (Encoding.UTF8.GetByteCount(result.Html) > 95_000)
+            var finalizedBytes = Encoding.UTF8.GetByteCount(result.Html);
+            _logger.LogInformation(
+                "Email V2 HTML size after MJML render: {RenderedBytes} bytes ({RenderedKb:F1} KB); after compaction: {FinalizedBytes} bytes ({FinalizedKb:F1} KB); saved {SavedBytes} bytes",
+                renderedBytes, renderedBytes / 1024d, finalizedBytes, finalizedBytes / 1024d, renderedBytes - finalizedBytes);
+            if (finalizedBytes > 90_000)
                 warnings.Add("The email is large and may be clipped by Gmail. Reduce the number of content cards or large HTML blocks.");
             result.Warnings = warnings;
         }

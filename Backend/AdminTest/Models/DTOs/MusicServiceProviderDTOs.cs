@@ -440,3 +440,13 @@ public class TeacherListDto : MusicServiceProviderListDto
     public TeachingLanguage? Languages { get; set; }
     public TargetAudience? TargetAudience { get; set; }
 }
+
+public class HomeShowcaseProfileDto
+{
+    public int Id { get; set; }
+    public string DisplayName { get; set; } = string.Empty;
+    public string? ProfileImageUrl { get; set; }
+    public bool IsTeacher { get; set; }
+    public bool IsFeatured { get; set; }
+    public string? Subtitle { get; set; }
+}

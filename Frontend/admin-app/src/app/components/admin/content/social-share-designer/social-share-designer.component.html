@@ -1,0 +1,124 @@
+<section class="share-designer" dir="rtl">
+  <div class="designer-header">
+    <div>
+      <span class="eyebrow">כלי קידום</span>
+      <h2>עיצוב תמונה לרשתות</h2>
+      <p>שלושה צעדים מתוכן באתר לתמונה וקישור מוכנים לשיתוף.</p>
+    </div>
+  </div>
+
+  <nav class="wizard-steps" aria-label="שלבי יצירת תמונה">
+    <button type="button" [class.active]="currentStep === 1" [class.complete]="currentStep > 1" (click)="goToStep(1)">
+      <span>1</span><strong>בחירת תוכן</strong>
+    </button>
+    <i></i>
+    <button type="button" [class.active]="currentStep === 2" [class.complete]="currentStep > 2" [disabled]="!selectedContent || captureLoading" (click)="goToStep(2)">
+      <span>2</span><strong>תצוגה מקדימה</strong>
+    </button>
+    <i></i>
+    <button type="button" [class.active]="currentStep === 3" [disabled]="!selectedContent || captureLoading" (click)="goToStep(3)">
+      <span>3</span><strong>הורדה ושיתוף</strong>
+    </button>
+  </nav>
+
+  <div class="step-panel selection-step" *ngIf="currentStep === 1">
+    <div class="content-types" aria-label="סוג תוכן">
+      <button type="button" [class.active]="kind === 'song'" (click)="setKind('song')"><span class="material-icons">music_note</span>אקורדים</button>
+      <button type="button" [class.active]="kind === 'article'" (click)="setKind('article')"><span class="material-icons">article</span>כתבות</button>
+      <button type="button" [class.active]="kind === 'event'" (click)="setKind('event')"><span class="material-icons">event</span>הופעות</button>
+      <button type="button" [class.active]="kind === 'podcast'" (click)="setKind('podcast')"><span class="material-icons">podcasts</span>פודקאסטים</button>
+      <button type="button" [class.active]="kind === 'professional'" (click)="setKind('professional')"><span class="material-icons">business_center</span>נותני שירות</button>
+      <button type="button" [class.active]="kind === 'artist'" (click)="setKind('artist')"><span class="material-icons">person</span>אמנים</button>
+    </div>
+
+    <div class="control-section content-picker">
+      <label class="field-label" for="content-search">בחירת {{ kindLabel }}</label>
+      <div class="picker-toolbar">
+        <div class="search-field">
+          <span class="material-icons">search</span>
+          <input id="content-search" type="search" [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()" [placeholder]="'חיפוש ' + kindLabel + '…'">
+        </div>
+        <label class="sort-field">
+          <span class="material-icons">sort</span>
+          <select [(ngModel)]="sortMode" (ngModelChange)="onSortChange()" aria-label="מיון תוכן">
+            <option value="newest">החדש ביותר</option>
+            <option value="views" *ngIf="supportsViewsSort">הכי נצפה</option>
+          </select>
+        </label>
+      </div>
+      <div class="result-list" [class.loading]="loadingResults">
+        <button type="button" *ngFor="let item of searchResults" [class.selected]="isSelected(item)" (click)="selectResult(item)">
+          <img [src]="getResultImage(item)" alt="">
+          <span><strong>{{ getResultTitle(item) }}</strong><small>{{ getResultMeta(item) }}</small></span>
+          <span class="material-icons selection-mark">check</span>
+        </button>
+        <p class="empty-state" *ngIf="!loadingResults && searchResults.length === 0">לא נמצאו תוצאות.</p>
+      </div>
+    </div>
+
+    <div class="step-actions">
+      <span *ngIf="selectedContent">נבחר: <strong>{{ selectedContent.title }}</strong></span>
+      <button class="primary-step-button" type="button" [disabled]="!selectedContent || captureLoading" (click)="goToStep(2)">{{ captureLoading ? 'מכין תצוגה…' : 'המשך לתצוגה' }}</button>
+    </div>
+    <p class="status-message" *ngIf="statusMessage">{{ statusMessage }}</p>
+  </div>
+
+  <div class="designer-grid" *ngIf="currentStep > 1">
+    <aside class="control-panel">
+      <ng-container *ngIf="currentStep === 2; else downloadStep">
+        <div class="selected-summary" *ngIf="selectedContent">
+          <img [src]="selectedContent.imageUrl" alt="">
+          <span><small>{{ kindLabel }}</small><strong>{{ selectedContent.title }}</strong></span>
+        </div>
+        <div class="control-section fields-stack">
+          <label>הכותרת שמעל הטלפון<textarea rows="3" [(ngModel)]="heading" (ngModelChange)="onDesignChange()"></textarea></label>
+          <div class="range-field">
+            <span>גודל הכותרת</span><output>{{ settings.headingSize }}</output>
+            <input type="range" min="42" max="92" [(ngModel)]="settings.headingSize" (ngModelChange)="onDesignChange()">
+          </div>
+          <div class="range-field">
+            <span>גובה הכותרת</span><output>{{ settings.headingY }}</output>
+            <input type="range" min="20" max="300" [(ngModel)]="settings.headingY" (ngModelChange)="onDesignChange()">
+          </div>
+        </div>
+        <div class="step-actions split-actions">
+          <button class="secondary-step-button" type="button" (click)="goToStep(1)">חזרה</button>
+          <button class="primary-step-button" type="button" (click)="goToStep(3)">המשך להורדה</button>
+        </div>
+      </ng-container>
+
+      <ng-template #downloadStep>
+        <div class="finish-card">
+          <span class="material-icons finish-icon">check</span>
+          <h3>מוכן לשיתוף</h3>
+          <p>הורידו את התמונה והעתיקו את הקישור לדף הציבורי.</p>
+          <button class="download-button" type="button" (click)="downloadImage()" [disabled]="exportLoading || captureLoading">
+            <span class="material-icons">download</span>
+            {{ exportLoading ? 'מכין תמונה…' : 'הורדת PNG' }}
+          </button>
+          <button class="copy-link-button" type="button" (click)="copyContentLink()">
+            <span class="material-icons">link</span>העתקת הקישור לתוכן
+          </button>
+          <div class="public-link" dir="ltr">{{ publicContentUrl }}</div>
+        </div>
+        <div class="step-actions">
+          <button class="secondary-step-button" type="button" (click)="goToStep(2)">חזרה לתצוגה</button>
+        </div>
+      </ng-template>
+    </aside>
+
+    <div class="preview-area">
+      <div class="preview-heading">
+        <div><strong>תצוגה מקדימה</strong><small>סטורי · 9:16 · 4500×8000</small></div>
+        <button type="button" class="refresh-capture" *ngIf="mobilePagePath" (click)="refreshPageCapture()" [disabled]="captureLoading">
+          {{ captureLoading ? 'מצלם את הדף…' : 'צילום מחדש' }}
+        </button>
+      </div>
+      <div class="canvas-shell"><canvas #previewCanvas></canvas></div>
+      <p class="status-message error" *ngIf="captureError">{{ captureError }}</p>
+      <p class="status-message" *ngIf="statusMessage">{{ statusMessage }}</p>
+    </div>
+  </div>
+
+  <iframe #mobileFrame class="mobile-capture-frame" title="תצוגת מובייל לצילום" (load)="onFrameLoad()"></iframe>
+</section>

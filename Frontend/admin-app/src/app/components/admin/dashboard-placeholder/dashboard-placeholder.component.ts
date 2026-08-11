@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { EMPTY, forkJoin, of } from 'rxjs';
-import { catchError, expand, map, reduce } from 'rxjs/operators';
+import { catchError, expand, finalize, map, reduce } from 'rxjs/operators';
 import { AnalyticsService, AnalyticsDashboard } from '../../../services/analytics.service';
 import { ReportService } from '../../../services/report.service';
 import { Report } from '../../../models/report.model';
@@ -43,7 +43,11 @@ interface DashboardQueueItem {
     styleUrls: ['./dashboard-placeholder.component.css']
 })
 export class AdminDashboardPlaceholderComponent implements OnInit {
-    loading = true;
+    usersLoading = true;
+    reportsLoading = true;
+    analyticsLoading = true;
+    approvalsLoading = true;
+    contentLoading = true;
     today = new Date();
     selectedUserPeriod: PeriodKey = 'day';
     selectedAnalyticsPeriod: PeriodKey = 'day';
@@ -54,7 +58,6 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
 
     pendingReportsCount = 0;
     pendingReports: Report[] = [];
-    chordRequestsCount = 0;
     pendingTeachersCount = 0;
     pendingTeachers: TeacherListDto[] = [];
     pendingServiceProvidersCount = 0;
@@ -304,17 +307,55 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
     }
 
     loadAll(): void {
-        this.loading = true;
+        this.today = new Date();
+        this.loadUsers();
+        this.loadReports();
+        this.loadAnalytics();
+        this.loadApprovals();
+        this.loadContentQueue();
+    }
+
+    private loadUsers(): void {
+        this.usersLoading = true;
+        this.loadRecentUsersWindow()
+            .pipe(
+                catchError(() => of({ totalCount: 0, users: [] as UserListDto[] })),
+                finalize(() => this.usersLoading = false)
+            )
+            .subscribe(result => {
+                this.totalUsers = result.totalCount;
+                this.recentUsers = result.users;
+            });
+    }
+
+    private loadReports(): void {
+        this.reportsLoading = true;
+        this.reportService.getReports(1, 6, 'Pending')
+            .pipe(
+                catchError(() => of(null)),
+                finalize(() => this.reportsLoading = false)
+            )
+            .subscribe(reports => {
+                this.pendingReportsCount = reports?.totalCount ?? 0;
+                this.pendingReports = reports?.items?.slice(0, 6) ?? [];
+            });
+    }
+
+    private loadAnalytics(): void {
+        this.analyticsLoading = true;
         const analyticsFrom = this.isoDate(this.periodCutoff(this.selectedAnalyticsPeriod));
         const analyticsTo = this.isoDate(new Date());
+        this.analyticsService.getDashboard(analyticsFrom, analyticsTo)
+            .pipe(
+                catchError(() => of(null)),
+                finalize(() => this.analyticsLoading = false)
+            )
+            .subscribe(dashboard => this.dashboard = dashboard);
+    }
+
+    private loadApprovals(): void {
+        this.approvalsLoading = true;
         forkJoin({
-            usersTotal: this.userService
-                .getUsers(undefined, undefined, undefined, 1, 1, undefined, undefined, 'created_desc')
-                .pipe(catchError(() => of(null))),
-            users: this.loadRecentUsersWindow().pipe(catchError(() => of([]))),
-            dash: this.analyticsService.getDashboard(analyticsFrom, analyticsTo).pipe(catchError(() => of(null))),
-            reports: this.reportService.getReports(1, 6, 'Pending').pipe(catchError(() => of(null))),
-            chordReqs: this.reportService.getChordRequests(1, 1).pipe(catchError(() => of(null))),
             teachers: this.teacherService
                 .getTeachers(undefined, undefined, 0, undefined, 1, 4)
                 .pipe(catchError(() => of(null))),
@@ -323,7 +364,20 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
                 .pipe(catchError(() => of(null))),
             artists: this.artistService
                 .getArtists(undefined, ArtistStatus.Pending, 1, 4)
-                .pipe(catchError(() => of(null))),
+                .pipe(catchError(() => of(null)))
+        }).pipe(finalize(() => this.approvalsLoading = false)).subscribe(({ teachers, providers, artists }) => {
+            this.pendingTeachersCount = teachers?.totalCount ?? 0;
+            this.pendingTeachers = teachers?.items?.slice(0, 4) ?? [];
+            this.pendingServiceProvidersCount = providers?.totalCount ?? 0;
+            this.pendingServiceProviders = providers?.items?.slice(0, 4) ?? [];
+            this.pendingArtistsCount = artists?.totalCount ?? 0;
+            this.pendingArtists = artists?.items?.slice(0, 4) ?? [];
+        });
+    }
+
+    private loadContentQueue(): void {
+        this.contentLoading = true;
+        forkJoin({
             songs: this.songService
                 .getSongsForAdmin(undefined, 1, 4, undefined, undefined, undefined, 'date', undefined, undefined, undefined, undefined, false)
                 .pipe(catchError(() => of(null))),
@@ -339,20 +393,7 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
             draftEpisodes: this.podcastService
                 .getEpisodes(1, 4, undefined, undefined, false, undefined, undefined, 'date')
                 .pipe(catchError(() => of(null)))
-        }).subscribe(({ usersTotal, users, dash, reports, chordReqs, teachers, providers, artists, songs, draftArticles, draftNews, draftEvents, draftEpisodes }) => {
-            this.totalUsers = usersTotal?.totalCount ?? 0;
-            this.recentUsers = users as UserListDto[];
-            this.dashboard = dash;
-
-            this.pendingReportsCount = reports?.totalCount ?? 0;
-            this.pendingReports = reports?.items?.slice(0, 6) ?? [];
-            this.chordRequestsCount = chordReqs?.totalCount ?? 0;
-            this.pendingTeachersCount = teachers?.totalCount ?? 0;
-            this.pendingTeachers = teachers?.items?.slice(0, 4) ?? [];
-            this.pendingServiceProvidersCount = providers?.totalCount ?? 0;
-            this.pendingServiceProviders = providers?.items?.slice(0, 4) ?? [];
-            this.pendingArtistsCount = artists?.totalCount ?? 0;
-            this.pendingArtists = artists?.items?.slice(0, 4) ?? [];
+        }).pipe(finalize(() => this.contentLoading = false)).subscribe(({ songs, draftArticles, draftNews, draftEvents, draftEpisodes }) => {
             this.pendingSongs = (songs?.songs ?? songs?.items ?? songs?.data ?? []).slice(0, 4);
             this.pendingSongsCount = songs?.totalCount ?? songs?.total ?? this.pendingSongs.length;
             this.draftArticlesCount = draftArticles?.totalCount ?? 0;
@@ -363,9 +404,6 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
             this.draftEvents = draftEvents?.items?.slice(0, 4) ?? [];
             this.draftPodcastEpisodesCount = draftEpisodes?.totalCount ?? 0;
             this.draftPodcastEpisodes = draftEpisodes?.items?.slice(0, 4) ?? [];
-
-            this.loading = false;
-            this.today = new Date();
         });
     }
 
@@ -375,7 +413,7 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
 
     setAnalyticsPeriod(period: PeriodKey): void {
         this.selectedAnalyticsPeriod = period;
-        this.loadAll();
+        this.loadAnalytics();
     }
 
     private loadRecentUsersWindow() {
@@ -405,8 +443,14 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
                     'created_desc'
                 );
             }),
-            reduce((users, result) => users.concat(result.items ?? []), [] as UserListDto[]),
-            map(users => users.filter(user => new Date(user.createdAt).getTime() >= cutoff.getTime()))
+            reduce((accumulator, result) => ({
+                totalCount: result.totalCount,
+                users: accumulator.users.concat(result.items ?? [])
+            }), { totalCount: 0, users: [] as UserListDto[] }),
+            map(result => ({
+                totalCount: result.totalCount,
+                users: result.users.filter(user => new Date(user.createdAt).getTime() >= cutoff.getTime())
+            }))
         );
     }
 

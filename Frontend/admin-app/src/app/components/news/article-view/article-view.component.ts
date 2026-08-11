@@ -146,9 +146,13 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
   feedbackCircleSize(type: 'yes' | 'no'): number {
     const pct = this.feedbackGiven ? this.feedbackPct(type) : 50;
     const isMobile = window.matchMedia('(max-width: 768px)').matches;
-    const baseSize = isMobile ? 52 : 64;
-    const sizeRange = isMobile ? 36 : 48;
-    return baseSize + Math.round((pct / 100) * sizeRange);
+    const baseSize = isMobile ? 56 : 72;
+    const sizeRange = isMobile ? 32 : 40;
+    const size = baseSize + Math.round((pct / 100) * sizeRange);
+    if (type === 'no') {
+      return baseSize + Math.round((pct / 100) * sizeRange);
+    }
+    return size;
   }
 
   get visibleRelatedArticles(): Article[] {
@@ -440,7 +444,7 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
 
     // If already an embed URL, return as is
     if (url.includes('/embed/')) {
-      return url;
+      return this.withoutAutoplay(url);
     }
 
     // Extract video ID from various YouTube URL formats
@@ -465,6 +469,16 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
 
     // Return original URL if we couldn't parse it
     return url;
+  }
+
+  private withoutAutoplay(url: string): string {
+    try {
+      const parsedUrl = new URL(url);
+      parsedUrl.searchParams.delete('autoplay');
+      return parsedUrl.toString();
+    } catch {
+      return url;
+    }
   }
 
   isAudioFileUrl(url: string | undefined): boolean {
@@ -566,11 +580,6 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
 
     if (this.safeVideoUrl) {
       this.isVideoActive = true;
-      if (this.article?.videoEmbedUrl) {
-        const embedUrl = this.convertToYouTubeEmbedUrl(this.article.videoEmbedUrl);
-        const separator = embedUrl.includes('?') ? '&' : '?';
-        this.safeVideoUrl = this.sanitizer.bypassSecurityTrustResourceUrl(`${embedUrl}${separator}autoplay=1`);
-      }
     }
   }
 

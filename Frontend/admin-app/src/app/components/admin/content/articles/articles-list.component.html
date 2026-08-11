@@ -254,6 +254,9 @@
       </div>
       <div class="grid-card-sub" *ngIf="article.subtitle">{{ article.subtitle }}</div>
       <div class="grid-card-meta">
+        <span class="grid-card-views" [title]="article.viewCount + ' צפיות'">
+          {{ article.viewCount }} צפיות
+        </span>
         <span *ngIf="article.authorName">{{ article.authorName }}</span>
         <span *ngIf="article.categoryNames && article.categoryNames.length > 0">{{ article.categoryNames.join(', ') }}</span>
       </div>

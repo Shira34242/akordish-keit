@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 import {
   MusicServiceProviderDto,
   MusicServiceProviderListDto,
+  HomeShowcaseProfile,
   CreateMusicServiceProviderDto,
   UpdateMusicServiceProviderDto
 } from '../models/music-service-provider.model';
@@ -62,6 +63,10 @@ export class MusicServiceProviderService {
     }
 
     return this.http.get<PagedResult<MusicServiceProviderListDto>>(this.apiUrl, { params });
+  }
+
+  getHomeShowcase(): Observable<HomeShowcaseProfile[]> {
+    return this.http.get<HomeShowcaseProfile[]>(`${this.apiUrl}/home-showcase`);
   }
 
   getServiceProviderById(id: number): Observable<MusicServiceProviderDto> {

@@ -77,6 +77,7 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // וידאו ב-lightbox
   videoLightboxUrl: string | null = null;
+  videoLightboxSafeUrl: SafeResourceUrl | null = null;
 
   // תמונה ב-lightbox
   imageLightboxUrl: string | null = null;
@@ -586,6 +587,7 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
 
   openVideoLightbox(videoUrl: string): void {
     this.videoLightboxUrl = videoUrl;
+    this.videoLightboxSafeUrl = this.buildYouTubeEmbedUrl(videoUrl);
   }
 
   getHitVideoUrl(hit: ArtistHit): string {
@@ -600,12 +602,25 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
 
   closeVideoLightbox(): void {
     this.videoLightboxUrl = null;
+    this.videoLightboxSafeUrl = null;
   }
 
-  getYouTubeEmbedUrl(videoUrl: string): SafeResourceUrl {
+  private buildYouTubeEmbedUrl(videoUrl: string): SafeResourceUrl {
     const videoId = videoUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/)?.[1];
-    const embedUrl = videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1` : videoUrl;
+    const embedUrl = videoId
+      ? `https://www.youtube.com/embed/${videoId}`
+      : this.withoutAutoplay(videoUrl);
     return this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl);
+  }
+
+  private withoutAutoplay(url: string): string {
+    try {
+      const parsedUrl = new URL(url);
+      parsedUrl.searchParams.delete('autoplay');
+      return parsedUrl.toString();
+    } catch {
+      return url;
+    }
   }
 
   // ============================================================

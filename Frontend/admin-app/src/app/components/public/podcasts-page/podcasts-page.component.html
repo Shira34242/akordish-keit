@@ -144,15 +144,30 @@
           </button>
 
           <ng-container *ngIf="selectedEpisode; else podcastCover">
+            <button
+              type="button"
+              *ngIf="!isEpisodeVideoActive && episodePlayableUrl"
+              class="episode-video-preview"
+              (click)="activateEpisodeVideo()"
+              [attr.aria-label]="'פתיחת הנגן של ' + selectedEpisode.title">
+              <img
+                *ngIf="getEpisodeThumbnail(selectedEpisode) as thumbnail"
+                [src]="thumbnail"
+                [alt]="selectedEpisode.title"
+                decoding="async"
+                imgFallback="/assets/default-article.png">
+              <span class="episode-video-play material-icons" aria-hidden="true">play_arrow</span>
+            </button>
+
             <iframe
-              *ngIf="safeEmbedUrl"
+              *ngIf="isEpisodeVideoActive && safeEmbedUrl"
               [src]="safeEmbedUrl"
               frameborder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowfullscreen>
             </iframe>
 
-            <div *ngIf="!safeEmbedUrl" class="media-fallback">
+            <div *ngIf="!episodePlayableUrl" class="media-fallback">
               <img *ngIf="getEpisodeThumbnail(selectedEpisode) as thumbnail" [src]="thumbnail" [alt]="selectedEpisode.title" decoding="async" imgFallback="/assets/default-article.png">
               <strong>הפרק לא זמין לניגון מוטמע</strong>
             </div>

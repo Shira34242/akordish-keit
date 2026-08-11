@@ -8,6 +8,7 @@ public class BrevoEmailSender : IBrevoEmailSender
 {
     private const string BrevoApiUrl = "https://api.brevo.com/v3/smtp/email";
     private const int MaxAttempts = 3;
+    private const int GmailClippingWarningBytes = 90_000;
 
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<BrevoEmailSender> _logger;
@@ -22,6 +23,21 @@ public class BrevoEmailSender : IBrevoEmailSender
     {
         try
         {
+            var htmlBytes = Encoding.UTF8.GetByteCount(request.HtmlContent);
+            var htmlKilobytes = htmlBytes / 1024d;
+            if (htmlBytes >= GmailClippingWarningBytes)
+            {
+                _logger.LogWarning(
+                    "Email HTML size: {Bytes} bytes ({Kilobytes:F1} KB) for {Recipient}; above the 90 KB Gmail safety target",
+                    htmlBytes, htmlKilobytes, request.ToEmail);
+            }
+            else
+            {
+                _logger.LogInformation(
+                    "Email HTML size: {Bytes} bytes ({Kilobytes:F1} KB) for {Recipient}",
+                    htmlBytes, htmlKilobytes, request.ToEmail);
+            }
+
             var payload = BuildPayload(request);
             var json = JsonSerializer.Serialize(payload, new JsonSerializerOptions
             {

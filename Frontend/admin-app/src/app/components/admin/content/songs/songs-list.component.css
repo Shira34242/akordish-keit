@@ -1015,6 +1015,16 @@
   justify-content: center;
 }
 
+.grid-card-views {
+  display: inline-flex;
+  align-items: center;
+  color: rgba(0,0,0,0.4);
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-xs);
+  font-weight: 300;
+  line-height: var(--lh-small);
+}
+
 /* Image Cell */
 .image-cell { width: 72px; }
 

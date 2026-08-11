@@ -165,6 +165,9 @@
         <span class="bump-indicator" *ngIf="song.bumpedAt" [title]="'הוקפץ ' + (song.bumpCount || 1) + ' פעמים, לאחרונה: ' + (song.bumpedAt | date:'short')">⬆{{ song.bumpCount && song.bumpCount > 1 ? song.bumpCount : '' }}</span>
       </div>
       <div class="grid-card-sub">{{ formatArtists(song) }}</div>
+      <div class="grid-card-views" [title]="(song.viewCount || 0) + ' צפיות'">
+        {{ song.viewCount || 0 }} צפיות
+      </div>
       <div class="grid-card-badges">
         <span class="badge" [class.badge-success]="song.isApproved" [class.badge-warning]="!song.isApproved">
           {{ song.isApproved ? 'מאושר' : 'ממתין' }}

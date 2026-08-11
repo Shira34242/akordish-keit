@@ -403,6 +403,11 @@ export const routes: Routes = [
                         title: 'עריכת כתבה - אקורדישקייט'
                     },
                     {
+                        path: 'social-design',
+                        loadComponent: () => import('./components/admin/content/social-share-designer/social-share-designer.component').then(m => m.SocialShareDesignerComponent),
+                        title: 'עיצוב תמונה לרשתות - אקורדישקייט'
+                    },
+                    {
                         path: 'featured',
                         loadComponent: () => import('./components/admin/content/featured-content/featured-content-management.component').then(m => m.FeaturedContentManagementComponent),
                         title: 'ניהול תוכן מרכזי - אקורדישקייט'

@@ -63,6 +63,15 @@ export interface MusicServiceProviderListDto {
   branchCityIds: number[];
 }
 
+export interface HomeShowcaseProfile {
+  id: number;
+  displayName: string;
+  profileImageUrl?: string;
+  isTeacher: boolean;
+  isFeatured: boolean;
+  subtitle?: string;
+}
+
 export interface CreateMusicServiceProviderDto {
   userId?: number;
   agencyId?: number;

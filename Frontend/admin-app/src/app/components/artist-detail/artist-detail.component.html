@@ -347,10 +347,10 @@
 </app-event-modal>
 
 <!-- Video Lightbox -->
-<div class="video-lightbox" *ngIf="videoLightboxUrl" (click)="closeVideoLightbox()">
+<div class="video-lightbox" *ngIf="videoLightboxUrl && videoLightboxSafeUrl" (click)="closeVideoLightbox()">
   <button class="video-lightbox-close" (click)="closeVideoLightbox()">✕</button>
   <div class="video-lightbox-inner" (click)="$event.stopPropagation()">
-    <iframe [src]="getYouTubeEmbedUrl(videoLightboxUrl)"
+    <iframe [src]="videoLightboxSafeUrl"
             allow="autoplay; encrypted-media; fullscreen"
             allowfullscreen>
     </iframe>

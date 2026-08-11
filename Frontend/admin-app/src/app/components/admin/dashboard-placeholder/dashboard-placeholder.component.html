@@ -1,36 +1,30 @@
 <section class="dashboard" dir="rtl">
-  @if (loading) {
-    <div class="dash-loading">
-      <div class="loading-spinner"></div>
-      <p>טוען את מרכז הבקרה...</p>
-    </div>
-  } @else {
     <div class="top-dashboard-grid">
       <div class="overview-column">
         <div class="kpi-grid">
           <a routerLink="/admin/users/clients" class="kpi-card">
             <span class="kpi-icon material-symbols-outlined">groups</span>
             <span class="kpi-label">כל המשתמשים</span>
-            <strong>{{ userCount | number }}</strong>
+            <strong>@if (usersLoading) { <span class="loading-value"></span> } @else { {{ userCount | number }} }</strong>
             <small>הכמות המלאה באתר</small>
           </a>
 
           <a routerLink="/admin/users/clients" class="kpi-card">
             <span class="kpi-icon material-symbols-outlined">person_add</span>
             <span class="kpi-label">הצטרפו ב־24 שעות</span>
-            <strong>{{ joinedLastDayCount | number }}</strong>
+            <strong>@if (usersLoading) { <span class="loading-value"></span> } @else { {{ joinedLastDayCount | number }} }</strong>
             <small>משתמשים חדשים מהיום</small>
           </a>
 
           <a routerLink="/admin/users/clients" class="kpi-card">
             <span class="kpi-icon material-symbols-outlined">date_range</span>
             <span class="kpi-label">הצטרפו השבוע</span>
-            <strong>{{ joinedLastWeekCount | number }}</strong>
+            <strong>@if (usersLoading) { <span class="loading-value"></span> } @else { {{ joinedLastWeekCount | number }} }</strong>
             <small>בשבעת הימים האחרונים</small>
           </a>
         </div>
 
-        <section class="panel user-activity-panel">
+        <section class="panel user-activity-panel" [attr.aria-busy]="usersLoading">
           <div class="panel-heading">
             <div>
               <span class="eyebrow">משתמשים חדשים</span>
@@ -44,18 +38,22 @@
             </div>
           </div>
 
-          <div class="joining-chart" [class.empty-chart]="!recentJoinCount">
-            @for (bucket of userJoinBuckets; track bucket.label) {
-              <span class="joining-bar" [style.height.%]="joinBarHeight(bucket.count)" [title]="bucket.label + ' · ' + bucket.count + ' הצטרפו'"></span>
-            }
-          </div>
-          <div class="chart-axis">
-            <span>{{ userJoinBuckets[userJoinBuckets.length - 1].label }}</span><span>הצטרפויות לאורך התקופה</span><span>{{ userJoinBuckets[0].label }}</span>
-          </div>
+          @if (usersLoading) {
+            <div class="section-loading chart-loading"><span></span><span></span><span></span><span></span><span></span></div>
+          } @else {
+            <div class="joining-chart" [class.empty-chart]="!recentJoinCount">
+              @for (bucket of userJoinBuckets; track bucket.label) {
+                <span class="joining-bar" [style.height.%]="joinBarHeight(bucket.count)" [title]="bucket.label + ' · ' + bucket.count + ' הצטרפו'"></span>
+              }
+            </div>
+            <div class="chart-axis">
+              <span>{{ userJoinBuckets[userJoinBuckets.length - 1].label }}</span><span>הצטרפויות לאורך התקופה</span><span>{{ userJoinBuckets[0].label }}</span>
+            </div>
+          }
         </section>
       </div>
 
-      <aside class="panel attention-panel">
+      <aside class="panel attention-panel" [attr.aria-busy]="usersLoading">
         <div class="panel-heading compact-heading">
           <div>
             <span class="eyebrow">השוואת צמיחה</span>
@@ -69,6 +67,9 @@
           </div>
         </div>
 
+        @if (usersLoading) {
+          <div class="section-loading gauge-loading"><span></span><span></span><span></span></div>
+        } @else {
         <div class="gauge-wrap">
           <svg viewBox="0 0 220 130" role="img" [attr.aria-label]="recentJoinCount + ' משתמשים הצטרפו ' + currentUserPeriodLabel">
             <path class="gauge-track" d="M 30 110 A 80 80 0 0 1 190 110"></path>
@@ -83,28 +84,31 @@
           <div><small>{{ currentUserPeriodLabel }}</small><strong>{{ recentJoinCount }}</strong></div>
           <div><small>{{ previousUserPeriodLabel }}</small><strong>{{ previousUserPeriodCount }}</strong></div>
         </div>
+        }
 
         <a routerLink="/admin/users/clients" class="outline-button">לכל המשתמשים</a>
       </aside>
     </div>
 
-    <section class="panel reports-panel">
+    <section class="panel reports-panel" [attr.aria-busy]="reportsLoading">
       <div class="panel-heading reports-heading">
         <div><span class="eyebrow">דורש טיפול</span><h2>דיווחים פתוחים</h2><p>{{ pendingReportsCount }} דיווחים ממתינים לבדיקה</p></div>
         <a routerLink="/admin/notifications/reports" class="outline-button compact-button">לכל הדיווחים</a>
       </div>
       <div class="reports-card-grid">
-        @for (report of pendingReports; track report.id) {
+        @if (reportsLoading) {
+          @for (placeholder of [1, 2, 3]; track placeholder) { <div class="section-loading card-loading"></div> }
+        } @else { @for (report of pendingReports; track report.id) {
           <a routerLink="/admin/notifications/reports" [queryParams]="{id: report.id}" class="report-card">
             <span class="report-card-icon material-symbols-outlined">flag</span>
             <span><small>{{ reportTypeLabel(report.reportType) }}</small><strong>{{ report.contentTitle || report.description }}</strong><time>{{ fmtDate(report.reportedAt) }}</time></span>
             <span class="material-symbols-outlined">arrow_back</span>
           </a>
-        } @empty { <div class="empty-inline grid-empty">אין דיווחים פתוחים</div> }
+        } @empty { <div class="empty-inline grid-empty">אין דיווחים פתוחים</div> } }
       </div>
     </section>
 
-    <section class="panel analytics-panel">
+    <section class="panel analytics-panel" [attr.aria-busy]="analyticsLoading">
       <div class="panel-heading analytics-heading">
         <div>
           <span class="eyebrow">אנליטיקס</span>
@@ -121,6 +125,9 @@
         </div>
       </div>
 
+      @if (analyticsLoading) {
+        <div class="section-loading analytics-loading"><span></span><span></span><span></span><span></span></div>
+      } @else {
       <div class="analytics-kpis">
         <div><small>צפיות תוכן</small><strong>{{ fmt(analyticsViews) }}</strong></div>
         <div><small>מבקרים ייחודיים</small><strong>{{ fmt(dashboard?.traffic?.uniqueVisitors || 0) }}</strong></div>
@@ -150,6 +157,7 @@
       } @else {
         <div class="chart-empty">עדיין אין נתוני מגמה להצגה בטווח הזה</div>
       }
+      }
     </section>
 
     <section class="popular-banner" *ngIf="popularContent.length">
@@ -174,7 +182,7 @@
     </section>
 
     <div class="management-grid">
-      <section class="panel approvals-panel">
+      <section class="panel approvals-panel" [attr.aria-busy]="approvalsLoading">
         <div class="panel-heading">
           <div>
             <span class="eyebrow">קהילה מקצועית</span>
@@ -184,6 +192,9 @@
           <span class="material-symbols-outlined heading-menu">more_vert</span>
         </div>
 
+        @if (approvalsLoading) {
+          <div class="section-loading approval-loading"><span></span><span></span><span></span></div>
+        } @else {
         <div class="approval-overview">
           @for (segment of approvalSegments; track segment.label) {
             <a [routerLink]="segment.link" class="approval-segment">
@@ -218,14 +229,18 @@
           }
           @if (!totalPendingApprovals) { <div class="empty-inline grid-empty">אין כרגע פרופילים שממתינים לאישור</div> }
         </div>
+        }
       </section>
 
-      <aside class="panel activities-panel">
+      <aside class="panel activities-panel" [attr.aria-busy]="usersLoading">
         <div class="panel-heading compact-heading">
           <div><span class="eyebrow">פעילות</span><h2>הצטרפויות אחרונות</h2></div>
           <span class="material-symbols-outlined heading-menu">more_vert</span>
         </div>
 
+        @if (usersLoading) {
+          <div class="section-loading activity-loading"><span></span><span></span><span></span><span></span></div>
+        } @else {
         <div class="activity-timeline">
           @for (user of recentUsers.slice(0, 6); track user.id; let first = $first) {
             <a routerLink="/admin/users/clients" [queryParams]="{userId: user.id}" class="activity-item">
@@ -236,11 +251,12 @@
             <div class="empty-inline">אין הצטרפויות אחרונות</div>
           }
         </div>
+        }
         <a routerLink="/admin/users/clients" class="outline-button">לכל המשתמשים</a>
       </aside>
     </div>
 
-    <section class="panel content-table-panel">
+    <section class="panel content-table-panel" [attr.aria-busy]="contentLoading">
       <div class="panel-heading table-heading">
         <div>
           <span class="eyebrow">תור עריכה</span>
@@ -257,7 +273,9 @@
         <div class="content-table table-header-row">
           <span>פריט</span><span>סוג</span><span>פרטים</span><span>תאריך</span><span>פעולה</span>
         </div>
-        @for (item of contentQueue; track item.id) {
+        @if (contentLoading) {
+          @for (placeholder of [1, 2, 3]; track placeholder) { <div class="section-loading table-loading"></div> }
+        } @else { @for (item of contentQueue; track item.id) {
           <a [routerLink]="item.link" class="content-table table-data-row">
             <span class="content-identity">
               <span class="content-thumb">@if (item.imageUrl) { <img [src]="item.imageUrl" [alt]="item.title"> } @else { <span class="material-symbols-outlined">description</span> }</span>
@@ -270,8 +288,7 @@
           </a>
         } @empty {
           <div class="empty-table">אין תוכן שממתין לפרסום</div>
-        }
+        } }
       </div>
     </section>
-  }
 </section>

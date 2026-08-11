@@ -8,7 +8,6 @@ import { SongService } from '../../services/song.service';
 import { ArtistService } from '../../services/artist.service';
 import { ArticleService } from '../../services/admin/article.service';
 import { EventService } from '../../services/admin/event.service';
-import { TeacherService } from '../../services/teacher.service';
 import { MusicServiceProviderService } from '../../services/music-service-provider.service';
 import { PodcastService } from '../../services/podcast.service';
 import { QuickAddAssistantService } from '../../services/quick-add-assistant.service';
@@ -25,8 +24,7 @@ import { ImgFallbackDirective } from '../../directives/img-fallback.directive';
 import { ArticleBanner } from '../../models/article.model';
 import { UpcomingEventDto } from '../../models/event.model';
 import { EventCardData } from '../../utils/event.utils';
-import { TeacherListDto } from '../../models/teacher.model';
-import { MusicServiceProviderListDto } from '../../models/music-service-provider.model';
+import { HomeShowcaseProfile } from '../../models/music-service-provider.model';
 import { PodcastEpisodeBanner, PodcastHomeCard } from '../../models/podcast.model';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { LanguageService } from '../../services/language.service';
@@ -125,8 +123,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
   viralArticlesHasMore = true;
   upcomingEvents: UpcomingEventDto[] = [];
   selectedEventModal: EventCardData | null = null;
-  featuredTeachers: TeacherListDto[] = [];
-  featuredProviders: MusicServiceProviderListDto[] = [];
+  featuredProfiles: HomeShowcaseProfile[] = [];
   homePodcasts: PodcastHomeCard[] = [];
   popularPodcastEpisodes: PodcastEpisodeBanner[] = [];
 
@@ -191,7 +188,6 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
     private artistService: ArtistService,
     private articleService: ArticleService,
     private eventService: EventService,
-    private teacherService: TeacherService,
     private providerService: MusicServiceProviderService,
     private podcastService: PodcastService,
     private quickAddAssistantService: QuickAddAssistantService,
@@ -709,27 +705,13 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
   }
 
   private loadFeaturedPeople(afterLoad?: () => void): void {
-    let completedLoads = 0;
-    const completeLoad = () => {
-      completedLoads++;
-      if (completedLoads === 2) afterLoad?.();
-    };
-    const onTeachersDone = this.trackPendingLoad();
-    this.teacherService.getTeachers(undefined, undefined, 1, undefined, 1, 6).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
-      onTeachersDone();
-      completeLoad();
+    const onProfilesDone = this.trackPendingLoad();
+    this.providerService.getHomeShowcase().pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+      onProfilesDone();
+      afterLoad?.();
     })).subscribe({
-      next: (res: any) => { this.featuredTeachers = res.items || []; },
-      error: (err) => console.error('loadContent: teachers', err)
-    });
-
-    const onProvidersDone = this.trackPendingLoad();
-    this.providerService.getServiceProviders(undefined, undefined, undefined, 1, undefined, false, 1, 6).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
-      onProvidersDone();
-      completeLoad();
-    })).subscribe({
-      next: (res: any) => { this.featuredProviders = res.items || []; },
-      error: (err) => console.error('loadContent: providers', err)
+      next: (profiles) => { this.featuredProfiles = profiles || []; },
+      error: (err) => console.error('loadContent: home showcase', err)
     });
   }
 
