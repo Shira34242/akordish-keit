@@ -114,6 +114,9 @@
     "rewrite": "/index.html",
     "exclude": ["/assets/*", "/*.{png,jpg,jpeg,gif,svg,ico,webp,avif,css,js,woff,woff2,ttf,eot,map,json,webmanifest,txt,xml,html}"]
   },
+  "mimeTypes": {
+    ".webmanifest": "application/manifest+json"
+  },
   "globalHeaders": {
     "Referrer-Policy": "strict-origin-when-cross-origin"
   }
