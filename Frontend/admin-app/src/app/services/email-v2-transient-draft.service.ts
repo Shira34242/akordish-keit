@@ -7,6 +7,7 @@ import { Injectable } from '@angular/core';
  */
 export interface TransientEmailV2Message {
   subject: string;
+  previewText?: string;
   htmlBody: string;
   fromName: string;
   fromEmail?: string;

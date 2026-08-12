@@ -17,7 +17,7 @@ export class SeoService {
   private readonly siteName = 'אקורדישקייט';
   private readonly defaultDescription =
     'אקורדישקייט הוא מאגר אקורדים, שירים, אמנים, חדשות מוזיקה, הופעות ואינדקס בעלי מקצוע בעולם המוזיקה היהודית.';
-  private readonly defaultShareImagePath = '/akordishkayt-share-default-v1.png';
+  private readonly defaultShareImagePath = '/akordishkayt-share-default-v2.jpg';
   private readonly jsonLdId = 'akordishkeit-json-ld';
 
   constructor(
@@ -47,9 +47,9 @@ export class SeoService {
 
     this.setTag('property', 'og:image', imageUrl);
     this.setTag('property', 'og:image:secure_url', imageUrl);
-    this.setTag('property', 'og:image:width', '1200');
-    this.setTag('property', 'og:image:height', '630');
-    this.setTag('property', 'og:image:type', 'image/png');
+    this.setTag('property', 'og:image:width', '1181');
+    this.setTag('property', 'og:image:height', '1181');
+    this.setTag('property', 'og:image:type', 'image/jpeg');
     this.setTag('property', 'og:image:alt', this.siteName);
     this.setTag('name', 'twitter:image', imageUrl);
     this.setTag('name', 'twitter:image:alt', this.siteName);

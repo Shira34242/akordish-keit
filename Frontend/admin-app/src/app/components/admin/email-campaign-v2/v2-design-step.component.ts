@@ -58,6 +58,12 @@ import { firstValueFrom } from 'rxjs';
     .subject-input:focus { outline: none; border-color: #d1d5db; background: #f9fafb; }
     .subject-input::placeholder { color: #9ca3af; }
 
+    .preheader-field { display: flex; align-items: center; gap: 6px; min-width: 220px; max-width: 330px; }
+    .preheader-label { color: #6b7280; font-size: 12px; white-space: nowrap; }
+    .preheader-input { width: 100%; min-width: 0; background: #f9fafb; border: 1px solid #e5e7eb; color: #374151; font-size: 12px; padding: 5px 8px; border-radius: 5px; direction: rtl; }
+    .preheader-input:focus { outline: none; border-color: #9ca3af; background: #fff; }
+    @media (max-width: 1100px) { .preheader-field { max-width: 240px; } }
+
     .header-actions { display: flex; gap: 6px; flex-shrink: 0; align-items: center; }
 
     .save-status { display: flex; align-items: center; gap: 6px; font-size: 13px; white-space: nowrap; }
@@ -122,6 +128,18 @@ import { firstValueFrom } from 'rxjs';
         maxlength="150"
       />
 
+      <label class="preheader-field" title="מופיע ליד נושא המייל בתיבת הדואר, ואינו חלק מגוף המייל">
+        <span class="preheader-label">טקסט מקדים</span>
+        <input
+          class="preheader-input"
+          type="text"
+          [ngModel]="previewText()"
+          (ngModelChange)="onPreviewTextChange($event)"
+          placeholder="למשל: כל מה שחדש השבוע..."
+          maxlength="150"
+        />
+      </label>
+
       <div class="header-actions">
         <div class="save-status">
           @if (isTransientMode()) {
@@ -168,7 +186,7 @@ import { firstValueFrom } from 'rxjs';
       <app-test-send-dialog
         [campaignId]="campaignId() || 0"
         [subject]="subject()"
-        [previewText]="''"
+        [previewText]="previewText()"
         [sending]="testSending()"
         [results]="testResults()"
         [errorMessage]="testError()"
@@ -201,7 +219,7 @@ import { firstValueFrom } from 'rxjs';
         [htmlBody]="previewHtml()"
         [errorMessage]="previewError()"
         [subject]="subject()"
-        [previewText]="''"
+        [previewText]="previewText()"
         [fromName]="'אקורדישקייט'"
         (onClose)="closePreview()"
       />
@@ -218,6 +236,7 @@ export class V2DesignStepComponent implements OnInit, OnDestroy {
   readonly editorComponent = viewChild(V2EditorComponent);
 
   subject = signal('שליחה משודרגת');
+  previewText = signal('');
   campaignId = signal<number | null>(null);
   designJson = signal<string | null>(null);
   currentMjml = signal('');
@@ -258,6 +277,7 @@ export class V2DesignStepComponent implements OnInit, OnDestroy {
         this.service.getTemplate(num).subscribe(t => {
           if (t) {
             this.subject.set(t.subject);
+            this.previewText.set(t.previewText || '');
             this.designJson.set(t.designJson);
             this._templateStatus = t.status || 'draft';
           }
@@ -267,6 +287,7 @@ export class V2DesignStepComponent implements OnInit, OnDestroy {
       const transient = this.transientDraft.get();
       if (transient?.designJson) {
         this.subject.set(transient.subject);
+        this.previewText.set(transient.previewText || '');
         this.designJson.set(transient.designJson);
       }
     }
@@ -331,6 +352,11 @@ export class V2DesignStepComponent implements OnInit, OnDestroy {
     this._scheduleAutosave();
   }
 
+  onPreviewTextChange(value: string): void {
+    this.previewText.set(value);
+    this._scheduleAutosave();
+  }
+
   manualSave(): void {
     this._clearDebounce();
     const snapshot = this._buildSnapshot();
@@ -372,6 +398,7 @@ export class V2DesignStepComponent implements OnInit, OnDestroy {
         fromName: 'אקורדישקייט',
         designJson: '',
         mjml,
+        previewText: this.previewText(),
         campaignId: this.campaignId() ?? undefined,
       }));
       if (result?.success && result?.html) {
@@ -575,6 +602,7 @@ export class V2DesignStepComponent implements OnInit, OnDestroy {
         fromName: 'אקורדישקייט',
         designJson: '',
         mjml,
+        previewText: this.previewText(),
       }));
       if (!result?.success || !result.html) {
         this._showTransientPreparationError(
@@ -585,6 +613,7 @@ export class V2DesignStepComponent implements OnInit, OnDestroy {
 
       return {
         subject: this.subject().trim(),
+        previewText: this.previewText().trim(),
         htmlBody: result.html,
         fromName: 'אקורדישקייט',
         designJson: JSON.stringify(this.editorComponent()?._editor?.getContent() ?? {}),
@@ -629,7 +658,7 @@ export class V2DesignStepComponent implements OnInit, OnDestroy {
       subject: this.subject(),
       designJson: JSON.stringify(content),
       mjml: this.currentMjml(),
-      previewText: '',
+      previewText: this.previewText(),
       fromName: 'אקורדישקייט',
       campaignId: cid,
     };

@@ -81,7 +81,7 @@ public class EmailV2Controller : ControllerBase
         if (string.IsNullOrWhiteSpace(dto.Mjml))
             return BadRequest("MJML is required");
 
-        var result = await _emailV2Service.ConvertToHtmlAsync(dto.Mjml);
+        var result = await _emailV2Service.ConvertToHtmlAsync(dto.Mjml, dto.PreviewText);
         return result.Success ? Ok(result) : BadRequest(result);
     }
 

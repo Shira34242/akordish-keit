@@ -35,7 +35,7 @@ public class EmailV2Service : IEmailV2Service
 
     public async Task<EmailV2TemplateDto> SaveTemplateAsync(SaveEmailV2TemplateDto dto)
     {
-        var conversionResult = await ConvertToHtmlAsync(dto.Mjml);
+        var conversionResult = await ConvertToHtmlAsync(dto.Mjml, dto.PreviewText);
         if (!conversionResult.Success)
         {
             throw new InvalidOperationException(
@@ -141,7 +141,7 @@ public class EmailV2Service : IEmailV2Service
         return true;
     }
 
-    public async Task<EmailV2ConversionResultDto> ConvertToHtmlAsync(string mjml)
+    public async Task<EmailV2ConversionResultDto> ConvertToHtmlAsync(string mjml, string? previewText = null)
     {
         var result = new EmailV2ConversionResultDto();
         var warnings = new List<string>();
@@ -173,7 +173,7 @@ public class EmailV2Service : IEmailV2Service
 
             var renderedBytes = Encoding.UTF8.GetByteCount(renderResult.Html);
             result.Success = true;
-            result.Html = FinalizeEmailHtml(renderResult.Html);
+            result.Html = FinalizeEmailHtml(renderResult.Html, previewText);
             var finalizedBytes = Encoding.UTF8.GetByteCount(result.Html);
             _logger.LogInformation(
                 "Email V2 HTML size after MJML render: {RenderedBytes} bytes ({RenderedKb:F1} KB); after compaction: {FinalizedBytes} bytes ({FinalizedKb:F1} KB); saved {SavedBytes} bytes",
@@ -567,7 +567,7 @@ public class EmailV2Service : IEmailV2Service
         var restoredPreheader = ExtractFromDesignJson(versionData.DesignJson, "previewText")
             ?? versionData.Preheader;
 
-        var conversionResult = await ConvertToHtmlAsync(restoredMjml);
+        var conversionResult = await ConvertToHtmlAsync(restoredMjml, restoredPreheader);
 
         if (conversionResult.Success && conversionResult.Html != null)
             campaign.HtmlBody = conversionResult.Html;
@@ -778,7 +778,7 @@ public class EmailV2Service : IEmailV2Service
         return mjml[..(idx + openingTag.Length)] + " direction=\"rtl\"" + mjml[(idx + openingTag.Length)..];
     }
 
-    private static string FinalizeEmailHtml(string html)
+    private static string FinalizeEmailHtml(string html, string? previewText)
     {
         // Gmail clips messages over roughly 102 KB. Mjml.Net already avoids
         // pretty-printing, but comments and whitespace between tags can still
@@ -798,6 +798,8 @@ public class EmailV2Service : IEmailV2Service
         compact = AddRtlAttribute(compact, "html");
         compact = AddRtlAttribute(compact, "body");
         compact = InjectRtlTextRules(compact);
+        compact = StabilizeHebrewTerminalPunctuation(compact);
+        compact = InjectPreheader(compact, previewText);
         return compact;
     }
 
@@ -827,11 +829,40 @@ public class EmailV2Service : IEmailV2Service
 
     private static string InjectRtlTextRules(string html)
     {
-        const string rules = "<style type=\"text/css\">h1,h2,h3,h4,h5,h6,p{direction:rtl!important;unicode-bidi:plaintext!important;text-align:right;}[dir=\"rtl\"]{unicode-bidi:plaintext;}</style>";
+        const string rules = "<style type=\"text/css\">body,table,tbody,tr,td,th,div,p,h1,h2,h3,h4,h5,h6,span,a{direction:rtl!important;unicode-bidi:plaintext!important;}td,th,div,p,h1,h2,h3,h4,h5,h6{text-align:right;}[dir=\"rtl\"]{unicode-bidi:plaintext!important;}</style>";
         var headEnd = html.IndexOf("</head>", StringComparison.OrdinalIgnoreCase);
         return headEnd >= 0
             ? html.Insert(headEnd, rules)
             : rules + html;
+    }
+
+    private static string StabilizeHebrewTerminalPunctuation(string html) =>
+        // Some email clients ignore CSS bidi rules inside MJML's table wrappers.
+        // An RLM before trailing neutral punctuation keeps it attached to a Hebrew run.
+        Regex.Replace(
+            html,
+            @"([\u0590-\u05FF])([!?.:;]+)(?=(?:\s|<|$))",
+            "$1&#8207;$2",
+            RegexOptions.CultureInvariant,
+            TimeSpan.FromSeconds(1));
+
+    private static string InjectPreheader(string html, string? previewText)
+    {
+        var text = previewText?.Trim();
+        if (string.IsNullOrEmpty(text))
+            return html;
+
+        var encoded = System.Net.WebUtility.HtmlEncode(text);
+        const string style = "display:none!important;visibility:hidden;opacity:0;color:transparent;height:0;width:0;max-height:0;max-width:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;";
+        var preheader = $"<div dir=\"rtl\" style=\"{style}\">&#8207;{encoded}&#8207;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>";
+        var bodyOpeningEnd = html.IndexOf('>');
+        if (bodyOpeningEnd >= 0 && html[..(bodyOpeningEnd + 1)].Contains("<body", StringComparison.OrdinalIgnoreCase))
+            return html.Insert(bodyOpeningEnd + 1, preheader);
+
+        var bodyStart = html.IndexOf("<body", StringComparison.OrdinalIgnoreCase);
+        if (bodyStart < 0) return preheader + html;
+        bodyOpeningEnd = html.IndexOf('>', bodyStart);
+        return bodyOpeningEnd >= 0 ? html.Insert(bodyOpeningEnd + 1, preheader) : preheader + html;
     }
 
     private static string AddRtlAttribute(string html, string tagName) =>

@@ -25,7 +25,9 @@ import { ComponentLibraryService } from '../../../services/component-library.ser
 @Component({
   selector: 'app-v2-editor',
   standalone: true,
-  host: { dir: 'rtl' },
+  // Templatical's toolbar is not RTL-native, while the document canvas must be.
+  // The two directions are separated explicitly after the editor is mounted.
+  host: { dir: 'ltr' },
   styles: [`
     :host {
       flex: 1;
@@ -33,7 +35,7 @@ import { ComponentLibraryService } from '../../../services/component-library.ser
       display: block;
       overflow: visible;
 
-      direction: rtl;
+      direction: ltr;
       --tpl-user-primary: #ddff53;
       --tpl-user-primary-hover: #c8e649;
       --tpl-user-primary-light: rgba(221, 255, 83, 0.12);
@@ -216,6 +218,10 @@ export class V2EditorComponent implements AfterViewInit, OnDestroy {
         shadowDom: true,
         branding: false,
         locale: 'he',
+        // The bundled quality panel currently reports Templatical's own `tpl:*`
+        // utility classes as template errors. Server-side MJML validation remains
+        // the source of truth, so do not show misleading editor diagnostics.
+        lint: { disabled: true },
         uiTheme: 'light',
         theme,
         templateDefaults: {
@@ -239,6 +245,7 @@ export class V2EditorComponent implements AfterViewInit, OnDestroy {
         onError: (error: Error) => console.error('[V2Editor]', error),
         onRequestMedia: this.handleMediaRequest.bind(this),
       });
+      this.applyBidiStyles(container);
       this.editorReady.emit();
     } catch (error) {
       console.error('[V2Editor] Failed to initialize:', error);
@@ -258,6 +265,36 @@ export class V2EditorComponent implements AfterViewInit, OnDestroy {
 
   private clearMjmlTimer(): void {
     if (this._mjmlTimer !== null) { clearTimeout(this._mjmlTimer); this._mjmlTimer = null; }
+  }
+
+  /**
+   * Templatical renders inside an open Shadow DOM and does not expose a public
+   * RTL-canvas option. Its toolbar must stay LTR so its selected states keep
+   * their real meaning; text content, including the Tiptap editor, must be RTL.
+   */
+  private applyBidiStyles(container: HTMLElement): void {
+    const root = container.shadowRoot;
+    if (!root) return;
+
+    root.getElementById('email-v2-bidi-rules')?.remove();
+    const style = document.createElement('style');
+    style.id = 'email-v2-bidi-rules';
+    style.textContent = `
+      .tpl { direction: ltr; }
+      .tpl .tpl-canvas .tpl-block-content,
+      .tpl .tpl-canvas .tpl-block-content *,
+      .tpl .tpl-text-content,
+      .tpl .tpl-text-editable,
+      .tpl .tpl-text-editable .tiptap,
+      .tpl .tpl-table-editable [contenteditable="true"] {
+        direction: rtl;
+        text-align: right;
+        unicode-bidi: plaintext;
+      }
+      .tpl .tpl-text-toolbar,
+      .tpl .tpl-text-toolbar * { direction: ltr; }
+    `;
+    root.appendChild(style);
   }
 
   private handleMediaRequest(context?: { files?: File[] }): Promise<{ url: string } | null> {
