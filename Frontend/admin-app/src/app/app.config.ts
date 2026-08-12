@@ -1,5 +1,6 @@
-import { ApplicationConfig, ErrorHandler, importProvidersFrom, LOCALE_ID } from '@angular/core';
+import { ApplicationConfig, ErrorHandler, importProvidersFrom, isDevMode, LOCALE_ID } from '@angular/core';
 import { provideRouter, withInMemoryScrolling } from '@angular/router';
+import { provideServiceWorker } from '@angular/service-worker';
 import { ChunkErrorHandler } from './services/chunk-error.handler';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { registerLocaleData } from '@angular/common';
@@ -16,6 +17,10 @@ export const appConfig: ApplicationConfig = {
     { provide: LOCALE_ID, useValue: 'he-IL' },
     { provide: ErrorHandler, useClass: ChunkErrorHandler },
     provideRouter(routes, withInMemoryScrolling({ scrollPositionRestoration: 'enabled' })),
+    provideServiceWorker('ngsw-worker.js', {
+      enabled: !isDevMode(),
+      registrationStrategy: 'registerWhenStable:30000'
+    }),
     // 🔒 Interceptors: authInterceptor מוסיף טוקן, errorInterceptor מטפל בשגיאות
     provideHttpClient(withInterceptors([authInterceptor, errorInterceptor])),
     importProvidersFrom([

@@ -30,6 +30,7 @@
     "@angular/forms": "^20.3.0",
     "@angular/platform-browser": "^20.3.0",
     "@angular/router": "^20.3.0",
+    "@angular/service-worker": "20.3.12",
     "@templatical/editor": "0.24.1",
     "@templatical/renderer": "0.24.1",
     "@tiptap/core": "^3.27.1",

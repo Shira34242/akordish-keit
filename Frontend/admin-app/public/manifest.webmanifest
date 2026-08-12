@@ -1,0 +1,45 @@
+{
+  "name": "אקורדישקייט",
+  "short_name": "אקורדישקייט",
+  "description": "מאגר אקורדים, שירים, אמנים, חדשות מוזיקה, הופעות ואינדקס בעלי מקצוע בעולם המוזיקה היהודית.",
+  "lang": "he",
+  "dir": "rtl",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#ddff53",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": [
+    "music",
+    "entertainment",
+    "lifestyle"
+  ]
+}
