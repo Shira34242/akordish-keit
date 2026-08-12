@@ -71,7 +71,7 @@
           <span><small>{{ kindLabel }}</small><strong>{{ selectedContent.title }}</strong></span>
         </div>
         <div class="control-section fields-stack">
-          <label>הכותרת שמעל הטלפון<textarea rows="3" [(ngModel)]="heading" (ngModelChange)="onDesignChange()"></textarea></label>
+          <label>הכותרת הראשית בעיצוב<textarea rows="3" [(ngModel)]="heading" (ngModelChange)="onDesignChange()"></textarea></label>
           <div class="range-field">
             <span>גודל הכותרת</span><output>{{ settings.headingSize }}</output>
             <input type="range" min="42" max="92" [(ngModel)]="settings.headingSize" (ngModelChange)="onDesignChange()">

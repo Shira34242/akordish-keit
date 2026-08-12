@@ -141,16 +141,18 @@ export class SocialShareDesignerComponent implements OnInit, AfterViewInit, OnDe
     const headings: Record<ContentKind, string> = {
       song: 'האקורדים ללהיט החדש כבר מחכים לכם באתר!',
       article: 'הכתבה החדשה שכדאי לכם לקרוא כבר באתר!',
-      event: 'ההופעה שאסור לכם לפספס מחכה לכם באתר!',
-      podcast: 'הפודקאסט שכדאי לכם לשמוע מחכה באתר!',
-      professional: 'הכירו את אנשי המקצוע של עולם המוזיקה!',
-      artist: 'כל מה שרציתם לדעת על האמן מחכה באתר!'
+      event: 'נפגשים בהופעה הקרובה!',
+      podcast: 'פרק חדש מחכה לכם באקורדישקייט',
+      professional: 'גם אני חלק מאינדקס עולם המוזיקה',
+      artist: 'גם אני מופיע באקורדישקייט'
     };
     this.heading = headings[kind];
     this.selectedContent = undefined;
     this.loadResults();
+    this.contentImage = undefined;
     this.capturedPageCanvas = undefined;
     this.mobilePagePath = '';
+    this.captureLoading = false;
     this.captureError = '';
     this.queueRender();
   }
@@ -278,7 +280,14 @@ export class SocialShareDesignerComponent implements OnInit, AfterViewInit, OnDe
   selectResult(item: ShareContentItem): void {
     this.selectedContent = item;
     this.statusMessage = '';
-    this.openMobilePage(item.path);
+    if (this.kind === 'song' || this.kind === 'article') {
+      this.contentImage = undefined;
+      this.openMobilePage(item.path);
+    } else {
+      this.mobilePagePath = '';
+      this.capturedPageCanvas = undefined;
+      this.loadSelectedContentImage();
+    }
     this.queueRender();
   }
 
@@ -551,20 +560,31 @@ export class SocialShareDesignerComponent implements OnInit, AfterViewInit, OnDe
   }
 
   private loadSelectedContentImage(): void {
-    const url = this.kind === 'song'
-      ? this.selectedSong?.imageUrl
-      : this.kind === 'article'
-        ? this.selectedArticle?.featuredImageUrl
-        : this.customImageUrl;
+    const url = this.selectedContent?.imageUrl;
+    const fallback = this.kind === 'artist' || this.kind === 'professional'
+      ? 'assets/default-artist.png'
+      : 'assets/default-article.png';
     this.contentImage = undefined;
+    this.captureLoading = true;
+    this.captureError = '';
     if (!url) {
+      this.captureLoading = false;
       this.queueRender();
       return;
     }
     this.loadImage(url, true).then(image => {
       this.contentImage = image;
+      this.captureLoading = false;
       this.queueRender();
-    }).catch(() => this.queueRender());
+    }).catch(() => this.loadImage(fallback).then(image => {
+      this.contentImage = image;
+      this.captureLoading = false;
+      this.queueRender();
+    })).catch(() => {
+      this.captureLoading = false;
+      this.captureError = 'לא הצלחנו לטעון את תמונת התוכן, אבל עדיין אפשר להמשיך עם העיצוב.';
+      this.queueRender();
+    });
   }
 
   private loadImage(src: string, crossOrigin = false): Promise<HTMLImageElement> {
@@ -604,17 +624,169 @@ export class SocialShareDesignerComponent implements OnInit, AfterViewInit, OnDe
     context.save();
     context.scale(scale, scale);
     this.drawHeading(context);
+    if (this.kind === 'artist' || this.kind === 'professional') {
+      this.drawProfilePromotion(context, this.kind === 'professional');
+    } else if (this.kind === 'podcast') {
+      this.drawPodcastPromotion(context);
+    } else if (this.kind === 'event') {
+      this.drawEventPromotion(context);
+    }
     context.restore();
 
-    const phoneCanvas = this.createPhoneContent(scale);
-    const points = this.pointNames.map(name => ({
-      x: this.settings.points[name].x * scale,
-      y: this.settings.points[name].y * scale
-    }));
-    this.drawWarpedImage(context, phoneCanvas, points, 10, 16);
-    context.drawImage(this.overlayImage!, 0, 0, canvas.width, canvas.height);
+    if (this.kind === 'song' || this.kind === 'article') {
+      const phoneCanvas = this.createPhoneContent(scale);
+      const points = this.pointNames.map(name => ({
+        x: this.settings.points[name].x * scale,
+        y: this.settings.points[name].y * scale
+      }));
+      this.drawWarpedImage(context, phoneCanvas, points, 10, 16);
+      context.drawImage(this.overlayImage!, 0, 0, canvas.width, canvas.height);
+    }
 
     return canvas;
+  }
+
+  private drawProfilePromotion(context: CanvasRenderingContext2D, professional: boolean): void {
+    const item = this.selectedContent;
+    const centerX = STAGE_WIDTH / 2;
+
+    context.save();
+    context.direction = 'rtl';
+    context.textAlign = 'center';
+    context.textBaseline = 'top';
+
+    context.beginPath();
+    context.arc(centerX, 455, 174, 0, Math.PI * 2);
+    context.fillStyle = '#ffffff';
+    context.fill();
+    if (this.contentImage) {
+      context.save();
+      context.beginPath();
+      context.arc(centerX, 455, 158, 0, Math.PI * 2);
+      context.clip();
+      this.drawCoverImage(context, this.contentImage, centerX - 158, 297, 316, 316);
+      context.restore();
+    } else {
+      context.beginPath();
+      context.arc(centerX, 455, 158, 0, Math.PI * 2);
+      context.fillStyle = '#F2F2F2';
+      context.fill();
+    }
+
+    if (professional) {
+      this.roundRect(context, centerX - 135, 650, 270, 48, 24);
+      context.fillStyle = '#000000';
+      context.fill();
+      context.fillStyle = '#ddff53';
+      context.font = '800 22px "Open Sans", Arial, sans-serif';
+      context.fillText('אינדקס עולם המוזיקה', centerX, 660);
+    }
+
+    context.fillStyle = '#000000';
+    context.font = '800 58px "Open Sans", Arial, sans-serif';
+    const nameY = professional ? 720 : 665;
+    this.drawWrappedText(context, item?.title || (professional ? 'נותן השירות' : 'שם האמן'), centerX, nameY, 730, 66, 2);
+
+    context.fillStyle = '#404040';
+    context.font = '300 26px "Open Sans", Arial, sans-serif';
+    this.drawWrappedText(context, item?.meta || '', centerX, professional ? 850 : 800, 660, 38, 2);
+
+    const cardY = professional ? 930 : 890;
+    this.roundRect(context, 95, cardY, 710, 260, 34);
+    context.fillStyle = '#ffffff';
+    context.fill();
+    context.fillStyle = '#303030';
+    context.font = '300 29px "Open Sans", Arial, sans-serif';
+    const invitation = professional
+      ? 'בואו להכיר את השירותים, הניסיון ודרכי יצירת הקשר שלי.'
+      : 'היכנסו לדף שלי לצפייה באקורדים, כתבות, הופעות ותוכן נוסף.';
+    this.drawWrappedText(context, invitation, centerX, cardY + 42, 610, 43, 3);
+
+    this.roundRect(context, 255, cardY + 174, 390, 58, 29);
+    context.fillStyle = '#000000';
+    context.fill();
+    context.fillStyle = '#ddff53';
+    context.font = '800 25px "Open Sans", Arial, sans-serif';
+    context.fillText(professional ? 'לצפייה בפרופיל' : 'לצפייה בדף האמן', centerX, cardY + 187);
+    context.restore();
+  }
+
+  private drawPodcastPromotion(context: CanvasRenderingContext2D): void {
+    const item = this.selectedContent;
+    context.save();
+    context.direction = 'rtl';
+    context.textAlign = 'center';
+    context.textBaseline = 'top';
+
+    this.roundRect(context, 70, 300, 760, 430, 36);
+    context.save();
+    context.clip();
+    context.fillStyle = '#404040';
+    context.fillRect(70, 300, 760, 430);
+    if (this.contentImage) this.drawCoverImage(context, this.contentImage, 70, 300, 760, 430);
+    context.restore();
+
+    context.beginPath();
+    context.arc(450, 515, 66, 0, Math.PI * 2);
+    context.fillStyle = '#ffffff';
+    context.fill();
+    context.beginPath();
+    context.moveTo(430, 478);
+    context.lineTo(430, 552);
+    context.lineTo(492, 515);
+    context.closePath();
+    context.fillStyle = '#000000';
+    context.fill();
+
+    this.roundRect(context, 105, 770, 690, 360, 34);
+    context.fillStyle = '#ffffff';
+    context.fill();
+    context.fillStyle = '#404040';
+    context.font = '800 23px "Open Sans", Arial, sans-serif';
+    context.fillText(item?.meta || 'פרק חדש', 450, 812);
+    context.fillStyle = '#000000';
+    context.font = '800 47px "Open Sans", Arial, sans-serif';
+    this.drawWrappedText(context, item?.title || 'שם הפרק', 450, 860, 600, 56, 3);
+    this.roundRect(context, 275, 1042, 350, 58, 29);
+    context.fillStyle = '#000000';
+    context.fill();
+    context.fillStyle = '#ddff53';
+    context.font = '800 25px "Open Sans", Arial, sans-serif';
+    context.fillText('להאזנה לפרק', 450, 1055);
+    context.restore();
+  }
+
+  private drawEventPromotion(context: CanvasRenderingContext2D): void {
+    const item = this.selectedContent;
+    context.save();
+    context.direction = 'rtl';
+    context.textAlign = 'center';
+    context.textBaseline = 'top';
+
+    this.roundRect(context, 125, 290, 650, 560, 40);
+    context.save();
+    context.clip();
+    context.fillStyle = '#ffffff';
+    context.fillRect(125, 290, 650, 560);
+    if (this.contentImage) this.drawCoverImage(context, this.contentImage, 125, 290, 650, 560);
+    context.restore();
+
+    this.roundRect(context, 90, 890, 720, 280, 34);
+    context.fillStyle = '#ffffff';
+    context.fill();
+    context.fillStyle = '#000000';
+    context.font = '800 48px "Open Sans", Arial, sans-serif';
+    this.drawWrappedText(context, item?.title || 'שם ההופעה', 450, 930, 620, 57, 2);
+    context.fillStyle = '#404040';
+    context.font = '300 27px "Open Sans", Arial, sans-serif';
+    this.drawWrappedText(context, item?.meta || 'כל הפרטים מחכים לכם באתר', 450, 1050, 600, 38, 1);
+    this.roundRect(context, 285, 1105, 330, 56, 28);
+    context.fillStyle = '#000000';
+    context.fill();
+    context.fillStyle = '#ddff53';
+    context.font = '800 24px "Open Sans", Arial, sans-serif';
+    context.fillText('לפרטי ההופעה', 450, 1117);
+    context.restore();
   }
 
   private drawHeading(context: CanvasRenderingContext2D): void {

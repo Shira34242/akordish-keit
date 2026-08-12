@@ -17,6 +17,7 @@ export class SeoService {
   private readonly siteName = 'אקורדישקייט';
   private readonly defaultDescription =
     'אקורדישקייט הוא מאגר אקורדים, שירים, אמנים, חדשות מוזיקה, הופעות ואינדקס בעלי מקצוע בעולם המוזיקה היהודית.';
+  private readonly defaultShareImagePath = '/akordishkayt-share-default-v1.png';
   private readonly jsonLdId = 'akordishkeit-json-ld';
 
   constructor(
@@ -29,7 +30,7 @@ export class SeoService {
     const title = this.withSiteName(config.title);
     const description = config.description || this.defaultDescription;
     const canonicalUrl = this.absoluteUrl(config.path || this.currentPath());
-    const imageUrl = config.imageUrl ? this.absoluteUrl(config.imageUrl) : undefined;
+    const imageUrl = this.absoluteUrl(this.defaultShareImagePath);
 
     this.titleService.setTitle(title);
     this.setTag('name', 'description', description);
@@ -40,17 +41,18 @@ export class SeoService {
     this.setTag('property', 'og:description', description);
     this.setTag('property', 'og:type', config.type || 'website');
     this.setTag('property', 'og:url', canonicalUrl);
-    this.setTag('name', 'twitter:card', imageUrl ? 'summary_large_image' : 'summary');
+    this.setTag('name', 'twitter:card', 'summary_large_image');
     this.setTag('name', 'twitter:title', title);
     this.setTag('name', 'twitter:description', description);
 
-    if (imageUrl) {
-      this.setTag('property', 'og:image', imageUrl);
-      this.setTag('name', 'twitter:image', imageUrl);
-    } else {
-      this.removeTag('property', 'og:image');
-      this.removeTag('name', 'twitter:image');
-    }
+    this.setTag('property', 'og:image', imageUrl);
+    this.setTag('property', 'og:image:secure_url', imageUrl);
+    this.setTag('property', 'og:image:width', '1200');
+    this.setTag('property', 'og:image:height', '630');
+    this.setTag('property', 'og:image:type', 'image/png');
+    this.setTag('property', 'og:image:alt', this.siteName);
+    this.setTag('name', 'twitter:image', imageUrl);
+    this.setTag('name', 'twitter:image:alt', this.siteName);
 
     this.setCanonical(canonicalUrl);
     this.setJsonLd(config.structuredData || this.organizationSchema(canonicalUrl));
@@ -132,7 +134,4 @@ export class SeoService {
     this.meta.updateTag({ [attr]: key, content });
   }
 
-  private removeTag(attr: 'name' | 'property', key: string): void {
-    this.meta.removeTag(`${attr}='${key}'`);
-  }
 }
