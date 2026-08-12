@@ -797,6 +797,7 @@ public class EmailV2Service : IEmailV2Service
         // clients. Put the direction on the generated document as well.
         compact = AddRtlAttribute(compact, "html");
         compact = AddRtlAttribute(compact, "body");
+        compact = AddRtlAttributesToTextContainers(compact);
         compact = InjectRtlTextRules(compact);
         compact = StabilizeHebrewTerminalPunctuation(compact);
         compact = InjectPreheader(compact, previewText);
@@ -835,6 +836,39 @@ public class EmailV2Service : IEmailV2Service
             ? html.Insert(headEnd, rules)
             : rules + html;
     }
+
+    private static string AddRtlAttributesToTextContainers(string html) =>
+        // Gmail can discard or lower the priority of rules from <head>. Put the
+        // direction inline on every MJML text wrapper, which also overrides any
+        // incidental LTR value carried over from a custom block.
+        Regex.Replace(
+            html,
+            @"<(?<tag>td|th|div|p|h1|h2|h3|h4|h5|h6|span|a)\b(?<attributes>[^>]*)>",
+            match =>
+            {
+                var attributes = match.Groups["attributes"].Value;
+                if (!Regex.IsMatch(attributes, @"\bdir\s*=", RegexOptions.IgnoreCase))
+                    attributes += " dir=\"rtl\"";
+
+                const string bidiStyle = "direction:rtl!important;unicode-bidi:plaintext!important;";
+                if (Regex.IsMatch(attributes, @"\bstyle\s*=", RegexOptions.IgnoreCase))
+                {
+                    attributes = Regex.Replace(
+                        attributes,
+                        "\\bstyle\\s*=\\s*(?<quote>[\\\"'])(?<style>.*?)\\k<quote>",
+                        styleMatch => $"style=\"{styleMatch.Groups["style"].Value.TrimEnd(';')};{bidiStyle}\"",
+                        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant,
+                        TimeSpan.FromSeconds(1));
+                }
+                else
+                {
+                    attributes += $" style=\"{bidiStyle}\"";
+                }
+
+                return $"<{match.Groups["tag"].Value}{attributes}>";
+            },
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant,
+            TimeSpan.FromSeconds(1));
 
     private static string StabilizeHebrewTerminalPunctuation(string html) =>
         // Some email clients ignore CSS bidi rules inside MJML's table wrappers.

@@ -1476,9 +1476,11 @@
 .footer-newsletter {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: flex-end;
     gap: var(--space-sm);
-    flex-shrink: 0;
+    flex: 0 1 28rem;
+    width: 100%;
+    max-width: 28rem;
     min-width: 200px;
 }
 
@@ -1544,6 +1546,41 @@
 
 .footer-newsletter-btn:hover {
     opacity: 0.75;
+}
+
+.footer-promos {
+    display: flex;
+    align-self: flex-end;
+    width: min(100%, 22rem);
+    gap: var(--space-md);
+    margin-top: var(--space-lg);
+}
+
+.footer-promo {
+    display: block;
+    flex: 1 1 0;
+    min-width: 0;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.footer-promo img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.footer-promo--link {
+    transition: opacity 0.15s;
+}
+
+.footer-promo--link:hover {
+    opacity: 0.75;
+}
+
+.footer-promo--link:focus-visible {
+    outline: 2px solid #000000;
+    outline-offset: 2px;
 }
 
 /* --- Legal bar --- */
