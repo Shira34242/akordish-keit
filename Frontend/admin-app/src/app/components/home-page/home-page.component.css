@@ -1719,6 +1719,16 @@
     will-change: auto;
   }
 
+  .hero-surface {
+    inset: 0;
+    height: 100%;
+  }
+
+  .hero-overlay {
+    background-size: cover !important;
+    background-position: center !important;
+  }
+
   .hero-content-area {
     height: calc(75vw - 50px);
     margin-top: 0;
