@@ -25,6 +25,7 @@ import { AnalyticsService } from '../../../services/analytics.service';
 import { CloudflareImagePipe, CloudflareImageSrcsetPipe, cloudflareBackgroundImage } from '../../../pipes/cloudflare-image.pipe';
 import { artistRoute } from '../../../utils/slug';
 import { ProfileAvatarComponent } from '../../shared/profile-avatar/profile-avatar.component';
+import { SystemSettingsService } from '../../../services/system-settings.service';
 
 interface Category {
   id: number;
@@ -65,6 +66,7 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
   private readonly scrollLoadOffset = 700;
   private searchDebounceTimer?: ReturnType<typeof setTimeout>;
   agencyBanners: AgencyWithProfiles[] = [];
+  heroImage = '';
 
   // ג”€ג”€ג”€ Tab ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
   activeTab: 'professionals' | 'teachers' = 'professionals';
@@ -177,10 +179,15 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
     private searchService: SearchService,
     private agencyService: AgencyService,
     private analytics: AnalyticsService,
+    private systemSettingsService: SystemSettingsService,
     private hostRef: ElementRef<HTMLElement>
   ) {}
 
   ngOnInit(): void {
+    this.systemSettingsService.getPublicBannerImages().subscribe({
+      next: images => this.heroImage = images['banner_music_index_hero_image'] || '',
+      error: () => undefined
+    });
     const tab = this.route.snapshot.queryParamMap.get('tab');
     if (tab === 'teachers') {
       this.activeTab = 'teachers';

@@ -11,6 +11,16 @@ namespace AkordishKeit.Controllers;
 public class SystemSettingsController : ControllerBase
 {
     private const string TickerConfigKey = "hero_news_ticker_config";
+    private static readonly string[] PublicBannerImageKeys =
+    {
+        "banner_home_hero_image",
+        "banner_home_chords_image",
+        "banner_home_index_image",
+        "banner_home_podcasts_image",
+        "banner_chords_hero_image",
+        "banner_podcasts_hero_image",
+        "banner_music_index_hero_image"
+    };
     private const string SiteGateEnabledKey = "site_access_gate_enabled";
     private const string SiteGatePasswordHashKey = "site_access_gate_password_hash";
     private const string SiteGatePasswordVersionKey = "site_access_gate_password_version";
@@ -36,6 +46,19 @@ public class SystemSettingsController : ControllerBase
 
         var value = await _settingsService.GetValueAsync(key);
         return Ok(new { key, value });
+    }
+
+    [HttpGet("public/banner-images")]
+    [AllowAnonymous]
+    public async Task<ActionResult<Dictionary<string, string>>> GetPublicBannerImages()
+    {
+        var values = new Dictionary<string, string>();
+        foreach (var key in PublicBannerImageKeys)
+        {
+            var value = await _settingsService.GetValueAsync(key);
+            if (!string.IsNullOrWhiteSpace(value)) values[key] = value;
+        }
+        return Ok(values);
     }
 
     [HttpGet("access-gate")]

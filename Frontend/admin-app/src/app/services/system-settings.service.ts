@@ -15,6 +15,8 @@ export interface UpdateSystemSettingDto {
   value: string;
 }
 
+export type PublicBannerImages = Record<string, string>;
+
 export interface SiteAccessGateStatusDto {
   enabled: boolean;
   passwordConfigured: boolean;
@@ -64,6 +66,10 @@ export class SystemSettingsService {
 
   updateAccessGate(body: UpdateSiteAccessGateDto): Observable<SiteAccessGateStatusDto> {
     return this.http.put<SiteAccessGateStatusDto>(`${this.base}/access-gate`, body, { withCredentials: true });
+  }
+
+  getPublicBannerImages(): Observable<PublicBannerImages> {
+    return this.http.get<PublicBannerImages>(`${this.base}/public/banner-images`);
   }
 
   subscribeComingSoon(email: string): Observable<ComingSoonSubscriptionDto> {

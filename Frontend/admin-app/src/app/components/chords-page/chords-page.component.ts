@@ -17,11 +17,13 @@ import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/
 import { MusicalKey } from '../../models/song.model';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { songSlug } from '../../utils/slug';
+import { SystemSettingsService } from '../../services/system-settings.service';
+import { CloudflareImagePipe } from '../../pipes/cloudflare-image.pipe';
 
 @Component({
     selector: 'app-chords-page',
     standalone: true,
-    imports: [CommonModule, FormsModule, RouterModule, SongCardComponent, NewsBannerComponent, TranslatePipe, AutoScrollDirective],
+    imports: [CommonModule, FormsModule, RouterModule, SongCardComponent, NewsBannerComponent, TranslatePipe, AutoScrollDirective, CloudflareImagePipe],
     templateUrl: './chords-page.component.html',
     styleUrls: ['./chords-page.component.css']
 })
@@ -82,6 +84,7 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     showSortDropdown: boolean = false;
 
     newsArticles: Article[] = [];
+    heroImage = '';
     private newsSubscription?: Subscription;
 
     private searchSubject = new Subject<string>();
@@ -114,7 +117,8 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
         private quickAddAssistantService: QuickAddAssistantService,
         private systemTablesService: SystemTablesService,
         private articleService: ArticleService,
-        private router: Router
+        private router: Router,
+        private systemSettingsService: SystemSettingsService
     ) {
         this.searchSubscription = this.searchSubject.pipe(
             debounceTime(500),
@@ -184,6 +188,10 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     ngOnInit(): void {
+        this.systemSettingsService.getPublicBannerImages().subscribe({
+            next: images => this.heroImage = images['banner_chords_hero_image'] || '',
+            error: () => undefined
+        });
         this.loadSongs();
         this.loadFilterData();
         this.loadQuickTags();

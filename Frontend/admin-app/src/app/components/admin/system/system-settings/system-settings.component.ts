@@ -4,11 +4,22 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AgencyListDto } from '../../../../models/agency.model';
 import { AgencyService } from '../../../../services/agency.service';
+import { MediaService } from '../../../../services/admin/media.service';
 import {
   SiteAccessGateStatusDto,
   SystemSettingsService,
   SystemSettingDto
 } from '../../../../services/system-settings.service';
+
+interface BannerImageSetting {
+  key: string;
+  label: string;
+  description: string;
+  value: string;
+  saving: boolean;
+  uploading: boolean;
+  success: boolean;
+}
 
 @Component({
   selector: 'app-system-settings',
@@ -36,10 +47,20 @@ export class SystemSettingsComponent implements OnInit {
   agencies: AgencyListDto[] = [];
   agenciesLoading = false;
   selectedAgencyId: number | null = null;
+  bannerImages: BannerImageSetting[] = [
+    { key: 'banner_home_hero_image', label: 'דף הבית — באנר ראשי', description: 'התמונה שבתיבה הראשית הצהובה.', value: '', saving: false, uploading: false, success: false },
+    { key: 'banner_home_chords_image', label: 'דף הבית — קידום אקורדים', description: 'תמונת באנר הקידום של האקורדים.', value: '', saving: false, uploading: false, success: false },
+    { key: 'banner_home_index_image', label: 'דף הבית — קידום אינדקס', description: 'תמונת באנר הקידום של אינדקס עולם המוזיקה.', value: '', saving: false, uploading: false, success: false },
+    { key: 'banner_home_podcasts_image', label: 'דף הבית — קידום פודקאסטים', description: 'תמונת באנר הקידום של הפודקאסטים.', value: '', saving: false, uploading: false, success: false },
+    { key: 'banner_chords_hero_image', label: 'עמוד אקורדים — באנר ראשי', description: 'התמונה העליונה של עמוד האקורדים.', value: '', saving: false, uploading: false, success: false },
+    { key: 'banner_podcasts_hero_image', label: 'עמוד פודקאסטים — באנר ראשי', description: 'התמונה העליונה של עמוד הפודקאסטים.', value: '', saving: false, uploading: false, success: false },
+    { key: 'banner_music_index_hero_image', label: 'אינדקס עולם המוזיקה — באנר ראשי', description: 'התמונה העליונה של עמוד אינדקס עולם המוזיקה.', value: '', saving: false, uploading: false, success: false }
+  ];
 
   constructor(
     private settingsService: SystemSettingsService,
-    private agencyService: AgencyService
+    private agencyService: AgencyService,
+    private mediaService: MediaService
   ) {}
 
   ngOnInit(): void {
@@ -55,6 +76,9 @@ export class SystemSettingsComponent implements OnInit {
     this.settingsService.getAll().subscribe({
       next: (data) => {
         this.settings = data;
+        this.bannerImages.forEach(banner => {
+          banner.value = data.find(setting => setting.key === banner.key)?.value || '';
+        });
         this.loading = false;
       },
       error: () => {
@@ -136,8 +160,53 @@ export class SystemSettingsComponent implements OnInit {
     });
   }
 
+  saveBannerImage(banner: BannerImageSetting): void {
+    banner.saving = true;
+    banner.success = false;
+    this.error = null;
+
+    this.settingsService.update(banner.key, banner.value.trim()).subscribe({
+      next: updated => {
+        const index = this.settings.findIndex(setting => setting.key === banner.key);
+        if (index >= 0) this.settings[index] = updated;
+        else this.settings.push(updated);
+        banner.value = updated.value;
+        banner.saving = false;
+        banner.success = true;
+        setTimeout(() => banner.success = false, 2500);
+      },
+      error: () => {
+        banner.saving = false;
+        this.error = `שגיאה בשמירת התמונה עבור ${banner.label}`;
+      }
+    });
+  }
+
+  uploadBannerImage(event: Event, banner: BannerImageSetting): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    banner.uploading = true;
+    banner.success = false;
+    this.error = null;
+    this.mediaService.uploadMedia(file).subscribe({
+      next: response => {
+        banner.value = response.url;
+        banner.uploading = false;
+        this.saveBannerImage(banner);
+        input.value = '';
+      },
+      error: () => {
+        banner.uploading = false;
+        this.error = `שגיאה בהעלאת התמונה עבור ${banner.label}`;
+        input.value = '';
+      }
+    });
+  }
+
   shouldShowSetting(setting: SystemSettingDto): boolean {
-    return ![
+    return !this.bannerImages.some(banner => banner.key === setting.key) && ![
       'site_access_gate_enabled',
       'site_access_gate_password_hash',
       'site_access_gate_password_version'

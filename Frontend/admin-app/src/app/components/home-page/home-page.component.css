@@ -1269,8 +1269,8 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  background-size: cover;
-  background-position: center;
+  background-size: auto 100%;
+  background-position: left center;
   background-repeat: no-repeat;
   padding: var(--space-lg) var(--space-2xl);
   direction: rtl;
@@ -1294,7 +1294,7 @@
     url('/collection-guitars-guitars-are-display-room.png')  type('image/png')
   );
   background-size: auto 100%;
-  background-position: right center;
+  background-position: left center;
 }
 
 #promo-podcasts {
@@ -1303,7 +1303,7 @@
     url('/concert-overlay.webp') type('image/webp'),
     url('/concert-overlay.png') type('image/png')
   );
-  background-position: center center;
+  background-position: left center;
 }
 
 .promo-box--compact {

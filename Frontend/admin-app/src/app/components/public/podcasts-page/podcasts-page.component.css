@@ -31,6 +31,12 @@
   will-change: height;
 }
 
+.podcasts-intro.has-banner-image {
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
 .hero-collapse-overlay {
   position: absolute;
   inset: -2px;

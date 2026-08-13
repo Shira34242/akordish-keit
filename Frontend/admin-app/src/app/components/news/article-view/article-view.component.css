@@ -579,7 +579,7 @@
   padding: var(--space-xl);
   font-family: 'Open Sans', sans-serif;
   font-weight: 300;
-  font-size: var(--font-base);
+  font-size: var(--font-lg);
   line-height: var(--lh-body);
   color: #000000;
   direction: rtl;
@@ -1553,7 +1553,7 @@
   /* --- Article content — שוליים נשמרים --- */
   .article-content {
     padding: var(--space-xl);
-    font-size: var(--font-sm);
+    font-size: var(--font-lg);
   }
 
   .article-content h2 {

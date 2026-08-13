@@ -31,7 +31,8 @@ import { LanguageService } from '../../services/language.service';
 import { AdDisplayComponent } from '../public/ad-display/ad-display.component';
 import { artistRoute, songSlug } from '../../utils/slug';
 import { getArticleLink } from '../../utils/article-route.utils';
-import { CloudflareImagePipe, CloudflareImageSrcsetPipe } from '../../pipes/cloudflare-image.pipe';
+import { CloudflareImagePipe, CloudflareImageSrcsetPipe, cloudflareBackgroundImage } from '../../pipes/cloudflare-image.pipe';
+import { SystemSettingsService } from '../../services/system-settings.service';
 
 interface HeroParticle {
   x: number; y: number;
@@ -126,6 +127,10 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
   featuredProfiles: HomeShowcaseProfile[] = [];
   homePodcasts: PodcastHomeCard[] = [];
   popularPodcastEpisodes: PodcastEpisodeBanner[] = [];
+  homeHeroImage = '';
+  homeChordsImage = '';
+  homeIndexImage = '';
+  homePodcastsImage = '';
 
 
   isMobile = window.innerWidth <= 768;
@@ -192,6 +197,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
     private podcastService: PodcastService,
     private quickAddAssistantService: QuickAddAssistantService,
     private searchService: SearchService,
+    private systemSettingsService: SystemSettingsService,
   ) {
     this.searchSubject.pipe(
       debounceTime(300),
@@ -341,6 +347,19 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
   ngOnInit() {
     this.initSearchPlaceholderRotation();
     this.loadContent();
+    this.systemSettingsService.getPublicBannerImages().pipe(take(1)).subscribe({
+      next: images => {
+        this.homeHeroImage = images['banner_home_hero_image'] || '';
+        this.homeChordsImage = images['banner_home_chords_image'] || '';
+        this.homeIndexImage = images['banner_home_index_image'] || '';
+        this.homePodcastsImage = images['banner_home_podcasts_image'] || '';
+      },
+      error: () => undefined
+    });
+  }
+
+  bannerBackground(imageUrl: string): string | null {
+    return cloudflareBackgroundImage(imageUrl, 'hero');
   }
 
   ngAfterViewInit(): void {

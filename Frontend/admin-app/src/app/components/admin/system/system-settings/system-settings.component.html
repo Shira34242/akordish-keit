@@ -15,6 +15,33 @@
   </div>
 
   <div *ngIf="!loading" class="settings-list">
+    <section class="banner-images-section" aria-labelledby="banner-images-title">
+      <div class="banner-images-heading">
+        <h3 id="banner-images-title">תמונות באנרים ראשיים</h3>
+        <p>העלו תמונה או הדביקו קישור. בהשארת השדה ריק תוצג תמונת ברירת־המחדל הקיימת.</p>
+      </div>
+
+      <div class="banner-image-card" *ngFor="let banner of bannerImages">
+        <img *ngIf="banner.value" class="banner-image-preview" [src]="banner.value" alt="תצוגה מקדימה">
+        <div class="setting-info">
+          <div class="setting-label">{{ banner.label }}</div>
+          <div class="setting-description">{{ banner.description }}</div>
+          <div class="banner-image-actions">
+            <input type="url" [(ngModel)]="banner.value" class="setting-input banner-url-input" placeholder="https://..." [disabled]="banner.saving || banner.uploading">
+            <label class="link-action secondary file-upload-action">
+              <input type="file" accept="image/*,.gif" (change)="uploadBannerImage($event, banner)" [disabled]="banner.saving || banner.uploading">
+              <span class="material-symbols-outlined">upload</span>
+              <span>{{ banner.uploading ? 'מעלה...' : 'העלאת תמונה' }}</span>
+            </label>
+            <button type="button" class="link-action primary" (click)="saveBannerImage(banner)" [disabled]="banner.saving || banner.uploading">
+              <span>{{ banner.saving ? 'שומר...' : 'שמירה' }}</span>
+            </button>
+            <span *ngIf="banner.success" class="icon-success material-symbols-outlined">check_circle</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <div class="setting-card join-index-card agency-join-card">
       <div class="setting-info">
         <div class="setting-label">טופס הצטרפות לאינדקס לפי סוכנות</div>

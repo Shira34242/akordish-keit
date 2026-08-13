@@ -9,6 +9,8 @@ import { SeoService } from '../../../services/seo.service';
 import { PodcastEpisodeBannerComponent } from '../../shared/podcast-episode-banner/podcast-episode-banner.component';
 import { ContentUploaderBadgeComponent } from '../../shared/content-uploader-badge/content-uploader-badge.component';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
+import { SystemSettingsService } from '../../../services/system-settings.service';
+import { cloudflareBackgroundImage } from '../../../pipes/cloudflare-image.pipe';
 
 @Component({
   selector: 'app-podcasts-page',
@@ -26,6 +28,7 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly seo = inject(SeoService);
+  private readonly systemSettings = inject(SystemSettingsService);
 
   loading = true;
   seriesLoading = false;
@@ -44,6 +47,11 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
   searchEpisodes: PodcastEpisode[] = [];
   searchPodcasts: Podcast[] = [];
   searchLoading = false;
+  heroImage = '';
+
+  get heroBackgroundImage(): string | null {
+    return cloudflareBackgroundImage(this.heroImage, 'hero');
+  }
 
   private readonly searchSubject = new Subject<string>();
   private readonly destroy$ = new Subject<void>();
@@ -56,6 +64,10 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
   private skipNextQuerySync = false;
 
   ngOnInit(): void {
+    this.systemSettings.getPublicBannerImages().subscribe({
+      next: images => this.heroImage = images['banner_podcasts_hero_image'] || '',
+      error: () => undefined
+    });
     this.loadPageData();
     this.searchSubject.pipe(
       debounceTime(250),
