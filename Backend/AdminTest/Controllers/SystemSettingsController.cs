@@ -21,6 +21,9 @@ public class SystemSettingsController : ControllerBase
         "banner_podcasts_hero_image",
         "banner_music_index_hero_image"
     };
+    private static readonly string[] PublicBannerSettingKeys = PublicBannerImageKeys
+        .SelectMany(key => new[] { key, $"{key}_display_mode", $"{key}_zoom", $"{key}_position" })
+        .ToArray();
     private const string SiteGateEnabledKey = "site_access_gate_enabled";
     private const string SiteGatePasswordHashKey = "site_access_gate_password_hash";
     private const string SiteGatePasswordVersionKey = "site_access_gate_password_version";
@@ -53,7 +56,7 @@ public class SystemSettingsController : ControllerBase
     public async Task<ActionResult<Dictionary<string, string>>> GetPublicBannerImages()
     {
         var values = new Dictionary<string, string>();
-        foreach (var key in PublicBannerImageKeys)
+        foreach (var key in PublicBannerSettingKeys)
         {
             var value = await _settingsService.GetValueAsync(key);
             if (!string.IsNullOrWhiteSpace(value)) values[key] = value;

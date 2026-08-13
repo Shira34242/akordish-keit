@@ -36,7 +36,29 @@
             <button type="button" class="link-action primary" (click)="saveBannerImage(banner)" [disabled]="banner.saving || banner.uploading">
               <span>{{ banner.saving ? 'שומר...' : 'שמירה' }}</span>
             </button>
+            <button *ngIf="banner.value" type="button" class="link-action remove-banner-action" (click)="removeBannerImage(banner)" [disabled]="banner.saving || banner.uploading">
+              <span class="material-symbols-outlined">delete</span>
+              <span>הסרת תמונה</span>
+            </button>
             <span *ngIf="banner.success" class="icon-success material-symbols-outlined">check_circle</span>
+          </div>
+          <div class="banner-display-controls" *ngIf="banner.value">
+            <label>תצוגה
+              <select [(ngModel)]="banner.displayMode" [disabled]="banner.saving || banner.uploading">
+                <option value="cover">מילוי הבאנר</option>
+                <option value="height">גובה מלא</option>
+              </select>
+            </label>
+            <label>הגדלה: {{ banner.zoom }}%
+              <input type="range" min="100" max="200" step="5" [(ngModel)]="banner.zoom" [disabled]="banner.saving || banner.uploading">
+            </label>
+            <label>מיקום
+              <select [(ngModel)]="banner.position" [disabled]="banner.saving || banner.uploading">
+                <option value="left">שמאל</option>
+                <option value="center">מרכז</option>
+                <option value="right">ימין</option>
+              </select>
+            </label>
           </div>
         </div>
       </div>

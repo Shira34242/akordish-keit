@@ -93,6 +93,23 @@
 .banner-url-input { width: min(100%, 20rem); }
 .file-upload-action input { display: none; }
 
+.remove-banner-action { background: #ffffff; color: #000000; }
+.remove-banner-action:hover { background: #000000; color: #ffffff; }
+
+.banner-display-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-base);
+  margin-top: var(--space-sm);
+  color: #404040;
+  font-size: var(--font-sm);
+}
+
+.banner-display-controls label { display: inline-flex; align-items: center; gap: var(--space-sm); }
+.banner-display-controls select { border: 1px solid #ddd; border-radius: 8px; padding: var(--space-xs) var(--space-sm); background: #ffffff; }
+.banner-display-controls input[type="range"] { accent-color: #000000; }
+
 .setting-card {
   background: #F2F2F2;
   border-radius: 24px;

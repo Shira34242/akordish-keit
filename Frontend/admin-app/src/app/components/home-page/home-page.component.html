@@ -7,7 +7,7 @@
   <div class="hero-bg" #heroBg>
     <div class="hero-surface">
       <canvas #heroCanvas class="hero-canvas"></canvas>
-      <div class="hero-overlay" [style.background-image]="bannerBackground(homeHeroImage)"></div>
+      <div class="hero-overlay" [style.background-image]="bannerBackground(homeHeroImage)" [style.background-size]="bannerSize('banner_home_hero_image')" [style.background-position]="bannerPosition('banner_home_hero_image')"></div>
       <div class="hero-collapse-overlay"></div>
     </div>
   </div>
@@ -301,7 +301,7 @@
       <app-media-item spotTechnicalId="home-top-banner" [isMobile]="isMobile"></app-media-item>
     </div>
 
-    <div id="promo-chords" class="promo-box" [style.background-image]="bannerBackground(homeChordsImage)" [class.promo-box--mobile-link]="isMobile" *ngIf="promoChordsStarted"
+    <div id="promo-chords" class="promo-box" [style.background-image]="bannerBackground(homeChordsImage)" [style.background-size]="bannerSize('banner_home_chords_image')" [style.background-position]="bannerPosition('banner_home_chords_image')" [class.promo-box--mobile-link]="isMobile" *ngIf="promoChordsStarted"
          [attr.role]="isMobile ? 'link' : null" [attr.tabindex]="isMobile ? 0 : null"
          (click)="navigatePromoOnMobile('/chords', $event)" (keydown.enter)="navigatePromoOnMobile('/chords', $event)">
       <div class="promo-content">
@@ -431,7 +431,7 @@
       <app-media-item spotTechnicalId="home-mid-banner" [isMobile]="isMobile"></app-media-item>
     </div>
 
-    <div id="promo-index" class="promo-box promo-box--providers" [style.background-image]="bannerBackground(homeIndexImage)" [class.promo-box--mobile-link]="isMobile" *ngIf="promoIndexStarted"
+    <div id="promo-index" class="promo-box promo-box--providers" [style.background-image]="bannerBackground(homeIndexImage)" [style.background-size]="bannerSize('banner_home_index_image')" [style.background-position]="bannerPosition('banner_home_index_image')" [class.promo-box--mobile-link]="isMobile" *ngIf="promoIndexStarted"
          role="link" tabindex="0" [attr.aria-label]="'home.promo_index_link' | translate"
          (click)="navigatePromo('/professionals', $event)" (keydown.enter)="navigatePromo('/professionals', $event)">
       <div class="promo-content">
@@ -538,7 +538,7 @@
       </div>
     </section>
 
-    <div id="promo-podcasts" class="promo-box promo-box--compact promo-box--podcasts" [style.background-image]="bannerBackground(homePodcastsImage)" [class.promo-box--mobile-link]="isMobile" *ngIf="promoPodcastsStarted"
+    <div id="promo-podcasts" class="promo-box promo-box--compact promo-box--podcasts" [style.background-image]="bannerBackground(homePodcastsImage)" [style.background-size]="bannerSize('banner_home_podcasts_image')" [style.background-position]="bannerPosition('banner_home_podcasts_image')" [class.promo-box--mobile-link]="isMobile" *ngIf="promoPodcastsStarted"
          [attr.role]="isMobile ? 'link' : null" [attr.tabindex]="isMobile ? 0 : null"
          (click)="navigatePromoOnMobile('/podcasts', $event)" (keydown.enter)="navigatePromoOnMobile('/podcasts', $event)">
       <div class="promo-content">

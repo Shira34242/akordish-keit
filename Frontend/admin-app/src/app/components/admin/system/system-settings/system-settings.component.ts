@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { AgencyListDto } from '../../../../models/agency.model';
 import { AgencyService } from '../../../../services/agency.service';
 import { MediaService } from '../../../../services/admin/media.service';
+import { forkJoin } from 'rxjs';
 import {
   SiteAccessGateStatusDto,
   SystemSettingsService,
@@ -19,6 +20,9 @@ interface BannerImageSetting {
   saving: boolean;
   uploading: boolean;
   success: boolean;
+  displayMode: 'cover' | 'height';
+  zoom: number;
+  position: 'left' | 'center' | 'right';
 }
 
 @Component({
@@ -48,13 +52,13 @@ export class SystemSettingsComponent implements OnInit {
   agenciesLoading = false;
   selectedAgencyId: number | null = null;
   bannerImages: BannerImageSetting[] = [
-    { key: 'banner_home_hero_image', label: 'דף הבית — באנר ראשי', description: 'התמונה שבתיבה הראשית הצהובה.', value: '', saving: false, uploading: false, success: false },
-    { key: 'banner_home_chords_image', label: 'דף הבית — קידום אקורדים', description: 'תמונת באנר הקידום של האקורדים.', value: '', saving: false, uploading: false, success: false },
-    { key: 'banner_home_index_image', label: 'דף הבית — קידום אינדקס', description: 'תמונת באנר הקידום של אינדקס עולם המוזיקה.', value: '', saving: false, uploading: false, success: false },
-    { key: 'banner_home_podcasts_image', label: 'דף הבית — קידום פודקאסטים', description: 'תמונת באנר הקידום של הפודקאסטים.', value: '', saving: false, uploading: false, success: false },
-    { key: 'banner_chords_hero_image', label: 'עמוד אקורדים — באנר ראשי', description: 'התמונה העליונה של עמוד האקורדים.', value: '', saving: false, uploading: false, success: false },
-    { key: 'banner_podcasts_hero_image', label: 'עמוד פודקאסטים — באנר ראשי', description: 'התמונה העליונה של עמוד הפודקאסטים.', value: '', saving: false, uploading: false, success: false },
-    { key: 'banner_music_index_hero_image', label: 'אינדקס עולם המוזיקה — באנר ראשי', description: 'התמונה העליונה של עמוד אינדקס עולם המוזיקה.', value: '', saving: false, uploading: false, success: false }
+    { key: 'banner_home_hero_image', label: 'דף הבית — באנר ראשי', description: 'התמונה שבתיבה הראשית הצהובה.', value: '', saving: false, uploading: false, success: false, displayMode: 'cover', zoom: 100, position: 'center' },
+    { key: 'banner_home_chords_image', label: 'דף הבית — קידום אקורדים', description: 'תמונת באנר הקידום של האקורדים.', value: '', saving: false, uploading: false, success: false, displayMode: 'height', zoom: 100, position: 'left' },
+    { key: 'banner_home_index_image', label: 'דף הבית — קידום אינדקס', description: 'תמונת באנר הקידום של אינדקס עולם המוזיקה.', value: '', saving: false, uploading: false, success: false, displayMode: 'height', zoom: 100, position: 'left' },
+    { key: 'banner_home_podcasts_image', label: 'דף הבית — קידום פודקאסטים', description: 'תמונת באנר הקידום של הפודקאסטים.', value: '', saving: false, uploading: false, success: false, displayMode: 'height', zoom: 100, position: 'left' },
+    { key: 'banner_chords_hero_image', label: 'עמוד אקורדים — באנר ראשי', description: 'התמונה העליונה של עמוד האקורדים.', value: '', saving: false, uploading: false, success: false, displayMode: 'cover', zoom: 100, position: 'center' },
+    { key: 'banner_podcasts_hero_image', label: 'עמוד פודקאסטים — באנר ראשי', description: 'התמונה העליונה של עמוד הפודקאסטים.', value: '', saving: false, uploading: false, success: false, displayMode: 'cover', zoom: 100, position: 'center' },
+    { key: 'banner_music_index_hero_image', label: 'אינדקס עולם המוזיקה — באנר ראשי', description: 'התמונה העליונה של עמוד אינדקס עולם המוזיקה.', value: '', saving: false, uploading: false, success: false, displayMode: 'cover', zoom: 100, position: 'center' }
   ];
 
   constructor(
@@ -78,6 +82,10 @@ export class SystemSettingsComponent implements OnInit {
         this.settings = data;
         this.bannerImages.forEach(banner => {
           banner.value = data.find(setting => setting.key === banner.key)?.value || '';
+          banner.displayMode = data.find(setting => setting.key === `${banner.key}_display_mode`)?.value === 'height' ? 'height' : 'cover';
+          banner.zoom = Number(data.find(setting => setting.key === `${banner.key}_zoom`)?.value) || 100;
+          const position = data.find(setting => setting.key === `${banner.key}_position`)?.value;
+          banner.position = position === 'left' || position === 'right' ? position : 'center';
         });
         this.loading = false;
       },
@@ -165,8 +173,13 @@ export class SystemSettingsComponent implements OnInit {
     banner.success = false;
     this.error = null;
 
-    this.settingsService.update(banner.key, banner.value.trim()).subscribe({
-      next: updated => {
+    forkJoin([
+      this.settingsService.update(banner.key, banner.value.trim()),
+      this.settingsService.update(`${banner.key}_display_mode`, banner.displayMode),
+      this.settingsService.update(`${banner.key}_zoom`, String(banner.zoom)),
+      this.settingsService.update(`${banner.key}_position`, banner.position)
+    ]).subscribe({
+      next: ([updated]) => {
         const index = this.settings.findIndex(setting => setting.key === banner.key);
         if (index >= 0) this.settings[index] = updated;
         else this.settings.push(updated);
@@ -180,6 +193,11 @@ export class SystemSettingsComponent implements OnInit {
         this.error = `שגיאה בשמירת התמונה עבור ${banner.label}`;
       }
     });
+  }
+
+  removeBannerImage(banner: BannerImageSetting): void {
+    banner.value = '';
+    this.saveBannerImage(banner);
   }
 
   uploadBannerImage(event: Event, banner: BannerImageSetting): void {
@@ -206,7 +224,7 @@ export class SystemSettingsComponent implements OnInit {
   }
 
   shouldShowSetting(setting: SystemSettingDto): boolean {
-    return !this.bannerImages.some(banner => banner.key === setting.key) && ![
+    return !this.bannerImages.some(banner => setting.key === banner.key || setting.key.startsWith(`${banner.key}_`)) && ![
       'site_access_gate_enabled',
       'site_access_gate_password_hash',
       'site_access_gate_password_version'

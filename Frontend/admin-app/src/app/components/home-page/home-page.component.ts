@@ -131,6 +131,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
   homeChordsImage = '';
   homeIndexImage = '';
   homePodcastsImage = '';
+  bannerImageSettings: Record<string, string> = {};
 
 
   isMobile = window.innerWidth <= 768;
@@ -349,6 +350,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
     this.loadContent();
     this.systemSettingsService.getPublicBannerImages().pipe(take(1)).subscribe({
       next: images => {
+        this.bannerImageSettings = images;
         this.homeHeroImage = images['banner_home_hero_image'] || '';
         this.homeChordsImage = images['banner_home_chords_image'] || '';
         this.homeIndexImage = images['banner_home_index_image'] || '';
@@ -360,6 +362,16 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
 
   bannerBackground(imageUrl: string): string | null {
     return cloudflareBackgroundImage(imageUrl, 'hero');
+  }
+
+  bannerSize(key: string): string | null {
+    const zoom = Math.max(100, Math.min(200, Number(this.bannerImageSettings[`${key}_zoom`]) || 100));
+    const mode = this.bannerImageSettings[`${key}_display_mode`] || 'cover';
+    return mode === 'height' ? `auto ${zoom}%` : `${zoom}% auto`;
+  }
+
+  bannerPosition(key: string): string {
+    return `${this.bannerImageSettings[`${key}_position`] || 'center'} center`;
   }
 
   ngAfterViewInit(): void {
