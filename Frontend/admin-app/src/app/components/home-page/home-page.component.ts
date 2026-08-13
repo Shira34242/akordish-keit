@@ -356,10 +356,12 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
         this.homeIndexImage = images['banner_home_index_image'] || '';
         this.homePodcastsImage = images['banner_home_podcasts_image'] || '';
         this.bannerImagesLoaded = true;
+        this.refreshHeroOverlayElement();
         this.loadContent();
       },
       error: () => {
         this.bannerImagesLoaded = true;
+        this.refreshHeroOverlayElement();
         this.loadContent();
       }
     });
@@ -531,6 +533,14 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
     bg.style.height = this.fullHeroHeight + 'px';
     this.resizeHeroCanvas();
     this.shrinkHero();
+  }
+
+  private refreshHeroOverlayElement(): void {
+    requestAnimationFrame(() => {
+      const bg = this.heroBg?.nativeElement;
+      this.heroOverlayEl = bg?.querySelector('.hero-overlay') as HTMLElement | null;
+      this.shrinkHero();
+    });
   }
 
   private shrinkHero(): void {
