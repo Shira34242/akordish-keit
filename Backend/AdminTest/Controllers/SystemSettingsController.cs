@@ -55,12 +55,11 @@ public class SystemSettingsController : ControllerBase
     [AllowAnonymous]
     public async Task<ActionResult<Dictionary<string, string>>> GetPublicBannerImages()
     {
-        var values = new Dictionary<string, string>();
-        foreach (var key in PublicBannerSettingKeys)
-        {
-            var value = await _settingsService.GetValueAsync(key);
-            if (!string.IsNullOrWhiteSpace(value)) values[key] = value;
-        }
+        // Banner changes should be visible immediately to every visitor and every server instance.
+        // GetAllAsync reads the shared database directly instead of this instance's five-minute memory cache.
+        var values = (await _settingsService.GetAllAsync())
+            .Where(setting => PublicBannerSettingKeys.Contains(setting.Key) && !string.IsNullOrWhiteSpace(setting.Value))
+            .ToDictionary(setting => setting.Key, setting => setting.Value);
         return Ok(values);
     }
 

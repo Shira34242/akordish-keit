@@ -67,6 +67,7 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
   private searchDebounceTimer?: ReturnType<typeof setTimeout>;
   agencyBanners: AgencyWithProfiles[] = [];
   heroImage = '';
+  bannerImagesLoaded = false;
 
   // ג”€ג”€ג”€ Tab ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
   activeTab: 'professionals' | 'teachers' = 'professionals';
@@ -185,8 +186,11 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     this.systemSettingsService.getPublicBannerImages().subscribe({
-      next: images => this.heroImage = images['banner_music_index_hero_image'] || '',
-      error: () => undefined
+      next: images => {
+        this.heroImage = images['banner_music_index_hero_image'] || '';
+        this.bannerImagesLoaded = true;
+      },
+      error: () => this.bannerImagesLoaded = true
     });
     const tab = this.route.snapshot.queryParamMap.get('tab');
     if (tab === 'teachers') {

@@ -132,6 +132,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
   homeIndexImage = '';
   homePodcastsImage = '';
   bannerImageSettings: Record<string, string> = {};
+  bannerImagesLoaded = false;
 
 
   isMobile = window.innerWidth <= 768;
@@ -347,7 +348,6 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
 
   ngOnInit() {
     this.initSearchPlaceholderRotation();
-    this.loadContent();
     this.systemSettingsService.getPublicBannerImages().pipe(take(1)).subscribe({
       next: images => {
         this.bannerImageSettings = images;
@@ -355,8 +355,13 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
         this.homeChordsImage = images['banner_home_chords_image'] || '';
         this.homeIndexImage = images['banner_home_index_image'] || '';
         this.homePodcastsImage = images['banner_home_podcasts_image'] || '';
+        this.bannerImagesLoaded = true;
+        this.loadContent();
       },
-      error: () => undefined
+      error: () => {
+        this.bannerImagesLoaded = true;
+        this.loadContent();
+      }
     });
   }
 
@@ -372,6 +377,10 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
 
   bannerPosition(key: string): string {
     return `${this.bannerImageSettings[`${key}_position`] || 'center'} center`;
+  }
+
+  promoBannerPosition(): string {
+    return 'left center';
   }
 
   ngAfterViewInit(): void {

@@ -48,6 +48,7 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
   searchPodcasts: Podcast[] = [];
   searchLoading = false;
   heroImage = '';
+  bannerImagesLoaded = false;
 
   get heroBackgroundImage(): string | null {
     return cloudflareBackgroundImage(this.heroImage, 'hero');
@@ -65,8 +66,11 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnInit(): void {
     this.systemSettings.getPublicBannerImages().subscribe({
-      next: images => this.heroImage = images['banner_podcasts_hero_image'] || '',
-      error: () => undefined
+      next: images => {
+        this.heroImage = images['banner_podcasts_hero_image'] || '';
+        this.bannerImagesLoaded = true;
+      },
+      error: () => this.bannerImagesLoaded = true
     });
     this.loadPageData();
     this.searchSubject.pipe(

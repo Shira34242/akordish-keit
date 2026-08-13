@@ -85,6 +85,7 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
 
     newsArticles: Article[] = [];
     heroImage = '';
+    bannerImagesLoaded = false;
     private newsSubscription?: Subscription;
 
     private searchSubject = new Subject<string>();
@@ -189,8 +190,11 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
 
     ngOnInit(): void {
         this.systemSettingsService.getPublicBannerImages().subscribe({
-            next: images => this.heroImage = images['banner_chords_hero_image'] || '',
-            error: () => undefined
+            next: images => {
+                this.heroImage = images['banner_chords_hero_image'] || '';
+                this.bannerImagesLoaded = true;
+            },
+            error: () => this.bannerImagesLoaded = true
         });
         this.loadSongs();
         this.loadFilterData();
