@@ -1282,32 +1282,6 @@
   display: none;
 }
 
-#promo-chords {
-  background-image: image-set(
-    url('/artist-composer-creating-new-song-his-electro-guitar-studio.avif') type('image/avif'),
-    url('/artist-composer-creating-new-song-his-electro-guitar-studio.webp') type('image/webp'),
-    url('/artist-composer-creating-new-song-his-electro-guitar-studio.png')  type('image/png')
-  );
-}
-#promo-index {
-  background-image: image-set(
-    url('/collection-guitars-guitars-are-display-room.avif') type('image/avif'),
-    url('/collection-guitars-guitars-are-display-room.webp') type('image/webp'),
-    url('/collection-guitars-guitars-are-display-room.png')  type('image/png')
-  );
-  background-size: auto 100%;
-  background-position: left center;
-}
-
-#promo-podcasts {
-  background-image: image-set(
-    url('/concert-overlay.avif') type('image/avif'),
-    url('/concert-overlay.webp') type('image/webp'),
-    url('/concert-overlay.png') type('image/png')
-  );
-  background-position: left center;
-}
-
 .promo-box--compact {
   min-height: var(--home-promo-banner-height, 18vh);
 }
@@ -1397,6 +1371,7 @@
   transition: background 0.2s, color 0.2s, transform 0.2s;
   flex-shrink: 0;
 }
+
 
 .promo-background {
   position: absolute;
