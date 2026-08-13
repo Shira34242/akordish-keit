@@ -7,7 +7,7 @@
   <div class="hero-bg" #heroBg>
     <div class="hero-surface">
       <canvas #heroCanvas class="hero-canvas"></canvas>
-      <div *ngIf="bannerImagesLoaded" class="hero-overlay" [style.background-image]="bannerBackground(homeHeroImage)" [style.background-size]="homeHeroImage ? 'cover' : null" [style.background-position]="bannerPosition('banner_home_hero_image')"></div>
+      <div *ngIf="bannerImagesLoaded" class="hero-overlay" [style.background-image]="bannerBackground(homeHeroImage)" [style.background-size]="homeHeroImage ? 'cover' : null" [style.background-position]="bannerPosition('banner_home_hero_image')" [style.transform]="homeHeroImage ? 'scale(' + (bannerZoom('banner_home_hero_image') / 100) + ')' : null"></div>
       <div class="hero-collapse-overlay"></div>
     </div>
   </div>
@@ -301,9 +301,10 @@
       <app-media-item spotTechnicalId="home-top-banner" [isMobile]="isMobile"></app-media-item>
     </div>
 
-    <div id="promo-chords" class="promo-box" [style.background-image]="bannerBackground(homeChordsImage)" [style.background-size]="bannerSize('banner_home_chords_image')" [style.background-position]="promoBannerPosition()" [class.promo-box--mobile-link]="isMobile" *ngIf="promoChordsStarted"
+    <div id="promo-chords" class="promo-box" [class.promo-box--mobile-link]="isMobile" *ngIf="promoChordsStarted"
          [attr.role]="isMobile ? 'link' : null" [attr.tabindex]="isMobile ? 0 : null"
          (click)="navigatePromoOnMobile('/chords', $event)" (keydown.enter)="navigatePromoOnMobile('/chords', $event)">
+      <div class="promo-background" [style.background-image]="bannerBackground(homeChordsImage)" [style.background-size]="bannerSize('banner_home_chords_image')" [style.background-position]="promoBannerPosition()" [style.transform]="promoBannerScale('banner_home_chords_image')"></div>
       <div class="promo-content">
         <h2 class="promo-title">
           {{ 'home.promo_chords_title' | translate }}
@@ -431,9 +432,10 @@
       <app-media-item spotTechnicalId="home-mid-banner" [isMobile]="isMobile"></app-media-item>
     </div>
 
-    <div id="promo-index" class="promo-box promo-box--providers" [style.background-image]="bannerBackground(homeIndexImage)" [style.background-size]="bannerSize('banner_home_index_image')" [style.background-position]="promoBannerPosition()" [class.promo-box--mobile-link]="isMobile" *ngIf="promoIndexStarted"
+    <div id="promo-index" class="promo-box promo-box--providers" [class.promo-box--mobile-link]="isMobile" *ngIf="promoIndexStarted"
          role="link" tabindex="0" [attr.aria-label]="'home.promo_index_link' | translate"
          (click)="navigatePromo('/professionals', $event)" (keydown.enter)="navigatePromo('/professionals', $event)">
+      <div class="promo-background" [style.background-image]="bannerBackground(homeIndexImage)" [style.background-size]="bannerSize('banner_home_index_image')" [style.background-position]="promoBannerPosition()" [style.transform]="promoBannerScale('banner_home_index_image')"></div>
       <div class="promo-content">
         <h2 class="promo-title">
           {{ 'home.promo_index_title' | translate }}
@@ -538,9 +540,10 @@
       </div>
     </section>
 
-    <div id="promo-podcasts" class="promo-box promo-box--compact promo-box--podcasts" [style.background-image]="bannerBackground(homePodcastsImage)" [style.background-size]="bannerSize('banner_home_podcasts_image')" [style.background-position]="promoBannerPosition()" [class.promo-box--mobile-link]="isMobile" *ngIf="promoPodcastsStarted"
+    <div id="promo-podcasts" class="promo-box promo-box--compact promo-box--podcasts" [class.promo-box--mobile-link]="isMobile" *ngIf="promoPodcastsStarted"
          [attr.role]="isMobile ? 'link' : null" [attr.tabindex]="isMobile ? 0 : null"
          (click)="navigatePromoOnMobile('/podcasts', $event)" (keydown.enter)="navigatePromoOnMobile('/podcasts', $event)">
+      <div class="promo-background" [style.background-image]="bannerBackground(homePodcastsImage)" [style.background-size]="bannerSize('banner_home_podcasts_image')" [style.background-position]="promoBannerPosition()" [style.transform]="promoBannerScale('banner_home_podcasts_image')"></div>
       <div class="promo-content">
         <h2 class="promo-title">
           פודקאסטים

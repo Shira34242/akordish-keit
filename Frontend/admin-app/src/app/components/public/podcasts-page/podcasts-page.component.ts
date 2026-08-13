@@ -49,9 +49,16 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
   searchLoading = false;
   heroImage = '';
   bannerImagesLoaded = false;
+  bannerImageSettings: Record<string, string> = {};
 
   get heroBackgroundImage(): string | null {
     return cloudflareBackgroundImage(this.heroImage, 'hero');
+  }
+
+  get heroBackgroundSize(): string {
+    const suffix = window.innerWidth <= 768 ? 'mobile_zoom' : 'desktop_zoom';
+    const zoom = Math.max(100, Math.min(200, Number(this.bannerImageSettings[`banner_podcasts_hero_image_${suffix}`]) || 100));
+    return zoom === 100 ? 'cover' : `${zoom}% auto`;
   }
 
   private readonly searchSubject = new Subject<string>();
@@ -67,6 +74,7 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnInit(): void {
     this.systemSettings.getPublicBannerImages().subscribe({
       next: images => {
+        this.bannerImageSettings = images;
         this.heroImage = images['banner_podcasts_hero_image'] || '';
         this.bannerImagesLoaded = true;
       },

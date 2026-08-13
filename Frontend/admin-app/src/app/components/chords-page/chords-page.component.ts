@@ -86,6 +86,7 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     newsArticles: Article[] = [];
     heroImage = '';
     bannerImagesLoaded = false;
+    bannerImageSettings: Record<string, string> = {};
     private newsSubscription?: Subscription;
 
     private searchSubject = new Subject<string>();
@@ -191,6 +192,7 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
     ngOnInit(): void {
         this.systemSettingsService.getPublicBannerImages().subscribe({
             next: images => {
+                this.bannerImageSettings = images;
                 this.heroImage = images['banner_chords_hero_image'] || '';
                 this.bannerImagesLoaded = true;
             },
@@ -253,6 +255,11 @@ export class ChordsPageComponent implements OnInit, AfterViewInit, OnDestroy {
         this.fullHeroHeight = Math.round(window.innerHeight * 0.6);
         bg.style.height = this.fullHeroHeight + 'px';
         this.shrinkHero();
+    }
+
+    get heroImageZoom(): number {
+        const suffix = window.innerWidth <= 768 ? 'mobile_zoom' : 'desktop_zoom';
+        return Math.max(100, Math.min(200, Number(this.bannerImageSettings[`banner_chords_hero_image_${suffix}`]) || 100));
     }
 
     private shrinkHero(): void {

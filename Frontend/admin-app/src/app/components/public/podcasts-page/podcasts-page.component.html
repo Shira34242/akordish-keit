@@ -3,7 +3,7 @@
   [class.viewing-series]="isViewingSeries || seriesLoading || episodeLoading"
   [class.playing-episode]="selectedEpisode"
   dir="rtl">
-  <section class="podcasts-intro" #heroBg [style.background-image]="bannerImagesLoaded ? heroBackgroundImage : null" [class.has-banner-image]="bannerImagesLoaded && !!heroImage">
+  <section class="podcasts-intro" #heroBg [style.background-image]="bannerImagesLoaded ? heroBackgroundImage : null" [style.background-size]="bannerImagesLoaded && heroImage ? heroBackgroundSize : null" [class.has-banner-image]="bannerImagesLoaded && !!heroImage">
     <div #collapseOverlay class="hero-collapse-overlay"></div>
   </section>
 

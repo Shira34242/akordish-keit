@@ -22,7 +22,7 @@ public class SystemSettingsController : ControllerBase
         "banner_music_index_hero_image"
     };
     private static readonly string[] PublicBannerSettingKeys = PublicBannerImageKeys
-        .SelectMany(key => new[] { key, $"{key}_display_mode", $"{key}_zoom", $"{key}_position" })
+        .SelectMany(key => new[] { key, $"{key}_display_mode", $"{key}_desktop_zoom", $"{key}_mobile_zoom", $"{key}_position" })
         .ToArray();
     private const string SiteGateEnabledKey = "site_access_gate_enabled";
     private const string SiteGatePasswordHashKey = "site_access_gate_password_hash";

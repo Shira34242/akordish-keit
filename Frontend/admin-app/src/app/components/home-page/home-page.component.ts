@@ -370,9 +370,9 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
   }
 
   bannerSize(key: string): string | null {
-    const zoom = Math.max(100, Math.min(200, Number(this.bannerImageSettings[`${key}_zoom`]) || 100));
+    const zoom = this.bannerZoom(key);
     const mode = this.bannerImageSettings[`${key}_display_mode`] || 'cover';
-    return mode === 'height' ? `auto ${zoom}%` : `${zoom}% auto`;
+    return mode === 'height' ? `auto ${zoom}%` : 'cover';
   }
 
   bannerPosition(key: string): string {
@@ -381,6 +381,16 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
 
   promoBannerPosition(): string {
     return 'left center';
+  }
+
+  promoBannerScale(key: string): string {
+    const mode = this.bannerImageSettings[`${key}_display_mode`] || 'cover';
+    return mode === 'cover' ? `scale(${this.bannerZoom(key) / 100})` : 'none';
+  }
+
+  bannerZoom(key: string): number {
+    const suffix = this.isMobile ? 'mobile_zoom' : 'desktop_zoom';
+    return Math.max(100, Math.min(200, Number(this.bannerImageSettings[`${key}_${suffix}`]) || 100));
   }
 
   ngAfterViewInit(): void {

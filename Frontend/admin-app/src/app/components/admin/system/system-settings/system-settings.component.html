@@ -49,8 +49,11 @@
                 <option value="height">גובה מלא</option>
               </select>
             </label>
-            <label>הגדלה: {{ banner.zoom }}%
-              <input type="range" min="100" max="200" step="5" [(ngModel)]="banner.zoom" [disabled]="banner.saving || banner.uploading">
+            <label>גודל למחשב: {{ banner.desktopZoom }}%
+              <input type="range" min="100" max="200" step="5" [(ngModel)]="banner.desktopZoom" [disabled]="banner.saving || banner.uploading">
+            </label>
+            <label>גודל למובייל: {{ banner.mobileZoom }}%
+              <input type="range" min="100" max="200" step="5" [(ngModel)]="banner.mobileZoom" [disabled]="banner.saving || banner.uploading">
             </label>
             <label>מיקום
               <select [(ngModel)]="banner.position" [disabled]="banner.saving || banner.uploading">

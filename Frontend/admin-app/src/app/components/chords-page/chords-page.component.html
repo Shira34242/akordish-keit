@@ -7,7 +7,7 @@
          HERO BG — fixed, full screen, shrinks on scroll
     ═══════════════════════════════════════════ -->
     <div class="hero-bg" #heroBg>
-        <img *ngIf="bannerImagesLoaded" class="hero-bg-image" [src]="(heroImage || '/artist-composer-creating-new-song-his-electro-guitar-studio.png') | cfImage:'hero'" alt="" aria-hidden="true" loading="eager" decoding="async" fetchpriority="high">
+        <img *ngIf="bannerImagesLoaded" class="hero-bg-image" [src]="(heroImage || '/artist-composer-creating-new-song-his-electro-guitar-studio.png') | cfImage:'hero'" [style.transform]="'scale(' + (heroImageZoom / 100) + ')'" alt="" aria-hidden="true" loading="eager" decoding="async" fetchpriority="high">
         <div class="hero-collapse-overlay"></div>
     </div>
 

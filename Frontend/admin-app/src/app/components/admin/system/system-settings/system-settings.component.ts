@@ -21,7 +21,8 @@ interface BannerImageSetting {
   uploading: boolean;
   success: boolean;
   displayMode: 'cover' | 'height';
-  zoom: number;
+  desktopZoom: number;
+  mobileZoom: number;
   position: 'left' | 'center' | 'right';
 }
 
@@ -52,13 +53,13 @@ export class SystemSettingsComponent implements OnInit {
   agenciesLoading = false;
   selectedAgencyId: number | null = null;
   bannerImages: BannerImageSetting[] = [
-    { key: 'banner_home_hero_image', label: 'דף הבית — באנר ראשי', description: 'התמונה שבתיבה הראשית הצהובה.', value: '', saving: false, uploading: false, success: false, displayMode: 'cover', zoom: 100, position: 'center' },
-    { key: 'banner_home_chords_image', label: 'דף הבית — קידום אקורדים', description: 'תמונת באנר הקידום של האקורדים.', value: '', saving: false, uploading: false, success: false, displayMode: 'height', zoom: 100, position: 'left' },
-    { key: 'banner_home_index_image', label: 'דף הבית — קידום אינדקס', description: 'תמונת באנר הקידום של אינדקס עולם המוזיקה.', value: '', saving: false, uploading: false, success: false, displayMode: 'height', zoom: 100, position: 'left' },
-    { key: 'banner_home_podcasts_image', label: 'דף הבית — קידום פודקאסטים', description: 'תמונת באנר הקידום של הפודקאסטים.', value: '', saving: false, uploading: false, success: false, displayMode: 'height', zoom: 100, position: 'left' },
-    { key: 'banner_chords_hero_image', label: 'עמוד אקורדים — באנר ראשי', description: 'התמונה העליונה של עמוד האקורדים.', value: '', saving: false, uploading: false, success: false, displayMode: 'cover', zoom: 100, position: 'center' },
-    { key: 'banner_podcasts_hero_image', label: 'עמוד פודקאסטים — באנר ראשי', description: 'התמונה העליונה של עמוד הפודקאסטים.', value: '', saving: false, uploading: false, success: false, displayMode: 'cover', zoom: 100, position: 'center' },
-    { key: 'banner_music_index_hero_image', label: 'אינדקס עולם המוזיקה — באנר ראשי', description: 'התמונה העליונה של עמוד אינדקס עולם המוזיקה.', value: '', saving: false, uploading: false, success: false, displayMode: 'cover', zoom: 100, position: 'center' }
+    { key: 'banner_home_hero_image', label: 'דף הבית — באנר ראשי', description: 'התמונה שבתיבה הראשית הצהובה.', value: '', saving: false, uploading: false, success: false, displayMode: 'cover', desktopZoom: 100, mobileZoom: 100, position: 'center' },
+    { key: 'banner_home_chords_image', label: 'דף הבית — קידום אקורדים', description: 'תמונת באנר הקידום של האקורדים.', value: '', saving: false, uploading: false, success: false, displayMode: 'height', desktopZoom: 100, mobileZoom: 100, position: 'left' },
+    { key: 'banner_home_index_image', label: 'דף הבית — קידום אינדקס', description: 'תמונת באנר הקידום של אינדקס עולם המוזיקה.', value: '', saving: false, uploading: false, success: false, displayMode: 'height', desktopZoom: 100, mobileZoom: 100, position: 'left' },
+    { key: 'banner_home_podcasts_image', label: 'דף הבית — קידום פודקאסטים', description: 'תמונת באנר הקידום של הפודקאסטים.', value: '', saving: false, uploading: false, success: false, displayMode: 'height', desktopZoom: 100, mobileZoom: 100, position: 'left' },
+    { key: 'banner_chords_hero_image', label: 'עמוד אקורדים — באנר ראשי', description: 'התמונה העליונה של עמוד האקורדים.', value: '', saving: false, uploading: false, success: false, displayMode: 'cover', desktopZoom: 100, mobileZoom: 100, position: 'center' },
+    { key: 'banner_podcasts_hero_image', label: 'עמוד פודקאסטים — באנר ראשי', description: 'התמונה העליונה של עמוד הפודקאסטים.', value: '', saving: false, uploading: false, success: false, displayMode: 'cover', desktopZoom: 100, mobileZoom: 100, position: 'center' },
+    { key: 'banner_music_index_hero_image', label: 'אינדקס עולם המוזיקה — באנר ראשי', description: 'התמונה העליונה של עמוד אינדקס עולם המוזיקה.', value: '', saving: false, uploading: false, success: false, displayMode: 'cover', desktopZoom: 100, mobileZoom: 100, position: 'center' }
   ];
 
   constructor(
@@ -83,7 +84,8 @@ export class SystemSettingsComponent implements OnInit {
         this.bannerImages.forEach(banner => {
           banner.value = data.find(setting => setting.key === banner.key)?.value || '';
           banner.displayMode = data.find(setting => setting.key === `${banner.key}_display_mode`)?.value === 'height' ? 'height' : 'cover';
-          banner.zoom = Number(data.find(setting => setting.key === `${banner.key}_zoom`)?.value) || 100;
+          banner.desktopZoom = Number(data.find(setting => setting.key === `${banner.key}_desktop_zoom`)?.value) || 100;
+          banner.mobileZoom = Number(data.find(setting => setting.key === `${banner.key}_mobile_zoom`)?.value) || 100;
           const position = data.find(setting => setting.key === `${banner.key}_position`)?.value;
           banner.position = position === 'left' || position === 'right' ? position : 'center';
         });
@@ -176,7 +178,8 @@ export class SystemSettingsComponent implements OnInit {
     forkJoin([
       this.settingsService.update(banner.key, banner.value.trim()),
       this.settingsService.update(`${banner.key}_display_mode`, banner.displayMode),
-      this.settingsService.update(`${banner.key}_zoom`, String(banner.zoom)),
+      this.settingsService.update(`${banner.key}_desktop_zoom`, String(banner.desktopZoom)),
+      this.settingsService.update(`${banner.key}_mobile_zoom`, String(banner.mobileZoom)),
       this.settingsService.update(`${banner.key}_position`, banner.position)
     ]).subscribe({
       next: ([updated]) => {

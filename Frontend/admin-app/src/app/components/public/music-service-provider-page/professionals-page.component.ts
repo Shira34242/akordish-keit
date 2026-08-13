@@ -68,6 +68,7 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
   agencyBanners: AgencyWithProfiles[] = [];
   heroImage = '';
   bannerImagesLoaded = false;
+  bannerImageSettings: Record<string, string> = {};
 
   // ג”€ג”€ג”€ Tab ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
   activeTab: 'professionals' | 'teachers' = 'professionals';
@@ -187,6 +188,7 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
   ngOnInit(): void {
     this.systemSettingsService.getPublicBannerImages().subscribe({
       next: images => {
+        this.bannerImageSettings = images;
         this.heroImage = images['banner_music_index_hero_image'] || '';
         this.bannerImagesLoaded = true;
       },
@@ -1033,6 +1035,11 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
     if (profile.profileType === 'artist') return 'אמן';
     if (profile.profileType === 'serviceProvider') return profile.subtitle?.trim() || 'נותן שירות';
     return '';
+  }
+
+  get heroImageZoom(): number {
+    const suffix = window.innerWidth <= 768 ? 'mobile_zoom' : 'desktop_zoom';
+    return Math.max(100, Math.min(200, Number(this.bannerImageSettings[`banner_music_index_hero_image_${suffix}`]) || 100));
   }
 
   goToAgencyProfile(profile: AgencyProfileDto): void {
