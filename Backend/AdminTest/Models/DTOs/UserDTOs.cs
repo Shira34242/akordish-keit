@@ -68,6 +68,11 @@ public class DeletePageRequestDto
     public int ProfileId { get; set; }
 }
 
+public class DeleteAccountRequestDto
+{
+    public bool Confirmed { get; set; }
+}
+
 /// <summary>
 /// בקשת הצגה / הסתרה של דף ציבורי מהאינדקס בלי מחיקה
 /// </summary>

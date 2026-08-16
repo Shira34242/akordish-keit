@@ -120,7 +120,12 @@ export class FileUploadInputComponent implements OnDestroy {
     this.uploadSub = this.mediaService.uploadMediaWithProgress(file).subscribe({
       next: (event) => {
         if (event.type === HttpEventType.UploadProgress) {
-          const currentFileProgress = event.total ? Math.round((event.loaded / event.total) * 100) : 0;
+          // Some browsers omit `event.total` for multipart uploads. The selected file
+          // still provides the exact byte count, so use it to keep progress visible.
+          const totalBytes = event.total || file.size;
+          const currentFileProgress = totalBytes
+            ? Math.min(100, Math.round((event.loaded / totalBytes) * 100))
+            : 0;
           this.uploadProgress = Math.round(
             ((this.uploadCompletedFiles * 100) + currentFileProgress) / this.uploadTotalFiles
           );

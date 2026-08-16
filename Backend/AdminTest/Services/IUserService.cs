@@ -46,6 +46,11 @@ public interface IUserService
     Task<bool> RequestPageDeletionAsync(int userId, DeletePageRequestDto dto);
 
     /// <summary>
+    /// שולח למנהלים בקשה למחיקת חשבון משתמש. החשבון לא נמחק אוטומטית.
+    /// </summary>
+    Task<bool> RequestAccountDeletionAsync(int userId);
+
+    /// <summary>
     /// מציג או מסתיר דף ציבורי מהאינדקס בלי למחוק אותו
     /// </summary>
     Task<UserWithProfileDto?> SetPageVisibilityAsync(int userId, SetPageVisibilityDto dto);

@@ -272,6 +272,12 @@ export const routes: Routes = [
                 data: { page: 'privacy' }
             },
             {
+                path: 'delete-account',
+                loadComponent: () => import('./components/public/legal-page/legal-page.component').then(m => m.LegalPageComponent),
+                title: 'מחיקת חשבון - אקורדישקייט',
+                data: { page: 'delete-account' }
+            },
+            {
                 path: 'terms',
                 loadComponent: () => import('./components/public/legal-page/legal-page.component').then(m => m.LegalPageComponent),
                 title: 'תנאי שימוש - אקורדישקייט',

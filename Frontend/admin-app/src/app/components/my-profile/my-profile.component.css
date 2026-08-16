@@ -1120,6 +1120,19 @@
   border: none;
 }
 
+.account-deletion-link {
+  align-self: center;
+  color: rgba(0, 0, 0, 0.45);
+  font-size: var(--font-xs);
+  font-weight: 300;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.account-deletion-link:hover {
+  color: #000000;
+}
+
 .manage-card-col {
   flex: 1;
   display: flex;

@@ -163,6 +163,25 @@ public class UsersController : ControllerBase
         return Ok();
     }
 
+    // POST: api/Users/me/delete-request
+    // שולח בקשה למחיקת חשבון למנהלים. המחיקה מבוצעת רק לאחר בדיקה.
+    [HttpPost("me/delete-request")]
+    [Authorize]
+    public async Task<ActionResult> RequestAccountDeletion([FromBody] DeleteAccountRequestDto dto)
+    {
+        if (!dto.Confirmed)
+            return BadRequest(new { message = "נדרש אישור מפורש לבקשת מחיקת החשבון" });
+
+        var userId = GetCurrentUserId();
+        if (userId == null) return Unauthorized();
+
+        var success = await _service.RequestAccountDeletionAsync(userId.Value);
+        if (!success) return NotFound();
+
+        _logger.LogInformation("User requested account deletion: UserId={UserId}", userId);
+        return Ok();
+    }
+
     // POST: api/Users/me/pages/visibility
     // מציג או מסתיר דף ציבורי מהאינדקס בלי למחוק אותו
     [HttpPost("me/pages/visibility")]

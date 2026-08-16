@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using AkordishKeit.Models.DTOs;
 
@@ -68,8 +69,12 @@ public class SmartContentImportService : ISmartContentImportService
         }
 
         var html = await FetchHtmlAsync(uri);
+        var eventDetails = contentType == "event" && IsTickchakUrl(uri)
+            ? ExtractTickchakEventDetails(html)
+            : null;
         var title = CleanTitle(
-            ExtractMeta(html, "og:title")
+            eventDetails?.Title
+            ?? ExtractMeta(html, "og:title")
             ?? ExtractMeta(html, "twitter:title")
             ?? ExtractTagText(html, "h1")
             ?? ExtractTitleTag(html)
@@ -80,10 +85,11 @@ public class SmartContentImportService : ISmartContentImportService
             ?? ExtractMeta(html, "description")
             ?? ExtractFirstParagraph(html));
         var imageUrl = AbsolutizeUrl(
-            ExtractMeta(html, "og:image")
+            eventDetails?.ImageUrl
+            ?? ExtractMeta(html, "og:image")
             ?? ExtractMeta(html, "twitter:image"),
             uri);
-        var publishedAt = ExtractPublishedAt(html);
+        var publishedAt = eventDetails?.StartDate ?? ExtractPublishedAt(html);
 
         return new ImportedContentDraftDto
         {
@@ -93,7 +99,9 @@ public class SmartContentImportService : ISmartContentImportService
             ImageUrl = imageUrl,
             SourceUrl = sourceUrl,
             Platform = DetectPlatform(uri),
-            PublishedAt = publishedAt
+            PublishedAt = publishedAt,
+            Location = eventDetails?.Location,
+            ArtistName = eventDetails?.ArtistName
         };
     }
 
@@ -237,6 +245,99 @@ public class SmartContentImportService : ISmartContentImportService
         return DateTime.TryParse(value, out var parsed) ? parsed : null;
     }
 
+    private static TickchakEventDetails? ExtractTickchakEventDetails(string html)
+    {
+        foreach (Match script in Regex.Matches(html,
+                     @"<script\b[^>]*type=[""']application/ld\+json[""'][^>]*>(?<json>.*?)</script>",
+                     RegexOptions.IgnoreCase | RegexOptions.Singleline))
+        {
+            try
+            {
+                using var document = JsonDocument.Parse(WebUtility.HtmlDecode(script.Groups["json"].Value));
+                foreach (var item in EnumerateJsonLdItems(document.RootElement))
+                {
+                    if (!item.TryGetProperty("@type", out var type) ||
+                        !string.Equals(type.GetString(), "Event", StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    var title = GetJsonString(item, "name");
+                    var startDate = GetJsonDate(item, "startDate");
+                    var imageUrl = GetJsonImage(item);
+                    var location = GetTickchakLocation(item);
+                    var artistName = GetTickchakPerformers(item);
+
+                    if (title is not null || startDate.HasValue || location is not null || artistName is not null)
+                    {
+                        return new TickchakEventDetails(title, startDate, imageUrl, location, artistName);
+                    }
+                }
+            }
+            catch (JsonException)
+            {
+                // A malformed JSON-LD block should not prevent the generic importer from working.
+            }
+        }
+
+        return null;
+    }
+
+    private static IEnumerable<JsonElement> EnumerateJsonLdItems(JsonElement root) => root.ValueKind switch
+    {
+        JsonValueKind.Array => root.EnumerateArray(),
+        JsonValueKind.Object => new[] { root },
+        _ => Array.Empty<JsonElement>()
+    };
+
+    private static string? GetJsonString(JsonElement element, string propertyName) =>
+        element.TryGetProperty(propertyName, out var property) && property.ValueKind == JsonValueKind.String
+            ? property.GetString()?.Trim()
+            : null;
+
+    private static DateTime? GetJsonDate(JsonElement element, string propertyName)
+    {
+        var value = GetJsonString(element, propertyName);
+        // Keep the event's published local date/time rather than converting it to the server timezone.
+        return DateTimeOffset.TryParse(value, out var date) ? date.DateTime : null;
+    }
+
+    private static string? GetJsonImage(JsonElement eventData)
+    {
+        if (!eventData.TryGetProperty("image", out var image)) return null;
+        return image.ValueKind switch
+        {
+            JsonValueKind.String => image.GetString(),
+            JsonValueKind.Array => image.EnumerateArray().FirstOrDefault(item => item.ValueKind == JsonValueKind.String).GetString(),
+            _ => null
+        };
+    }
+
+    private static string? GetTickchakLocation(JsonElement eventData)
+    {
+        if (!eventData.TryGetProperty("location", out var location) || location.ValueKind != JsonValueKind.Object) return null;
+        if (location.TryGetProperty("address", out var address) && address.ValueKind == JsonValueKind.Object)
+        {
+            return GetJsonString(address, "addressLocality") ?? GetJsonString(address, "streetAddress");
+        }
+
+        return GetJsonString(location, "name");
+    }
+
+    private static string? GetTickchakPerformers(JsonElement eventData)
+    {
+        if (!eventData.TryGetProperty("performer", out var performers)) return null;
+
+        var names = performers.ValueKind == JsonValueKind.Array
+            ? performers.EnumerateArray().Select(performer => GetJsonString(performer, "name"))
+            : new[] { GetJsonString(performers, "name") };
+
+        var joined = string.Join(" / ", names.Where(name => !string.IsNullOrWhiteSpace(name)).Distinct());
+        return string.IsNullOrWhiteSpace(joined) ? null : joined;
+    }
+
+    private sealed record TickchakEventDetails(string? Title, DateTime? StartDate, string? ImageUrl, string? Location, string? ArtistName);
+
     private static string? CleanTitle(string? value)
     {
         if (string.IsNullOrWhiteSpace(value)) return null;
@@ -276,6 +377,10 @@ public class SmartContentImportService : ISmartContentImportService
     private static bool IsYouTubeUrl(Uri uri) =>
         uri.Host.Contains("youtube.com", StringComparison.OrdinalIgnoreCase) ||
         uri.Host.Contains("youtu.be", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsTickchakUrl(Uri uri) =>
+        uri.Host.Equals("tickchak.co.il", StringComparison.OrdinalIgnoreCase) ||
+        uri.Host.EndsWith(".tickchak.co.il", StringComparison.OrdinalIgnoreCase);
 
     private static string DetectPlatform(Uri uri)
     {

@@ -8,6 +8,8 @@ export interface ImportedContentDraft {
   sourceUrl: string;
   platform?: string;
   publishedAt?: string;
+  location?: string;
+  artistName?: string;
 }
 
 export interface ImportContentFromUrlResponse {

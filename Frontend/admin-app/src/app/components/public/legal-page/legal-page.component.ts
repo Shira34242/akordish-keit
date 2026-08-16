@@ -4,6 +4,8 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { SeoService } from '../../../services/seo.service';
 import { QuickAddAssistantService } from '../../../services/quick-add-assistant.service';
 import { LanguageService } from '../../../services/language.service';
+import { AuthService } from '../../../services/auth.service';
+import { UserService } from '../../../services/user.service';
 
 export interface LegalPageContent {
   title: string;
@@ -269,6 +271,32 @@ export const PAGES: Record<string, LegalPageContent> = {
       }
     ]
   },
+  'delete-account': {
+    title: 'מחיקת חשבון ונתונים',
+    description: 'בעמוד זה אפשר להגיש בקשה למחיקת חשבון האקורדישקייט והמידע המשויך אליו.',
+    relatedLinks: [
+      { label: 'מדיניות פרטיות', path: '/privacy' },
+      { label: 'יצירת קשר', path: '/contact' }
+    ],
+    sections: [
+      {
+        title: 'איך מבקשים מחיקה?',
+        body: 'אם אתם מחוברים לחשבון, לחצו על הכפתור בעמוד זה ואשרו את הבקשה. אם אין לכם גישה לחשבון, שלחו בקשה לכתובת akordishkayt@gmail.com מהכתובת שמקושרת לחשבון, וציינו את שם המשתמש.'
+      },
+      {
+        title: 'מה יימחק?',
+        body: 'לאחר אימות וטיפול בבקשה, החשבון יושבת והמידע האישי והפרופיל המשויך אליו יימחקו או יוסרו מהתצוגה הציבורית, לפי העניין. תוכן שכבר פורסם ייבחן בנפרד כדי לשמור על זכויות יוצרים, הקשר ותפעול האתר.'
+      },
+      {
+        title: 'מידע שעשוי להישמר',
+        body: 'ייתכן שנשמור מידע מצומצם הנדרש לצורכי אבטחה, מניעת שימוש לרעה, טיפול במחלוקות או עמידה בחובות חוקיות וחשבונאיות. מידע זה לא ישמש להפעלת החשבון לאחר המחיקה.'
+      },
+      {
+        title: 'טיפול בבקשה',
+        body: 'הבקשה נבדקת על ידי צוות האתר לפני המחיקה, כדי לאמת את זהות מבקש המחיקה ולמנוע מחיקה לא מורשית.'
+      }
+    ]
+  },
   accessibility: {
     title: 'הצהרת נגישות',
     description: 'הצהרת הנגישות של אתר אקורדישקייט ופרטי פנייה בנושא התאמות נגישות.',
@@ -315,8 +343,12 @@ export const PAGES: Record<string, LegalPageContent> = {
 export class LegalPageComponent implements OnInit {
   page: LegalPageContent = PAGES['about'];
   key = 'about';
+  accountDeletionPending = false;
+  accountDeletionRequested = false;
 
   private readonly langService = inject(LanguageService);
+  readonly currentUser$ = inject(AuthService).currentUser$;
+  private readonly userService = inject(UserService);
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -345,6 +377,30 @@ export class LegalPageComponent implements OnInit {
 
   get isContactPage(): boolean {
     return this.key === 'contact';
+  }
+
+  get isAccountDeletionPage(): boolean {
+    return this.key === 'delete-account';
+  }
+
+  requestAccountDeletion(): void {
+    if (this.accountDeletionPending || this.accountDeletionRequested) return;
+
+    const confirmed = window.confirm('האם לשלוח בקשה למחיקת החשבון? לאחר הטיפול לא תהיה אפשרות לשחזר את החשבון.');
+    if (!confirmed) return;
+
+    this.accountDeletionPending = true;
+    this.userService.requestAccountDeletion().subscribe({
+      next: (success) => {
+        this.accountDeletionPending = false;
+        this.accountDeletionRequested = success;
+        if (!success) window.alert('לא הצלחנו לשלוח את הבקשה. אפשר לפנות אלינו גם במייל.');
+      },
+      error: () => {
+        this.accountDeletionPending = false;
+        window.alert('לא הצלחנו לשלוח את הבקשה. אפשר לפנות אלינו גם במייל.');
+      }
+    });
   }
 
   openContactForm(): void {

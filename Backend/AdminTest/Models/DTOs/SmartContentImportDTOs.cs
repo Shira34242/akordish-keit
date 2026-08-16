@@ -20,6 +20,8 @@ public class ImportedContentDraftDto
     public string SourceUrl { get; set; } = string.Empty;
     public string? Platform { get; set; }
     public DateTime? PublishedAt { get; set; }
+    public string? Location { get; set; }
+    public string? ArtistName { get; set; }
 }
 
 public class ImportContentFromUrlResponseDto

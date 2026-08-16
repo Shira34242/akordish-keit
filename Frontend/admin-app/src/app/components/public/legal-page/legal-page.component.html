@@ -12,6 +12,19 @@
       <button *ngIf="isContactPage" type="button" class="legal-page__primary" (click)="openContactForm()">
         פתיחת טופס צור קשר
       </button>
+      <ng-container *ngIf="isAccountDeletionPage">
+        <button
+          *ngIf="(currentUser$ | async); else accountDeletionByEmail"
+          type="button"
+          class="legal-page__primary"
+          [disabled]="accountDeletionPending || accountDeletionRequested"
+          (click)="requestAccountDeletion()">
+          {{ accountDeletionRequested ? 'הבקשה נשלחה' : accountDeletionPending ? 'שולחים בקשה...' : 'שליחת בקשת מחיקה' }}
+        </button>
+        <ng-template #accountDeletionByEmail>
+          <a class="legal-page__primary legal-page__primary--link" href="mailto:akordishkayt@gmail.com?subject=בקשה למחיקת חשבון">שליחת בקשה במייל</a>
+        </ng-template>
+      </ng-container>
     </header>
 
     <div class="legal-page__content">

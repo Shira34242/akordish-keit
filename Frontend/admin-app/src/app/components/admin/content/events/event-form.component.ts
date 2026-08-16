@@ -222,8 +222,11 @@ export class EventFormComponent implements OnInit {
       description: draft.description || this.event.description,
       imageUrl: draft.imageUrl || this.event.imageUrl,
       ticketUrl: draft.sourceUrl || this.event.ticketUrl,
-      eventDate: this.getFutureDateForInput(draft.publishedAt) || this.event.eventDate
+      eventDate: this.getFutureDateForInput(draft.publishedAt) || this.event.eventDate,
+      location: draft.location || this.event.location,
+      artistName: draft.artistName || this.event.artistName
     };
+    this.artistSearchTerm = draft.artistName || this.artistSearchTerm;
     this.queueArtistSuggestionScan();
   }
 

@@ -104,6 +104,17 @@
   opacity: 0.82;
 }
 
+.legal-page__primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.legal-page__primary--link {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
 .legal-page__content {
   display: grid;
   gap: var(--space-base);

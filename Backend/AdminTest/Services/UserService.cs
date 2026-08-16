@@ -638,6 +638,37 @@ public class UserService : IUserService
         return true;
     }
 
+    public async Task<bool> RequestAccountDeletionAsync(int userId)
+    {
+        var user = await _context.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted);
+
+        if (user == null) return false;
+
+        var alreadyRequested = await _context.ContentReports.AnyAsync(report =>
+            report.UserId == userId &&
+            report.ContentType == "General" &&
+            report.ReportType == "AccountDeletionRequest" &&
+            report.Status == "Pending");
+
+        if (alreadyRequested) return true;
+
+        _context.ContentReports.Add(new ContentReport
+        {
+            UserId = userId,
+            ContentType = "General",
+            ContentId = 0,
+            ReportType = "AccountDeletionRequest",
+            Description = $"{user.Username} ביקש למחוק את חשבון המשתמש שלו ואת הנתונים המשויכים אליו. כתובת הדוא\"ל של החשבון: {user.Email}. הבקשה נשלחה מתוך החשבון ודורשת טיפול מנהל.",
+            ReportedAt = DateTime.UtcNow,
+            Status = "Pending"
+        });
+
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
     private async Task<UserWithProfileDto?> GetOwnedPageForRequestAsync(int userId, string profileType, int profileId)
     {
         if (profileType == "artist")
