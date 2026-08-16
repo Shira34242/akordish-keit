@@ -264,7 +264,7 @@ public class SmartContentImportService : ISmartContentImportService
 
                     var title = GetJsonString(item, "name");
                     var startDate = GetJsonDate(item, "startDate");
-                    var imageUrl = GetJsonImage(item);
+                    var imageUrl = ExtractTickchakEventImage(html) ?? GetJsonImage(item);
                     var location = GetTickchakLocation(item);
                     var artistName = GetTickchakPerformers(item);
 
@@ -311,6 +311,24 @@ public class SmartContentImportService : ISmartContentImportService
             JsonValueKind.Array => image.EnumerateArray().FirstOrDefault(item => item.ValueKind == JsonValueKind.String).GetString(),
             _ => null
         };
+    }
+
+    private static string? ExtractTickchakEventImage(string html)
+    {
+        // Tickchak's Open Graph image is a wide social-sharing screenshot. The top section uses
+        // the original event artwork, which retains its portrait/landscape proportions.
+        var match = Regex.Match(
+            html,
+            @"TICKCHAK\.bg_images\s*\[.*?\]\s*=\s*\{.*?""urls""\s*:\s*\[\s*""url\((?<url>.*?)\)""",
+            RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+        if (!match.Success) return null;
+
+        var imageUrl = WebUtility.HtmlDecode(match.Groups["url"].Value)
+            .Replace("\\/", "/", StringComparison.Ordinal)
+            .Trim();
+
+        return Uri.TryCreate(imageUrl, UriKind.Absolute, out var uri) ? uri.ToString() : null;
     }
 
     private static string? GetTickchakLocation(JsonElement eventData)
