@@ -253,3 +253,16 @@
     </section>
   </div>
 </main>
+
+<div class="media-login-backdrop" *ngIf="showMediaLoginPrompt" (click)="closeMediaLoginPrompt()">
+  <div class="media-login-dialog" role="dialog" aria-modal="true" aria-labelledby="media-login-title" (click)="$event.stopPropagation()">
+    <button type="button" class="media-login-close" (click)="closeMediaLoginPrompt()" aria-label="סגירה">
+      <span class="material-icons">close</span>
+    </button>
+    <p id="media-login-title" class="media-login-message">כדי לצפות בפרק יש להתחבר או להירשם</p>
+    <div class="media-login-actions">
+      <button type="button" class="media-login-link media-login-link--primary" (click)="continueToMediaAuth('login')">התחברות</button>
+      <button type="button" class="media-login-link media-login-link--secondary" (click)="continueToMediaAuth('register')">הרשמה</button>
+    </div>
+  </div>
+</div>

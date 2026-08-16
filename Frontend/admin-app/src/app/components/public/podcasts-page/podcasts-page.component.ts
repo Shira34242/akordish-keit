@@ -10,6 +10,7 @@ import { PodcastEpisodeBannerComponent } from '../../shared/podcast-episode-bann
 import { ContentUploaderBadgeComponent } from '../../shared/content-uploader-badge/content-uploader-badge.component';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 import { SystemSettingsService } from '../../../services/system-settings.service';
+import { AuthService } from '../../../services/auth.service';
 import { cloudflareBackgroundImage } from '../../../pipes/cloudflare-image.pipe';
 
 @Component({
@@ -29,6 +30,7 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly sanitizer = inject(DomSanitizer);
   private readonly seo = inject(SeoService);
   private readonly systemSettings = inject(SystemSettingsService);
+  private readonly authService = inject(AuthService);
 
   loading = true;
   seriesLoading = false;
@@ -42,6 +44,7 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
   episodePlayableUrl: string | null = null;
   safeEmbedUrl: SafeResourceUrl | null = null;
   isEpisodeVideoActive = false;
+  showMediaLoginPrompt = false;
   seriesDescriptionExpanded = false;
   searchQuery = '';
   searchEpisodes: PodcastEpisode[] = [];
@@ -187,8 +190,22 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
   activateEpisodeVideo(): void {
     if (!this.episodePlayableUrl || this.isEpisodeVideoActive) return;
 
+    if (!this.authService.isLoggedIn) {
+      this.showMediaLoginPrompt = true;
+      return;
+    }
+
     this.safeEmbedUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.episodePlayableUrl);
     this.isEpisodeVideoActive = true;
+  }
+
+  closeMediaLoginPrompt(): void {
+    this.showMediaLoginPrompt = false;
+  }
+
+  continueToMediaAuth(mode: 'login' | 'register'): void {
+    this.showMediaLoginPrompt = false;
+    this.authService.requestLogin(this.router.url, mode);
   }
 
   resetViewer(updateUrl = true): void {
