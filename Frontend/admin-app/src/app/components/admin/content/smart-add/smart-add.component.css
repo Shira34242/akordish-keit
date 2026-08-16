@@ -25,7 +25,8 @@
   align-items: start;
 }
 
-.compact-song-import .smart-import-card {
+.compact-song-import .smart-import-card,
+.smart-import-card.compact-song-import {
   display: block;
   padding: 0;
   border-radius: 0;

@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.akordishkayt.app",
+      "sha256_cert_fingerprints": [
+        "9F:62:29:4D:1F:FD:10:66:BF:C6:70:22:33:7D:40:F3:15:C7:24:CB:B7:2B:AE:0C:B3:33:4A:37:FE:99:E2:1D"
+      ]
+    }
+  }
+]

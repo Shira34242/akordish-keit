@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, HostListener, Input, Output, inject } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, OnChanges, Output, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ModalService } from '../../../../services/modal.service';
@@ -15,13 +15,14 @@ import { ImportContentFromUrlResponse, SmartContentType } from '../../../../mode
   templateUrl: './smart-add.component.html',
   styleUrls: ['./smart-add.component.css']
 })
-export class SmartAddComponent {
+export class SmartAddComponent implements OnChanges {
   private readonly router = inject(Router);
   private readonly modalService = inject(ModalService);
   private readonly songService = inject(SongService);
   private readonly smartContentService = inject(SmartContentService);
 
   @Input() compactSongOnly = false;
+  @Input() compactEventOnly = false;
   @Output() completed = new EventEmitter<void>();
 
   importUrl = '';
@@ -45,10 +46,20 @@ export class SmartAddComponent {
     { value: 'podcast', label: 'פודקאסט', hint: 'פרק פודקאסט עם מקור ותמונה', icon: 'podcasts' }
   ];
 
+  ngOnChanges(): void {
+    if (this.compactEventOnly) {
+      this.selectedContentType = 'event';
+    }
+  }
+
+  get isCompactImport(): boolean {
+    return this.compactSongOnly || this.compactEventOnly;
+  }
+
   get visibleContentTypes(): { value: SmartContentType; label: string; hint: string; icon: string }[] {
-    return this.compactSongOnly
-      ? this.contentTypes.filter(type => type.value === 'song')
-      : this.contentTypes;
+    if (this.compactSongOnly) return this.contentTypes.filter(type => type.value === 'song');
+    if (this.compactEventOnly) return this.contentTypes.filter(type => type.value === 'event');
+    return this.contentTypes;
   }
 
   prepareSmartImport(): void {
@@ -58,6 +69,10 @@ export class SmartAddComponent {
       this.selectedContentType = 'song';
       this.prepareCompactSongImport(url);
       return;
+    }
+
+    if (this.compactEventOnly) {
+      this.selectedContentType = 'event';
     }
 
     if (!this.isValidUrl(url)) {
@@ -129,6 +144,7 @@ export class SmartAddComponent {
   }
 
   onContentTypeChange(type: SmartContentType): void {
+    if (this.compactEventOnly && type !== 'event') return;
     this.selectedContentType = type;
     this.importState = 'idle';
     this.importResult = null;
@@ -436,6 +452,7 @@ export class SmartAddComponent {
     });
 
     if (draft.contentType === 'event') {
+      this.completed.emit();
       this.router.navigate(['/admin/content/events/new'], { queryParams: { smartDraft: draftKey } });
       return;
     }

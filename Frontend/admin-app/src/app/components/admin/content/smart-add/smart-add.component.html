@@ -1,6 +1,6 @@
 ﻿<div class="smart-add-page" [class.compact-song-import]="compactSongOnly">
-  <section class="smart-import-card" aria-labelledby="smart-import-title">
-    <div class="card-copy" *ngIf="!compactSongOnly">
+  <section class="smart-import-card" [class.compact-song-import]="isCompactImport" aria-labelledby="smart-import-title">
+    <div class="card-copy" *ngIf="!isCompactImport">
       <span class="section-pill">ייבוא חכם</span>
       <h2 id="smart-import-title">הוספת תוכן חכמה מקישור</h2>
       <p>
@@ -9,7 +9,7 @@
     </div>
 
     <div class="import-form">
-      <div class="content-type-grid" *ngIf="!compactSongOnly" role="radiogroup" aria-label="בחירת סוג תוכן לייבוא">
+      <div class="content-type-grid" *ngIf="!isCompactImport" role="radiogroup" aria-label="בחירת סוג תוכן לייבוא">
         <button
           *ngFor="let type of visibleContentTypes"
           type="button"
@@ -27,7 +27,7 @@
         </button>
       </div>
 
-      <label for="chord-import-url">{{ compactSongOnly ? 'הדבקת לינק לשליפה' : 'קישור לאתר מקור' }}</label>
+      <label for="chord-import-url">{{ isCompactImport ? 'הדבקת לינק לשליפה' : 'קישור לאתר מקור' }}</label>
       <div class="url-row">
         <input
           id="chord-import-url"
@@ -35,16 +35,16 @@
           [(ngModel)]="importUrl"
           (paste)="onImportPaste()"
           (keyup.enter)="prepareSmartImport()"
-          [placeholder]="compactSongOnly ? 'הדבק לינק לשיר או לעמוד אמן...' : 'https://...'"
+          [placeholder]="compactSongOnly ? 'הדבק לינק לשיר או לעמוד אמן...' : (compactEventOnly ? 'הדבק לינק להופעה...' : 'https://...')"
           dir="ltr"
-          [attr.autofocus]="compactSongOnly ? '' : null"
+          [attr.autofocus]="isCompactImport ? '' : null"
         />
         <button type="button" class="primary-btn" (click)="prepareSmartImport()" [disabled]="!compactSongOnly && importState === 'loading'">
-          {{ !compactSongOnly && importState === 'loading' ? 'שולף...' : (compactSongOnly ? 'שלוף' : 'שלוף תוכן') }}
+          {{ !compactSongOnly && importState === 'loading' ? 'שולף...' : (isCompactImport ? 'שלוף' : 'שלוף תוכן') }}
         </button>
       </div>
 
-      <p class="field-note" *ngIf="importState === 'idle' && !compactSongOnly">
+      <p class="field-note" *ngIf="importState === 'idle' && !isCompactImport">
         השליפה ממלאת טיוטה ראשונית בלבד. תמיד עוברים דרך טופס עריכה לפני פרסום.
       </p>
       <p class="field-note" *ngIf="compactSongOnly && activeCompactImports > 0">
@@ -126,7 +126,7 @@
     </section>
   </div>
 
-  <section class="quick-add-section" *ngIf="!compactSongOnly" aria-labelledby="quick-add-title">
+  <section class="quick-add-section" *ngIf="!isCompactImport" aria-labelledby="quick-add-title">
     <div class="section-heading">
       <span class="section-pill">הוספה מהירה</span>
       <h2 id="quick-add-title">כל סוגי התוכן</h2>

@@ -21,6 +21,44 @@
   overflow: visible;
 }
 
+.smart-import-action {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.smart-import-toggle {
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 50%;
+  background: #F2F2F2;
+  color: #000000;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.smart-import-toggle:hover,
+.smart-import-toggle[aria-expanded="true"] {
+  background: #ddff53;
+}
+
+.smart-import-toggle .material-icons {
+  font-size: 20px;
+}
+
+.smart-import-popover {
+  position: absolute;
+  top: calc(100% + var(--space-sm));
+  left: 0;
+  z-index: 20;
+  width: min(360px, calc(100vw - var(--space-xl) * 2));
+  padding: var(--space-sm);
+  border-radius: 16px;
+  background: #F2F2F2;
+}
+
 .filters {
   display: flex;
   gap: var(--space-xs);

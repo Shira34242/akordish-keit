@@ -11,12 +11,13 @@ import { EventCardData } from '../../../../utils/event.utils';
 import { EventModalComponent } from '../../../shared/event-modal/event-modal.component';
 import { ArtistService } from '../../../../services/artist.service';
 import { ArtistListDto } from '../../../../models/artist.model';
+import { SmartAddComponent } from '../smart-add/smart-add.component';
 
 
 @Component({
   selector: 'app-events-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, EventModalComponent],
+  imports: [CommonModule, FormsModule, EventModalComponent, SmartAddComponent],
   templateUrl: './events-list.component.html',
   styleUrls: ['./events-list.component.css']
 })
@@ -38,6 +39,7 @@ export class EventsListComponent implements OnInit, OnDestroy, AfterViewInit {
   selectedEventIds = new Set<number>();
   savingStatusId: number | null = null;
   selectedEventPreview: EventCardData | null = null;
+  smartImportOpen = false;
   viewMode: 'list' | 'grid' = (localStorage.getItem('admin-events-view-v2') as 'list' | 'grid') || 'grid';
   setView(mode: 'list' | 'grid') { this.viewMode = mode; localStorage.setItem('admin-events-view-v2', mode); }
 

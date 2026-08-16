@@ -56,6 +56,24 @@
     </div>
 
     <div class="actions-view" *ngIf="!loading">
+      <div class="smart-import-action">
+        <button
+          type="button"
+          class="smart-import-toggle"
+          (click)="smartImportOpen = !smartImportOpen"
+          title="הוספה חכמה מלינק"
+          [attr.aria-expanded]="smartImportOpen"
+          aria-label="הוספה חכמה מלינק">
+          <span class="material-icons">link</span>
+        </button>
+
+        <div class="smart-import-popover" *ngIf="smartImportOpen">
+          <app-smart-add
+            [compactEventOnly]="true"
+            (completed)="smartImportOpen = false">
+          </app-smart-add>
+        </div>
+      </div>
       <span class="results-info">{{ totalItems }} הופעות</span>
       <div class="view-controls">
         <button class="view-btn" type="button" [class.active]="viewMode === 'grid'" (click)="setView('grid')" title="גריד">
