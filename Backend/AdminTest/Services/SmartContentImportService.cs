@@ -315,17 +315,27 @@ public class SmartContentImportService : ISmartContentImportService
 
     private static string? ExtractTickchakEventImage(string html)
     {
-        // Tickchak's Open Graph image is a wide social-sharing screenshot. The top section uses
-        // the original event artwork, which retains its portrait/landscape proportions.
+        // Prefer the image placed directly on the event's top section.
         var match = Regex.Match(
+            html,
+            @"<div\b[^>]*class=[""'][^""']*\btopsection-main-container\b[^""']*[""'][^>]*style=[""'][^""']*background-image\s*:\s*url\([""']?(?<url>.*?)[""']?\)[^""']*[""']",
+            RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+        if (!match.Success)
+        {
+            // On many Tickchak pages this style is applied by their script after the page loads.
+            // This is the same image data that populates .topsection-main-container.
+            match = Regex.Match(
             html,
             @"TICKCHAK\.bg_images\s*\[.*?\]\s*=\s*\{.*?""urls""\s*:\s*\[\s*""url\((?<url>.*?)\)""",
             RegexOptions.IgnoreCase | RegexOptions.Singleline);
+        }
 
         if (!match.Success) return null;
 
         var imageUrl = WebUtility.HtmlDecode(match.Groups["url"].Value)
             .Replace("\\/", "/", StringComparison.Ordinal)
+            .Trim('"', '\'')
             .Trim();
 
         return Uri.TryCreate(imageUrl, UriKind.Absolute, out var uri) ? uri.ToString() : null;
