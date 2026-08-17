@@ -10,6 +10,8 @@ interface DirectMediaUpload {
   contentType?: string;
 }
 
+const DIRECT_UPLOAD_CHUNK_SIZE = 4 * 1024 * 1024;
+
 @Injectable({
   providedIn: 'root'
 })
@@ -57,33 +59,74 @@ export class MediaService {
 
   private uploadDirectly(file: File, target: DirectMediaUpload): Observable<HttpEvent<{ url: string }>> {
     return new Observable(observer => {
-      const xhr = new XMLHttpRequest();
-      xhr.open('PUT', target.uploadUrl!);
-      xhr.setRequestHeader('x-ms-blob-type', 'BlockBlob');
-      xhr.setRequestHeader('x-ms-blob-content-type', target.contentType!);
-      xhr.setRequestHeader('x-ms-version', '2023-11-03');
-
-      xhr.upload.onprogress = event => {
-        observer.next({
-          type: HttpEventType.UploadProgress,
-          loaded: event.loaded,
-          total: event.lengthComputable ? event.total : file.size
-        });
-      };
-      xhr.onload = () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          observer.next(new HttpResponse({ body: { url: target.url! }, status: xhr.status, url: target.url! }));
-          observer.complete();
-          return;
-        }
-        observer.error(new Error(`Direct upload failed with status ${xhr.status}`));
-      };
-      xhr.onerror = () => observer.error(new Error('Direct upload failed'));
-      xhr.onabort = () => observer.error(new Error('Direct upload cancelled'));
-
+      let activeRequest: XMLHttpRequest | undefined;
+      let cancelled = false;
       observer.next({ type: HttpEventType.Sent });
-      xhr.send(file);
-      return () => xhr.abort();
+
+      const send = (url: string, body: Blob | string, headers: Record<string, string>): Promise<number> =>
+        new Promise((resolve, reject) => {
+          activeRequest = new XMLHttpRequest();
+          activeRequest.open('PUT', url);
+          Object.entries(headers).forEach(([name, value]) => activeRequest!.setRequestHeader(name, value));
+          activeRequest.onload = () => {
+            const status = activeRequest?.status ?? 0;
+            status >= 200 && status < 300
+              ? resolve(status)
+              : reject(new Error(`Direct upload failed with status ${status}`));
+          };
+          activeRequest.onerror = () => reject(new Error('Direct upload failed'));
+          activeRequest.onabort = () => reject(new Error('Direct upload cancelled'));
+          activeRequest.send(body);
+        });
+
+      const run = async (): Promise<void> => {
+        try {
+          const blockIds: string[] = [];
+          const totalBlocks = Math.ceil(file.size / DIRECT_UPLOAD_CHUNK_SIZE);
+
+          for (let index = 0; index < totalBlocks; index += 1) {
+            const start = index * DIRECT_UPLOAD_CHUNK_SIZE;
+            const end = Math.min(start + DIRECT_UPLOAD_CHUNK_SIZE, file.size);
+            const blockId = btoa(String(index).padStart(6, '0'));
+            blockIds.push(blockId);
+
+            await send(
+              `${target.uploadUrl}&comp=block&blockid=${encodeURIComponent(blockId)}`,
+              file.slice(start, end),
+              { 'x-ms-version': '2023-11-03' }
+            );
+            if (cancelled) return;
+
+            // A block only counts after Azure has accepted it, so the percentage is factual.
+            observer.next({ type: HttpEventType.UploadProgress, loaded: end, total: file.size });
+          }
+
+          const blockList = `<?xml version="1.0" encoding="utf-8"?><BlockList>${blockIds
+            .map(blockId => `<Latest>${blockId}</Latest>`)
+            .join('')}</BlockList>`;
+          const status = await send(
+            `${target.uploadUrl}&comp=blocklist`,
+            blockList,
+            {
+              'Content-Type': 'application/xml',
+              'x-ms-blob-content-type': target.contentType!,
+              'x-ms-version': '2023-11-03'
+            }
+          );
+          if (cancelled) return;
+
+          observer.next(new HttpResponse({ body: { url: target.url! }, status, url: target.url! }));
+          observer.complete();
+        } catch (error) {
+          if (!cancelled) observer.error(error);
+        }
+      };
+
+      void run();
+      return () => {
+        cancelled = true;
+        activeRequest?.abort();
+      };
     });
   }
 

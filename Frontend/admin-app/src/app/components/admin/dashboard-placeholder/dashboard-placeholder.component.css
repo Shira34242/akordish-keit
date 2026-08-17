@@ -341,7 +341,13 @@ h2 { font-size: var(--font-xl); font-weight: 800; line-height: var(--lh-heading)
 }
 
 @media (max-width: 780px) {
-  .dashboard { padding: var(--space-lg); border-radius: 20px; }
+  .dashboard {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+    padding: var(--space-lg);
+    border-radius: 20px;
+  }
   .dashboard-header, .panel-heading, .analytics-heading { align-items: stretch; flex-direction: column; }
   .refresh-button { align-self: flex-start; }
   .kpi-grid, .analytics-kpis, .approval-overview { grid-template-columns: 1fr; }
@@ -354,6 +360,50 @@ h2 { font-size: var(--font-xl); font-weight: 800; line-height: var(--lh-heading)
   .analytics-loading, .approval-loading { grid-template-columns: 1fr; }
   .line-chart { height: 13rem; }
   .table-heading { align-items: stretch; }
+
+  .content-table-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    overflow: visible;
+    padding: 0 var(--space-lg) var(--space-lg);
+    border-top: 0;
+  }
+
+  .table-header-row {
+    display: none;
+  }
+
+  .content-table.table-data-row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "identity identity open"
+      "type details date";
+    min-width: 0;
+    min-height: 0;
+    padding: var(--space-base);
+    border: 0;
+    border-radius: 16px;
+    background: #F2F2F2;
+  }
+
+  .table-data-row .content-identity { grid-area: identity; }
+  .table-data-row > span:nth-child(2) { grid-area: type; }
+  .table-data-row > span:nth-child(3) { grid-area: details; }
+  .table-data-row > span:nth-child(4) { grid-area: date; }
+  .table-data-row > span:nth-child(5) { grid-area: open; }
+
+  .table-data-row .table-secondary {
+    min-width: 0;
+    font-size: var(--font-xs);
+  }
+
+  .empty-table,
+  .table-loading {
+    margin: 0;
+    border-radius: 16px;
+    background: #F2F2F2;
+  }
 }
 
 @media (max-width: 520px) {
@@ -372,4 +422,19 @@ h2 { font-size: var(--font-xl); font-weight: 800; line-height: var(--lh-heading)
   .comparison-switch { width: 100%; }
   .popular-banner { padding: var(--space-lg); border-radius: 18px; }
   .popular-banner-heading { align-items: stretch; flex-direction: column; }
+
+  .table-heading,
+  .content-table-wrap {
+    padding-inline: var(--space-base);
+  }
+
+  .content-table.table-data-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "identity open"
+      "type type"
+      "details details"
+      "date date";
+    gap: var(--space-sm);
+  }
 }

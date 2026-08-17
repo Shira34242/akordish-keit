@@ -177,12 +177,6 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
 
   loadArtist(id: number): void {
     this.loading = true;
-
-    // תוכן הליבה אינו תלוי בפרטי האמן המלאים. מתחילים אותו מיד כדי שלא
-    // ייווצר "מפל" של בקשות לאחר שה־hero כבר הסתיים.
-    this.loadSongs(id);
-    this.loadArticles(id);
-
     this.artistService.getArtistById(id).subscribe({
       next: (artist) => {
         this.artist = artist;
@@ -191,14 +185,18 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
         if (this.redirectToCanonicalArtist(artist)) return;
         this.applySeo(artist);
         this.artistPageService.setOwnerId(artist.userId ?? null);
-        this.loadEvents(id);
-        this.loadPodcastEpisodes(id);
         this.updateDefaultSongsCount();
         setTimeout(() => {
           this.cdr.detectChanges();
           this.initHeroHeight();
           this.initGallery3D();
           this.checkBioOverflow();
+
+          // נותנים ל־hero להיצבע לפני שמתחילים את שאילתות התוכן הכבדות.
+          this.loadSongs(id);
+          this.loadArticles(id);
+          this.loadEvents(id);
+          this.loadPodcastEpisodes(id);
         }, 0);
       },
       error: () => {

@@ -18,6 +18,8 @@ public class SongService : ISongService
     private readonly IMemoryCache _cache;
     private readonly IDisplayRankingService _rankingService;
     private const int DuplicateScanThreshold = 70;
+    // Temporary switch: keep collecting daily view statistics without enforcing the limit.
+    private static readonly bool DailyViewLimitEnabled = false;
 
     private sealed record DuplicateScanSong(
         int Id,
@@ -2464,7 +2466,7 @@ public class SongService : ISongService
 
         return new DailyLimitStatusDto
         {
-            LimitExceeded = dailyViewCount >= dailyLimit,
+            LimitExceeded = DailyViewLimitEnabled && dailyViewCount >= dailyLimit,
             DailyViewCount = dailyViewCount,
             DailyLimit = dailyLimit,
             RemainingViews = remaining,
