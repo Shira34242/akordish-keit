@@ -177,6 +177,12 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
 
   loadArtist(id: number): void {
     this.loading = true;
+
+    // תוכן הליבה אינו תלוי בפרטי האמן המלאים. מתחילים אותו מיד כדי שלא
+    // ייווצר "מפל" של בקשות לאחר שה־hero כבר הסתיים.
+    this.loadSongs(id);
+    this.loadArticles(id);
+
     this.artistService.getArtistById(id).subscribe({
       next: (artist) => {
         this.artist = artist;
@@ -185,8 +191,6 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
         if (this.redirectToCanonicalArtist(artist)) return;
         this.applySeo(artist);
         this.artistPageService.setOwnerId(artist.userId ?? null);
-        this.loadSongs(id);
-        this.loadArticles(id);
         this.loadEvents(id);
         this.loadPodcastEpisodes(id);
         this.updateDefaultSongsCount();
@@ -627,9 +631,9 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   // Data loading
   // ============================================================
 
-  loadSongs(artistId: number, page: number = 1): void {
+  loadSongs(artistId: number, page: number = 1, pageSize: number = 6): void {
     this.loadingSongs = true;
-    this.artistService.getArtistSongs(artistId, page, 50).subscribe({
+    this.artistService.getArtistSongs(artistId, page, pageSize).subscribe({
       next: (result) => {
         this.songs = result.items;
         this.totalSongs = result.totalCount;
@@ -658,7 +662,12 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   toggleSongsExpanded(): void {
-    this.songsExpanded = !this.songsExpanded;
+    const shouldExpand = !this.songsExpanded;
+    this.songsExpanded = shouldExpand;
+
+    if (shouldExpand && this.artist && this.songs.length < this.totalSongs) {
+      this.loadSongs(this.artist.id, 1, 50);
+    }
   }
 
   get visibleArticles(): Article[] {
@@ -672,12 +681,17 @@ export class ArtistDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   toggleArticlesExpanded(): void {
-    this.articlesExpanded = !this.articlesExpanded;
+    const shouldExpand = !this.articlesExpanded;
+    this.articlesExpanded = shouldExpand;
+
+    if (shouldExpand && this.artist && this.articles.length < this.totalArticles) {
+      this.loadArticles(this.artist.id, 1, 50);
+    }
   }
 
-  loadArticles(artistId: number, page: number = 1): void {
+  loadArticles(artistId: number, page: number = 1, pageSize: number = 6): void {
     this.loadingArticles = true;
-    this.artistService.getArtistArticles(artistId, page, 50).subscribe({
+    this.artistService.getArtistArticles(artistId, page, pageSize).subscribe({
       next: (result) => {
         this.articles = result.items;
         this.totalArticles = result.totalCount;

@@ -26,6 +26,7 @@ import { ProfileAvatarComponent } from '../../shared/profile-avatar/profile-avat
 import { Article, ArticleContentType, ArticleStatus } from '../../../models/article.model';
 import { CloudflareImagePipe } from '../../../pipes/cloudflare-image.pipe';
 import { getSocialPlatformIconSvg, normalizeExternalLinkUrl, normalizeSocialPlatform } from '../../../utils/social-platform-icons';
+import { ScrollRestorationService } from '../../../services/scroll-restoration.service';
 
 type GalleryMediaItem = {
   type: 'image' | 'video';
@@ -58,6 +59,7 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
   private readonly analytics = inject(AnalyticsService);
   private readonly langService = inject(LanguageService);
   private readonly seo = inject(SeoService);
+  private readonly scrollRestoration = inject(ScrollRestorationService);
 
   professional: MusicServiceProviderDto | null = null;
   agencyBadge: AgencyBadgeDto | null = null;
@@ -388,7 +390,7 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
       this.close.emit();
       return;
     }
-    this.router.navigate(['/professionals']);
+    this.scrollRestoration.goBackOr('/professionals');
   }
 
   retryLoad(): void {

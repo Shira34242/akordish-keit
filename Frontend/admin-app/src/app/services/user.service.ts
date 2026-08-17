@@ -48,6 +48,14 @@ export class UserService {
 
     return this.http.get<PagedResult<UserListDto>>(this.apiUrl, { params, withCredentials: true });
   }
+
+  getDashboardSummary(): Observable<{ totalUsers: number; joinedLastDay: number; joinedLastWeek: number }> {
+    return this.http.get<{ totalUsers: number; joinedLastDay: number; joinedLastWeek: number }>(
+      `${this.apiUrl}/dashboard-summary`,
+      { withCredentials: true }
+    );
+  }
+
   searchUsersWithProfiles(q?: string, limit: number = 20, profileKind?: string, includeAgencies: boolean = false): Observable<UserWithProfileDto[]> {
     let params = new HttpParams().set('limit', limit.toString());
     if (q) params = params.set('q', q);

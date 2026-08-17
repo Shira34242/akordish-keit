@@ -2,7 +2,7 @@ import { Component, OnInit, AfterViewInit, AfterViewChecked, OnDestroy, ViewChil
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, debounceTime, distinctUntilChanged, switchMap, of, take, finalize, catchError } from 'rxjs';
+import { Subject, debounceTime, distinctUntilChanged, switchMap, of, take, finalize, catchError, filter } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SongService } from '../../services/song.service';
 import { ArtistService } from '../../services/artist.service';
@@ -33,6 +33,9 @@ import { artistRoute, songSlug } from '../../utils/slug';
 import { getArticleLink } from '../../utils/article-route.utils';
 import { CloudflareImagePipe, CloudflareImageSrcsetPipe, cloudflareBackgroundImage } from '../../pipes/cloudflare-image.pipe';
 import { SystemSettingsService } from '../../services/system-settings.service';
+import { ScrollRestorationService } from '../../services/scroll-restoration.service';
+import { RouteReuseEventsService } from '../../services/route-reuse-events.service';
+import { ContentRefreshNoticeService } from '../../services/content-refresh-notice.service';
 
 interface HeroParticle {
   x: number; y: number;
@@ -99,6 +102,9 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
   private readonly destroyRef = inject(DestroyRef);
   private readonly langService = inject(LanguageService);
   private readonly ngZone = inject(NgZone);
+  private readonly scrollRestoration = inject(ScrollRestorationService);
+  private readonly routeReuseEvents = inject(RouteReuseEventsService);
+  private readonly contentRefreshNotice = inject(ContentRefreshNoticeService);
 
   recentSongs: any[] = [];
   popularSongs: any[] = [];
@@ -153,6 +159,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
   private heroOverlayEl?: HTMLElement | null;
   private viralObserver?: IntersectionObserver;
   private viralOffset = 0;
+  private restoreViralOffset = 0;
   private readonly viralPageSize = 8;
   private readonly initialViralVisibleCount = 4;
   private readonly viralRevealStep = 4;
@@ -347,6 +354,11 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
   }
 
   ngOnInit() {
+    this.routeReuseEvents.attached$
+      .pipe(filter(key => key === 'home'), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.checkForNewHomeNews());
+    const savedView = this.scrollRestoration.getViewState<{ viralOffset?: number }>('home');
+    this.restoreViralOffset = Math.max(0, savedView?.viralOffset ?? 0);
     this.initSearchPlaceholderRotation();
     this.systemSettingsService.getPublicBannerImages().pipe(take(1)).subscribe({
       next: images => {
@@ -405,7 +417,6 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
   }
 
   ngOnDestroy(): void {
-    HomePageComponent.savedScrollY = window.scrollY;
     if (this.particleAnimId) cancelAnimationFrame(this.particleAnimId);
     if (this.heroMouseHandler) window.removeEventListener('mousemove', this.heroMouseHandler);
     if (this.heroScrollHandler) window.removeEventListener('scroll', this.heroScrollHandler);
@@ -592,7 +603,6 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
   }
 
   private pendingContentLoads = 0;
-  private static savedScrollY = 0;
 
   loadContent() {
     this.pendingContentLoads = 0;
@@ -802,14 +812,6 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
 
   private onAllContentLoaded(): void {
     this.pendingContentLoads = 0;
-    const targetY = HomePageComponent.savedScrollY;
-    if (targetY <= 0) return;
-    HomePageComponent.savedScrollY = 0;
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        window.scrollTo(0, targetY);
-      });
-    });
   }
 
   onSearchInput(query: string) {
@@ -1042,7 +1044,9 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
           }
         }
       },
-      { rootMargin: '360px 0px', threshold: 0.01 }
+      // The sentinel is intentionally empty, so use a zero threshold. A fractional
+      // threshold can be missed when its rendered height is rounded by the browser.
+      { rootMargin: '480px 0px', threshold: 0 }
     );
 
     if (this.viralSection?.nativeElement) {
@@ -1059,8 +1063,13 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
     this.loadingViralArticles = true;
     this.articleService.getHomeViralBanners(this.viralPageSize, this.viralOffset)
       .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-        next: (articles) => {
-          this.appendViralArticles(articles || []);
+      next: (articles) => {
+        this.appendViralArticles(articles || []);
+        if (this.viralOffset < this.restoreViralOffset && this.viralArticlesHasMore) {
+          this.loadViralArticles();
+        } else {
+          this.scrollRestoration.restoreWhenReady();
+        }
         },
         error: (err) => {
           console.error('loadContent: viral articles', err);
@@ -1088,6 +1097,20 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
         },
         error: (err) => {
           console.error('loadContent: home news banners', err);
+        }
+      });
+  }
+
+  private checkForNewHomeNews(): void {
+    const currentFirstId = this.newsArticles[0]?.id;
+    if (!currentFirstId) return;
+
+    this.articleService.getHomeNewsBanners()
+      .pipe(take(1), catchError(() => of(null)))
+      .subscribe(banners => {
+        const newestId = banners?.featured?.[0]?.id ?? banners?.regular?.[0]?.id;
+        if (newestId && newestId !== currentFirstId) {
+          this.contentRefreshNotice.show();
         }
       });
   }
@@ -1143,6 +1166,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
     this.refreshVisibleViralArticles();
     this.viralArticlesLoaded = true;
     this.loadingViralArticles = false;
+    this.scrollRestoration.saveViewState('home', { viralOffset: this.viralOffset });
     setTimeout(() => this.initViralObserver(), 0);
   }
 

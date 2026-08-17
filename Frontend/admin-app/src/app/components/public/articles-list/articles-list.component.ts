@@ -16,6 +16,10 @@ import { SearchItem, SearchResults, SearchService } from '../../../services/sear
 import { AuthService } from '../../../services/auth.service';
 import { getArticleLink } from '../../../utils/article-route.utils';
 import { artistRoute, songSlug } from '../../../utils/slug';
+import { ScrollRestorationService } from '../../../services/scroll-restoration.service';
+import { RouteReuseEventsService } from '../../../services/route-reuse-events.service';
+import { ContentRefreshNoticeService } from '../../../services/content-refresh-notice.service';
+import { catchError, filter, of, take } from 'rxjs';
 
 @Component({
   selector: 'app-articles-list',
@@ -35,6 +39,9 @@ export class ArticlesListComponent implements OnInit, OnDestroy {
   private readonly searchService = inject(SearchService);
   private readonly authService = inject(AuthService);
   private readonly ngZone = inject(NgZone);
+  private readonly scrollRestoration = inject(ScrollRestorationService);
+  private readonly routeReuseEvents = inject(RouteReuseEventsService);
+  private readonly contentRefreshNotice = inject(ContentRefreshNoticeService);
 
   articles: Article[] = [];
   universalResults: SearchResults | null = null;
@@ -94,6 +101,9 @@ export class ArticlesListComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.routeReuseEvents.attached$
+      .pipe(filter(key => key === 'articles'), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.checkForNewContent());
     this.mobileMql = window.matchMedia('(max-width: 640px)');
     this.isMobile = this.mobileMql.matches;
     this.mobileMql.addEventListener('change', this.mobileMqlHandler);
@@ -108,6 +118,7 @@ export class ArticlesListComponent implements OnInit, OnDestroy {
         this.searchTerm = '';
         this.tagId = undefined;
         this.tagName = '';
+        this.sortMode = 'recent';
 
         // Get category from query params
         if (params['category']) {
@@ -154,6 +165,10 @@ export class ArticlesListComponent implements OnInit, OnDestroy {
         } else {
           this.universalResults = null;
           this.loadVisibleCategorySettings();
+        }
+
+        if (['recent', 'popular', 'liked', 'title'].includes(params['sort'])) {
+          this.sortMode = params['sort'];
         }
       });
   }
@@ -223,12 +238,41 @@ export class ArticlesListComponent implements OnInit, OnDestroy {
           this.totalPages = result.totalPages;
           this.isLoading = false;
           this.invalidateCache();
+          this.scrollRestoration.restoreWhenReady();
         },
         error: (error) => {
           console.error('Error loading articles:', error);
           this.isLoading = false;
         }
       });
+  }
+
+  private checkForNewContent(): void {
+    if (this.isUniversalSearch || this.sortMode !== 'recent' || this.articles.length === 0) return;
+
+    const categoryIds = this.categoryId === undefined && this.tagId === undefined
+      ? this.visibleCategoryIds
+      : undefined;
+    const currentFirstId = this.articles[0]?.id;
+
+    this.articleService.getArticles(
+      this.currentPage,
+      this.pageSize,
+      this.searchTerm || undefined,
+      this.categoryId,
+      this.contentType,
+      ArticleStatus.Published,
+      undefined,
+      undefined,
+      undefined,
+      this.tagId,
+      categoryIds
+    ).pipe(take(1), catchError(() => of(null))).subscribe(result => {
+      const newestId = result?.items?.[0]?.id;
+      if (newestId && newestId !== currentFirstId) {
+        this.contentRefreshNotice.show();
+      }
+    });
   }
 
   private loadUniversalSearch(): void {
@@ -249,6 +293,7 @@ export class ArticlesListComponent implements OnInit, OnDestroy {
         next: (results) => {
           this.universalResults = results;
           this.isLoading = false;
+          this.scrollRestoration.restoreWhenReady();
         },
         error: (error) => {
           console.error('Error loading search results:', error);
@@ -567,6 +612,8 @@ export class ArticlesListComponent implements OnInit, OnDestroy {
       if (this.tagName) queryParams.tagName = this.tagName;
     }
 
+    if (this.sortMode !== 'recent') queryParams.sort = this.sortMode;
+
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams,
@@ -610,6 +657,8 @@ export class ArticlesListComponent implements OnInit, OnDestroy {
     if (this.searchTerm) {
       queryParams.search = this.searchTerm;
     }
+
+    if (this.sortMode !== 'recent') queryParams.sort = this.sortMode;
 
     this.router.navigate([], {
       relativeTo: this.route,

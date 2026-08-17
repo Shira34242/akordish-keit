@@ -269,6 +269,12 @@
   <button class="session-expired-dismiss" (click)="sessionExpiredToast = false">✕</button>
 </div>
 
+<div class="content-refresh-notice" *ngIf="contentRefreshMessage" role="status">
+    <span>{{ contentRefreshMessage }}</span>
+    <button type="button" class="content-refresh-notice__action" (click)="refreshContent()">רענון</button>
+    <button type="button" class="content-refresh-notice__close" (click)="dismissContentRefreshNotice()" aria-label="סגירת התראה">✕</button>
+</div>
+
 <main id="main-content" class="main-content" tabindex="-1" [class.main-content--podcast-viewer]="isPodcastViewerPage">
     <router-outlet></router-outlet>
 </main>

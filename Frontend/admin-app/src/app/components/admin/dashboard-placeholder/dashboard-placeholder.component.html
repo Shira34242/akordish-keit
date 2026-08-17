@@ -5,21 +5,21 @@
           <a routerLink="/admin/users/clients" class="kpi-card">
             <span class="kpi-icon material-symbols-outlined">groups</span>
             <span class="kpi-label">כל המשתמשים</span>
-            <strong>@if (usersLoading) { <span class="loading-value"></span> } @else { {{ userCount | number }} }</strong>
+            <strong>@if (userMetricsLoading) { <span class="loading-value"></span> } @else { {{ userCount | number }} }</strong>
             <small>הכמות המלאה באתר</small>
           </a>
 
           <a routerLink="/admin/users/clients" class="kpi-card">
             <span class="kpi-icon material-symbols-outlined">person_add</span>
             <span class="kpi-label">הצטרפו ב־24 שעות</span>
-            <strong>@if (usersLoading) { <span class="loading-value"></span> } @else { {{ joinedLastDayCount | number }} }</strong>
+            <strong>@if (userMetricsLoading) { <span class="loading-value"></span> } @else { {{ joinedLastDayCount | number }} }</strong>
             <small>משתמשים חדשים מהיום</small>
           </a>
 
           <a routerLink="/admin/users/clients" class="kpi-card">
             <span class="kpi-icon material-symbols-outlined">date_range</span>
             <span class="kpi-label">הצטרפו השבוע</span>
-            <strong>@if (usersLoading) { <span class="loading-value"></span> } @else { {{ joinedLastWeekCount | number }} }</strong>
+            <strong>@if (userMetricsLoading) { <span class="loading-value"></span> } @else { {{ joinedLastWeekCount | number }} }</strong>
             <small>בשבעת הימים האחרונים</small>
           </a>
         </div>

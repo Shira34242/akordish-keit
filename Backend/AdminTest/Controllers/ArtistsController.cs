@@ -259,6 +259,8 @@ public class ArtistsController : ControllerBase
         try
         {
             var artist = await _context.Artists
+                .AsNoTracking()
+                .AsSplitQuery()
                 .Include(a => a.GalleryImages.OrderBy(gi => gi.DisplayOrder))
                 .Include(a => a.Videos.OrderBy(v => v.DisplayOrder))
                 .Include(a => a.Hits.OrderBy(h => h.DisplayOrder))

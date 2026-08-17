@@ -28,6 +28,7 @@ import { QuickAddAssistantService, QuickAddEntryPoint } from '../../services/qui
 import { LanguageService, Lang } from '../../services/language.service';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { AnalyticsService } from '../../services/analytics.service';
+import { ContentRefreshNoticeService } from '../../services/content-refresh-notice.service';
 
 @Component({
   selector: 'app-layout',
@@ -90,6 +91,7 @@ export class LayoutComponent implements OnInit, AfterViewInit, OnDestroy {
   showForgotPasswordModal = false;
   showReportModal = false;
   sessionExpiredToast = false;
+  contentRefreshMessage: string | null = null;
   showTeacherCreateModal = false;
   showServiceProviderCreateModal = false;
   showArtistCreateModal = false;
@@ -112,6 +114,7 @@ export class LayoutComponent implements OnInit, AfterViewInit, OnDestroy {
     private contentPageService: ContentPageService,
     private notificationService: NotificationService,
     private analyticsService: AnalyticsService,
+    private contentRefreshNotice: ContentRefreshNoticeService,
     private quickAddAssistantService: QuickAddAssistantService,
     private profileReminderService: ProfileReminderService,
     public langService: LanguageService,
@@ -241,6 +244,10 @@ export class LayoutComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.langService.lang$.subscribe(lang => {
       this.currentLang = lang;
+    });
+
+    this.contentRefreshNotice.message$.subscribe(message => {
+      this.contentRefreshMessage = message;
     });
   }
 
@@ -609,6 +616,14 @@ export class LayoutComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  refreshContent(): void {
+    window.location.reload();
+  }
+
+  dismissContentRefreshNotice(): void {
+    this.contentRefreshNotice.dismiss();
+  }
+
   onNotificationResourceClick(event: Event, notification: NotificationDto): void {
     event.stopPropagation();
     this.trackNotificationClick(notification);
@@ -776,7 +791,7 @@ export class LayoutComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const returnUrl = this.authService.getAndClearReturnUrl();
     if (returnUrl && returnUrl !== '/') {
-      this.router.navigate([returnUrl]);
+      this.router.navigateByUrl(returnUrl);
     }
 
     // אחרי לוגין רגיל (משתמש קיים) — נבדוק אם להציג תזכורת רכה
@@ -801,7 +816,7 @@ export class LayoutComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (userType === UserType.Regular) {
       if (returnUrl && returnUrl !== '/') {
-        this.router.navigate([returnUrl]);
+        this.router.navigateByUrl(returnUrl);
       } else {
         this.router.navigate(['/']);
       }
@@ -810,7 +825,7 @@ export class LayoutComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (!choice.addPublicPage) {
       if (returnUrl && returnUrl !== '/') {
-        this.router.navigate([returnUrl]);
+        this.router.navigateByUrl(returnUrl);
       } else {
         this.router.navigate(['/']);
       }

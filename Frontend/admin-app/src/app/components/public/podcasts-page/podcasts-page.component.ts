@@ -195,7 +195,7 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    this.safeEmbedUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.episodePlayableUrl);
+    this.safeEmbedUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.withAutoplay(this.episodePlayableUrl));
     this.isEpisodeVideoActive = true;
   }
 
@@ -547,6 +547,16 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
       const parsedUrl = new URL(url);
       parsedUrl.searchParams.delete('autoplay');
       parsedUrl.searchParams.set('rel', '0');
+      return parsedUrl.toString();
+    } catch {
+      return url;
+    }
+  }
+
+  private withAutoplay(url: string): string {
+    try {
+      const parsedUrl = new URL(url);
+      parsedUrl.searchParams.set('autoplay', '1');
       return parsedUrl.toString();
     } catch {
       return url;

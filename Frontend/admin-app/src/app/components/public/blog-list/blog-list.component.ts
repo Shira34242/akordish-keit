@@ -6,6 +6,9 @@ import { NewsBannerComponent } from '../../shared/news-banner/news-banner.compon
 import { ArticleService } from '../../../services/admin/article.service';
 import { ArticleBanner, ArticleContentType } from '../../../models/article.model';
 import { TranslatePipe } from '../../../pipes/translate.pipe';
+import { RouteReuseEventsService } from '../../../services/route-reuse-events.service';
+import { ContentRefreshNoticeService } from '../../../services/content-refresh-notice.service';
+import { catchError, filter, of, take } from 'rxjs';
 
 @Component({
   selector: 'app-blog-list',
@@ -20,6 +23,8 @@ export class BlogListComponent implements OnInit, OnDestroy {
   private readonly articleService = inject(ArticleService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly ngZone = inject(NgZone);
+  private readonly routeReuseEvents = inject(RouteReuseEventsService);
+  private readonly contentRefreshNotice = inject(ContentRefreshNoticeService);
 
   isMobile = false;
   private mobileMql?: MediaQueryList;
@@ -42,6 +47,9 @@ export class BlogListComponent implements OnInit, OnDestroy {
   private observer?: IntersectionObserver;
 
   ngOnInit(): void {
+    this.routeReuseEvents.attached$
+      .pipe(filter(key => key === 'blog'), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.checkForNewContent());
     this.mobileMql = window.matchMedia('(max-width: 640px)');
     this.isMobile = this.mobileMql.matches;
     this.mobileMql.addEventListener('change', (e) => {
@@ -112,6 +120,20 @@ export class BlogListComponent implements OnInit, OnDestroy {
         },
         error: () => {
           this.isLoadingMore = false;
+        }
+      });
+  }
+
+  private checkForNewContent(): void {
+    const currentFirstId = this.managedArticles[0]?.id;
+    if (!currentFirstId) return;
+
+    this.articleService.getPublishedArticleBanners(ArticleContentType.Blog, 1, this.pageSize)
+      .pipe(take(1), catchError(() => of(null)))
+      .subscribe(result => {
+        const newestId = result?.items?.[0]?.id;
+        if (newestId && newestId !== currentFirstId) {
+          this.contentRefreshNotice.show();
         }
       });
   }

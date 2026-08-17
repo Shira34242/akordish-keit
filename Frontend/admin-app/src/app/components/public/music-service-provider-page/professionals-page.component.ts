@@ -26,6 +26,7 @@ import { CloudflareImagePipe, CloudflareImageSrcsetPipe, cloudflareBackgroundIma
 import { artistRoute } from '../../../utils/slug';
 import { ProfileAvatarComponent } from '../../shared/profile-avatar/profile-avatar.component';
 import { SystemSettingsService } from '../../../services/system-settings.service';
+import { ScrollRestorationService } from '../../../services/scroll-restoration.service';
 
 interface Category {
   id: number;
@@ -168,6 +169,7 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
   ];
 
   private readonly langService = inject(LanguageService);
+  private readonly scrollRestoration = inject(ScrollRestorationService);
 
   constructor(
     private professionalService: MusicServiceProviderService,
@@ -419,6 +421,7 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
         this.additionalProfessionalsPage = results.catalog.pageNumber || 1;
         this.additionalProfessionalsTotal = results.catalog.totalCount || this.additionalProfessionals.length;
         this.loading = false;
+        this.scrollRestoration.restoreWhenReady();
       },
       error: (err) => { console.error('Error loading professionals:', err); this.loading = false; }
     });
@@ -464,6 +467,7 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
         this.additionalTeachersPage = results.catalog.pageNumber || 1;
         this.additionalTeachersTotal = results.catalog.totalCount || this.additionalTeachers.length;
         this.loadingTeachers = false;
+        this.scrollRestoration.restoreWhenReady();
       },
       error: (err) => { console.error('Error loading teachers:', err); this.loadingTeachers = false; }
     });

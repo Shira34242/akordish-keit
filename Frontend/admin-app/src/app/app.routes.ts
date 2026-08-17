@@ -32,21 +32,25 @@ export const routes: Routes = [
             {
                 path: '',
                 loadComponent: () => import('./components/home-page/home-page.component').then(m => m.HomePageComponent),
+                data: { reuseKey: 'home' },
                 title: 'אקורדישקייט'
             },
             {
                 path: 'song/:id/:slug',
                 loadComponent: () => import('./components/song-page/song-page.component').then(m => m.SongPageComponent),
+                data: { reuseKey: 'song' },
                 title: 'אקורדישקייט'
             },
             {
                 path: 'song/:id',
                 loadComponent: () => import('./components/song-page/song-page.component').then(m => m.SongPageComponent),
+                data: { reuseKey: 'song' },
                 title: 'אקורדישקייט'
             },
             {
                 path: 'chords',
                 loadComponent: () => import('./components/chords-page/chords-page.component').then(m => m.ChordsPageComponent),
+                data: { reuseKey: 'chords' },
                 title: 'מאגר האקורדים - אקורדישקייט'
             },
             {
@@ -62,11 +66,13 @@ export const routes: Routes = [
             {
                 path: 'music-news',
                 loadComponent: () => import('./components/public/music-news/music-news.component').then(m => m.MusicNewsComponent),
+                data: { reuseKey: 'music-news' },
                 title: 'חדשות המוזיקה - אקורדישקייט'
             },
             {
                 path: 'articles',
                 loadComponent: () => import('./components/public/articles-list/articles-list.component').then(m => m.ArticlesListComponent),
+                data: { reuseKey: 'articles' },
                 title: 'כתבות - אקורדישקייט'
             },
             {
@@ -87,6 +93,7 @@ export const routes: Routes = [
             {
                 path: 'blog',
                 loadComponent: () => import('./components/public/blog-list/blog-list.component').then(m => m.BlogListComponent),
+                data: { reuseKey: 'blog' },
                 title: 'בלוג - אקורדישקייט'
             },
             {
@@ -112,6 +119,7 @@ export const routes: Routes = [
             {
                 path: 'professionals',
                 loadComponent: () => import('./components/public/music-service-provider-page/professionals-page.component').then(m => m.ProfessionalsPageComponent),
+                data: { reuseKey: 'professionals' },
                 title: 'בעלי מקצוע - מוזיקה חרדית - אקורדישקייט'
             },
             {
@@ -134,6 +142,7 @@ export const routes: Routes = [
             {
                 path: 'community-playlists',
                 loadComponent: () => import('./components/community-playlists/community-playlists').then(m => m.CommunityPlaylistsComponent),
+                data: { reuseKey: 'community-playlists' },
                 title: 'מאגר רשימות קהילתי - אקורדישקייט'
             },
             {
@@ -145,6 +154,7 @@ export const routes: Routes = [
                 path: 'artists',
                 loadComponent: () => import('./components/artists-list/artists-list.component').then(m => m.ArtistsListComponent),
                 canActivate: [authGuard],
+                data: { reuseKey: 'artists' },
                 title: 'אומנים - אקורדישקייט'
             },
             // ===== יצירת פרופילים מקצועיים =====
@@ -236,11 +246,13 @@ export const routes: Routes = [
             {
                 path: 'events',
                 loadComponent: () => import('./components/public/events-page/events-page.component').then(m => m.EventsPageComponent),
+                data: { reuseKey: 'events' },
                 title: 'הופעות - אקורדישקייט'
             },
             {
                 path: 'podcasts',
                 loadComponent: () => import('./components/public/podcasts-page/podcasts-page.component').then(m => m.PodcastsPageComponent),
+                data: { reuseKey: 'podcasts' },
                 title: 'פודקאסטים - אקורדישקייט'
             },
             {

@@ -44,6 +44,7 @@ interface DashboardQueueItem {
 })
 export class AdminDashboardPlaceholderComponent implements OnInit {
     usersLoading = true;
+    userMetricsLoading = true;
     reportsLoading = true;
     analyticsLoading = true;
     approvalsLoading = true;
@@ -53,6 +54,8 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
     selectedAnalyticsPeriod: PeriodKey = 'day';
 
     totalUsers = 0;
+    joinedLastDay = 0;
+    joinedLastWeek = 0;
     recentUsers: UserListDto[] = [];
     dashboard: AnalyticsDashboard | null = null;
 
@@ -246,11 +249,11 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
     }
 
     get joinedLastDayCount(): number {
-        return this.usersSince(this.periodCutoff('day')).length;
+        return this.joinedLastDay;
     }
 
     get joinedLastWeekCount(): number {
-        return this.usersSince(this.periodCutoff('week')).length;
+        return this.joinedLastWeek;
     }
 
     get displayedRecentUsers(): UserListDto[] {
@@ -308,6 +311,7 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
 
     loadAll(): void {
         this.today = new Date();
+        this.loadUserMetrics();
         this.loadUsers();
         this.loadReports();
         this.loadAnalytics();
@@ -325,6 +329,20 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
             .subscribe(result => {
                 this.totalUsers = result.totalCount;
                 this.recentUsers = result.users;
+            });
+    }
+
+    private loadUserMetrics(): void {
+        this.userMetricsLoading = true;
+        this.userService.getDashboardSummary()
+            .pipe(
+                catchError(() => of({ totalUsers: 0, joinedLastDay: 0, joinedLastWeek: 0 })),
+                finalize(() => this.userMetricsLoading = false)
+            )
+            .subscribe(summary => {
+                this.totalUsers = summary.totalUsers;
+                this.joinedLastDay = summary.joinedLastDay;
+                this.joinedLastWeek = summary.joinedLastWeek;
             });
     }
 
@@ -491,10 +509,6 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
 
     private periodDays(period: PeriodKey): number {
         return period === 'day' ? 1 : period === 'week' ? 7 : 30;
-    }
-
-    private usersSince(cutoff: Date): UserListDto[] {
-        return this.recentUsers.filter(user => new Date(user.createdAt).getTime() >= cutoff.getTime());
     }
 
     private isoDate(date: Date): string {

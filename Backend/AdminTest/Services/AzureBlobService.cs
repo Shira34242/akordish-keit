@@ -1,5 +1,6 @@
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
+using Azure.Storage.Sas;
 
 namespace AkordishKeit.Services
 {
@@ -87,6 +88,38 @@ namespace AkordishKeit.Services
             }
         }
 
+        public async Task<DirectUploadTarget?> CreateDirectUploadTargetAsync(string fileName, string contentType, string? folder = null)
+        {
+            if (_container == null || !_container.CanGenerateSasUri)
+                return null;
+
+            try
+            {
+                await _container.CreateIfNotExistsAsync(PublicAccessType.Blob);
+
+                var blobName = BuildBlobName(fileName, folder);
+                var blobClient = _container.GetBlobClient(blobName);
+                var sas = new BlobSasBuilder
+                {
+                    BlobContainerName = _containerName,
+                    BlobName = blobName,
+                    Resource = "b",
+                    ExpiresOn = DateTimeOffset.UtcNow.AddMinutes(10)
+                };
+                sas.SetPermissions(BlobSasPermissions.Create | BlobSasPermissions.Write);
+
+                return new DirectUploadTarget(
+                    blobClient.GenerateSasUri(sas).ToString(),
+                    blobClient.Uri.ToString(),
+                    contentType);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Could not create a direct upload target for: {FileName}", fileName);
+                return null;
+            }
+        }
+
         public async Task<string?> UploadStringAsync(string content, string fileName, string? folder = null)
         {
             var bytes = System.Text.Encoding.UTF8.GetBytes(content);
@@ -152,6 +185,16 @@ namespace AkordishKeit.Services
             var idx = uri.AbsolutePath.IndexOf(prefix, StringComparison.OrdinalIgnoreCase);
             if (idx < 0) return null;
             return uri.AbsolutePath[(idx + prefix.Length)..];
+        }
+
+        private static string BuildBlobName(string fileName, string? folder)
+        {
+            var now = DateTime.UtcNow;
+            var blobFolder = folder ?? $"uploads/{now.Year}/{now.Month:D2}";
+            var ext = Path.GetExtension(fileName).ToLowerInvariant();
+            var originalName = SanitizeFileName(Path.GetFileNameWithoutExtension(fileName));
+            var originalSuffix = string.IsNullOrWhiteSpace(originalName) ? string.Empty : $"_{originalName}";
+            return $"{blobFolder}/{now:yyyyMMdd_HHmmss}_{Guid.NewGuid()}{originalSuffix}{ext}";
         }
 
         private async Task<string?> UploadLocalAsync(Stream stream, string fileName, string? folder)

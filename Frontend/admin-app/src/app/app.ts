@@ -16,6 +16,7 @@ import { AdBlockDetectionService } from './services/adblock-detection.service';
 import { SystemSettingsService } from './services/system-settings.service';
 import { PageViewAnalyticsService } from './services/page-view-analytics.service';
 import { ReportContextService } from './services/report-context.service';
+import { ScrollRestorationService } from './services/scroll-restoration.service';
 
 @Component({
   selector: 'app-root',
@@ -115,10 +116,12 @@ export class AppComponent implements OnInit {
     private settingsService: SystemSettingsService,
     private router: Router,
     private pageViewAnalytics: PageViewAnalyticsService,
-    private reportContextService: ReportContextService
+    private reportContextService: ReportContextService,
+    private scrollRestoration: ScrollRestorationService
   ) { }
 
   ngOnInit() {
+    void this.scrollRestoration;
     this.authService.captureReferralCodeFromUrl();
     this.checkAccessGate();
   }

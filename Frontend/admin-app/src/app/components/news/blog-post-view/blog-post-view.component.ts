@@ -21,6 +21,7 @@ import { CloudflareImagePipe, cloudflareBackgroundImage } from '../../../pipes/c
 import { getArticlePath, getArticleSlug } from '../../../utils/article-route.utils';
 import { attachArticleContentImageFallbacks, attachArticleContentMentionRouting, prepareArticleContentHtml } from '../../../utils/article-content-html.utils';
 import { artistRoute } from '../../../utils/slug';
+import { ScrollRestorationService } from '../../../services/scroll-restoration.service';
 
 @Component({
   selector: 'app-blog-post-view',
@@ -42,6 +43,7 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
   private readonly seo = inject(SeoService);
   private readonly langService = inject(LanguageService);
   private readonly host = inject(ElementRef<HTMLElement>);
+  private readonly scrollRestoration = inject(ScrollRestorationService);
 
   constructor() {
     this.destroyRef.onDestroy(() => this.contentPageService.clearCurrentArticle());
@@ -68,6 +70,7 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
   articleContentHtml: SafeHtml | null = null;
   loading = true;
   safeVideoUrl: SafeResourceUrl | null = null;
+  private videoEmbedUrl: string | null = null;
   isVideoActive = false;
   showMediaLoginPrompt = false;
   loginPromptContext: 'media' | 'feedback' = 'media';
@@ -221,6 +224,7 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
   loadArticleById(id: number): void {
     this.loading = true;
     this.safeVideoUrl = null;
+    this.videoEmbedUrl = null;
     this.isVideoActive = false;
     this.articleService.getArticle(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -237,6 +241,7 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
   loadArticle(slug: string): void {
     this.loading = true;
     this.safeVideoUrl = null;
+    this.videoEmbedUrl = null;
     this.isVideoActive = false;
     this.articleService.getArticleBySlug(slug, ArticleContentType.Blog)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -272,6 +277,7 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
 
     if (article.videoEmbedUrl) {
       const embedUrl = this.convertToYouTubeEmbedUrl(article.videoEmbedUrl);
+      this.videoEmbedUrl = embedUrl;
       this.safeVideoUrl = this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl);
     }
 
@@ -405,6 +411,16 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
     }
   }
 
+  private withAutoplay(url: string): string {
+    try {
+      const parsedUrl = new URL(url);
+      parsedUrl.searchParams.set('autoplay', '1');
+      return parsedUrl.toString();
+    } catch {
+      return url;
+    }
+  }
+
   activateVideo(): void {
     if (!this.authService.isLoggedIn) {
       this.openMediaLoginPrompt();
@@ -412,6 +428,9 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
     }
 
     if (this.safeVideoUrl) {
+      if (this.videoEmbedUrl) {
+        this.safeVideoUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.withAutoplay(this.videoEmbedUrl));
+      }
       this.isVideoActive = true;
     }
   }
@@ -455,7 +474,7 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/blog']);
+    this.scrollRestoration.goBackOr('/blog');
   }
 
   // Share article

@@ -21,6 +21,7 @@ import { CloudflareImagePipe, cloudflareBackgroundImage } from '../../../pipes/c
 import { getArticlePath, getArticleSlug } from '../../../utils/article-route.utils';
 import { attachArticleContentImageFallbacks, attachArticleContentMentionRouting, prepareArticleContentHtml } from '../../../utils/article-content-html.utils';
 import { artistRoute } from '../../../utils/slug';
+import { ScrollRestorationService } from '../../../services/scroll-restoration.service';
 
 @Component({
   selector: 'app-article-view',
@@ -42,6 +43,7 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
   private readonly seo = inject(SeoService);
   private readonly langService = inject(LanguageService);
   private readonly host = inject(ElementRef<HTMLElement>);
+  private readonly scrollRestoration = inject(ScrollRestorationService);
 
   constructor() {
     this.destroyRef.onDestroy(() => {
@@ -108,6 +110,7 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
   articleContentHtml: SafeHtml | null = null;
   loading = true;
   safeVideoUrl: SafeResourceUrl | null = null;
+  private videoEmbedUrl: string | null = null;
   isVideoActive = false;
   showMediaLoginPrompt = false;
   loginPromptContext: 'media' | 'feedback' = 'media';
@@ -297,6 +300,7 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
   loadArticleById(id: number): void {
     this.loading = true;
     this.safeVideoUrl = null;
+    this.videoEmbedUrl = null;
     this.isVideoActive = false;
     this.articleService.getArticle(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -313,6 +317,7 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
   loadArticle(slug: string): void {
     this.loading = true;
     this.safeVideoUrl = null;
+    this.videoEmbedUrl = null;
     this.isVideoActive = false;
     this.articleService.getArticleBySlug(slug, ArticleContentType.News)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -348,6 +353,7 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
 
     if (article.videoEmbedUrl) {
       const embedUrl = this.convertToYouTubeEmbedUrl(article.videoEmbedUrl);
+      this.videoEmbedUrl = embedUrl;
       this.safeVideoUrl = this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl);
     }
 
@@ -481,6 +487,16 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
     }
   }
 
+  private withAutoplay(url: string): string {
+    try {
+      const parsedUrl = new URL(url);
+      parsedUrl.searchParams.set('autoplay', '1');
+      return parsedUrl.toString();
+    } catch {
+      return url;
+    }
+  }
+
   isAudioFileUrl(url: string | undefined): boolean {
     return !!url && /\.(mp3|wav|m4a|aac|ogg)(\?.*)?$/i.test(url);
   }
@@ -499,7 +515,7 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/music-news']);
+    this.scrollRestoration.goBackOr('/music-news');
   }
 
   // Share article
@@ -579,6 +595,9 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
     }
 
     if (this.safeVideoUrl) {
+      if (this.videoEmbedUrl) {
+        this.safeVideoUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.withAutoplay(this.videoEmbedUrl));
+      }
       this.isVideoActive = true;
     }
   }

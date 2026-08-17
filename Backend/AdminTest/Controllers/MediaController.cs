@@ -85,6 +85,40 @@ namespace AkordishKeit.Controllers
             return Ok(new { url });
         }
 
+        [HttpPost("upload-url")]
+        [Authorize]
+        public async Task<IActionResult> CreateUploadUrl([FromBody] PrepareMediaUploadRequest request)
+        {
+            if (request == null || string.IsNullOrWhiteSpace(request.FileName))
+                return BadRequest(new { message = "File name is required" });
+
+            var fileExtension = Path.GetExtension(request.FileName).ToLowerInvariant();
+            if (!AllowedExtensions.Contains(fileExtension))
+                return BadRequest(new { message = "Invalid file type" });
+
+            if (request.FileSize <= 0 || request.FileSize > MaxFileSizeBytes)
+                return BadRequest(new { message = "File size exceeds 30MB limit" });
+
+            var target = await _blobService.CreateDirectUploadTargetAsync(
+                request.FileName,
+                GetContentType(fileExtension));
+
+            if (target == null)
+            {
+                // Local development and storage configurations without a shared key keep using
+                // the existing authenticated upload endpoint.
+                return Ok(new { directUpload = false });
+            }
+
+            return Ok(new
+            {
+                directUpload = true,
+                uploadUrl = target.UploadUrl,
+                url = target.Url,
+                contentType = target.ContentType
+            });
+        }
+
         [HttpGet("pdf-view")]
         public async Task<IActionResult> ViewPdf([FromQuery] string url)
         {
@@ -388,6 +422,12 @@ namespace AkordishKeit.Controllers
             ".pdf"            => "application/pdf",
             _                 => "application/octet-stream"
         };
+
+        public sealed class PrepareMediaUploadRequest
+        {
+            public string FileName { get; set; } = string.Empty;
+            public long FileSize { get; set; }
+        }
 
         private async Task<byte[]?> FetchMediaBytes(Uri uri, string acceptHeader)
         {

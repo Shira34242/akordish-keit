@@ -9,6 +9,10 @@ import { NewsPageSectionService } from '../../../services/news-page-section.serv
 import { FeaturedContentBanner } from '../../../models/featured-content.model';
 import { ArticleBanner, ArticleContentType } from '../../../models/article.model';
 import { TranslatePipe } from '../../../pipes/translate.pipe';
+import { ScrollRestorationService } from '../../../services/scroll-restoration.service';
+import { RouteReuseEventsService } from '../../../services/route-reuse-events.service';
+import { ContentRefreshNoticeService } from '../../../services/content-refresh-notice.service';
+import { catchError, filter, of, take } from 'rxjs';
 
 @Component({
   selector: 'app-music-news',
@@ -25,6 +29,9 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
   private readonly newsPageSectionService = inject(NewsPageSectionService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly ngZone = inject(NgZone);
+  private readonly scrollRestoration = inject(ScrollRestorationService);
+  private readonly routeReuseEvents = inject(RouteReuseEventsService);
+  private readonly contentRefreshNotice = inject(ContentRefreshNoticeService);
 
   isMobile = false;
   private mobileMql?: MediaQueryList;
@@ -44,10 +51,15 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
   private currentPage = 1;
   private readonly pageSize = 12;
   private hasMore = true;
+  private restoreUntilPage = 1;
   private observer?: IntersectionObserver;
   private visibleCategoryIds: number[] = [];
 
   ngOnInit(): void {
+    this.routeReuseEvents.attached$
+      .pipe(filter(key => key === 'music-news'), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.checkForNewContent());
+    this.restoreUntilPage = Math.max(1, this.scrollRestoration.getViewState<{ nextPage?: number }>('music-news')?.nextPage ?? 1);
     this.mobileMql = window.matchMedia('(max-width: 640px)');
     this.isMobile = this.mobileMql.matches;
     this.mobileMql.addEventListener('change', (e) => {
@@ -61,6 +73,7 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
       this.loadFeaturedContent(),
       this.loadVisibleCategorySettings().then(() => this.loadNewsArticles())
     ])
+      .then(() => this.loadRestoredPages())
       .then(() => {
         const featuredIds = new Set(this.featuredArticles.map(item => item.article.id));
         this.newsArticles = this.newsArticles.filter(article => !featuredIds.has(article.id));
@@ -78,7 +91,10 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
         } else {
           // יש תוכן — גם אם featured נכשל, מציגים את מה שיש
           this.loadFailed = false;
-          setTimeout(() => this.setupObserver(), 100);
+          setTimeout(() => {
+            this.setupObserver();
+            this.scrollRestoration.restoreWhenReady();
+          }, 100);
         }
       });
   }
@@ -160,6 +176,7 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
             this.newsArticles = [...this.newsArticles, ...newItems];
             this.hasMore = result.hasNextPage;
             this.currentPage++;
+            this.scrollRestoration.saveViewState('music-news', { nextPage: this.currentPage });
             this.isLoadingMore = false;
             this.invalidateCache();
             resolve();
@@ -171,6 +188,29 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
             resolve();
           }
         });
+    });
+  }
+
+  private loadRestoredPages(): Promise<void> {
+    if (!this.hasMore || this.currentPage >= this.restoreUntilPage) {
+      return Promise.resolve();
+    }
+
+    return this.loadNewsArticles().then(() => this.loadRestoredPages());
+  }
+
+  private checkForNewContent(): void {
+    const currentFirstId = this.newsArticles[0]?.id;
+    if (!currentFirstId) return;
+
+    this.articleService.getPublishedArticleBanners(
+      ArticleContentType.News, 1, this.pageSize, this.visibleCategoryIds
+    ).pipe(take(1), catchError(() => of(null))).subscribe(result => {
+      const featuredIds = new Set(this.featuredArticles.map(item => item.article.id));
+      const newestId = result?.items?.find(item => !featuredIds.has(item.id))?.id;
+      if (newestId && newestId !== currentFirstId) {
+        this.contentRefreshNotice.show();
+      }
     });
   }
 

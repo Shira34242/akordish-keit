@@ -1,7 +1,9 @@
+using AkordishKeit.Data;
 using AkordishKeit.Models.DTOs;
 using AkordishKeit.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace AkordishKeit.Controllers;
 
@@ -11,11 +13,13 @@ public class UsersController : ControllerBase
 {
     private readonly IUserService _service;
     private readonly ILogger<UsersController> _logger;
+    private readonly AkordishKeitDbContext _context;
 
-    public UsersController(IUserService service, ILogger<UsersController> logger)
+    public UsersController(IUserService service, ILogger<UsersController> logger, AkordishKeitDbContext context)
     {
         _service = service;
         _logger = logger;
+        _context = context;
     }
 
     // GET: api/Users/with-profiles?q=שם&limit=20
@@ -204,6 +208,28 @@ public class UsersController : ControllerBase
         if (User.Identity?.IsAuthenticated != true) return null;
         var claim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
         return claim != null && int.TryParse(claim.Value, out var id) ? id : null;
+    }
+
+    [HttpGet("dashboard-summary")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> GetDashboardSummary()
+    {
+        var now = DateTime.UtcNow;
+        var lastDay = now.AddDays(-1);
+        var lastWeek = now.AddDays(-7);
+        var users = _context.Users.AsNoTracking().Where(user => !user.IsDeleted);
+
+        var summary = await users
+            .GroupBy(_ => 1)
+            .Select(group => new
+            {
+                totalUsers = group.Count(),
+                joinedLastDay = group.Count(user => user.CreatedAt >= lastDay),
+                joinedLastWeek = group.Count(user => user.CreatedAt >= lastWeek)
+            })
+            .SingleOrDefaultAsync();
+
+        return Ok(summary ?? new { totalUsers = 0, joinedLastDay = 0, joinedLastWeek = 0 });
     }
 
     // GET: api/Users
