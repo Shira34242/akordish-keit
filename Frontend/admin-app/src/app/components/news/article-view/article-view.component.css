@@ -1917,24 +1917,41 @@
 }
 
 @media (max-width: 768px) {
+  .hero-content {
+    max-height: 100%;
+    box-sizing: border-box;
+    padding: var(--space-lg) var(--space-base);
+    gap: var(--space-sm);
+    transform: none;
+  }
+
   .category-badge {
-    margin-bottom: var(--space-lg);
+    margin-bottom: 0;
   }
 
   .article-title {
-    margin-bottom: var(--space-base);
+    display: -webkit-box;
+    max-width: 100%;
+    margin-bottom: 0;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
   }
 
   .article-subtitle {
-    margin-bottom: var(--space-base);
+    display: -webkit-box;
+    margin-bottom: 0;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
   }
 
   .article-actions {
-    margin-top: var(--space-xl);
+    margin-top: 0;
   }
 
   .hero-uploader-badge {
-    margin-top: var(--space-lg);
+    margin-top: 0;
   }
 
   .article-title {

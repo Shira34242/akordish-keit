@@ -2202,12 +2202,29 @@ html[dir="ltr"] .footer-newsletter-input {
     }
 
     .footer-newsletter {
+        flex: 0 0 auto;
         min-width: 0;
         gap: var(--space-sm);
     }
 
     .footer-newsletter-form {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        width: 100%;
         margin-top: 0;
+    }
+
+    .footer-newsletter-input {
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
+    .footer-promos {
+        align-self: flex-start;
+        width: 100%;
+        max-width: 22rem;
+        margin-top: var(--space-sm);
     }
 
     .footer-legal {
@@ -2233,11 +2250,6 @@ html[dir="ltr"] .footer-newsletter-input {
     }
 
     .footer-newsletter-form {
-        flex-direction: row;
-    }
-
-    .footer-newsletter-input,
-    .footer-newsletter-btn {
-        width: auto;
+        grid-template-columns: minmax(0, 1fr) auto;
     }
 }

@@ -625,7 +625,7 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
 
   private getHeroHeight(): number {
     return window.matchMedia('(max-width: 768px)').matches
-      ? (window.innerWidth - 8) * (4 / 3)
+      ? Math.round(window.innerHeight * 0.5)
       : window.innerHeight - 16;
   }
 

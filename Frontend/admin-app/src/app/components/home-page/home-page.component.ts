@@ -124,7 +124,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
   viralArticles: ArticleBanner[] = [];
   visibleViralArticles: ArticleBanner[] = [];
   viralRows: ViralRow[] = [];
-  visibleViralCount = 4;
+  visibleViralCount = 8;
   loadingViralArticles = false;
   viralArticlesLoaded = false;
   viralArticlesHasMore = true;
@@ -161,7 +161,10 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
   private viralOffset = 0;
   private restoreViralOffset = 0;
   private readonly viralPageSize = 8;
-  private readonly initialViralVisibleCount = 4;
+  // Keep the entire first response visible. Limiting it to four items made the
+  // section appear to stop after its first two desktop rows before the scroll
+  // sentinel had a chance to request more.
+  private readonly initialViralVisibleCount = 8;
   private readonly viralRevealStep = 4;
   private viralRowsViewport: 'mobile' | 'desktop' = window.innerWidth <= 640 ? 'mobile' : 'desktop';
   newsContentFinished = false;
