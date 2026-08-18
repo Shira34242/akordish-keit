@@ -67,7 +67,7 @@ export class MarketingAttributionService {
 
   private normalizeCode(value: string | null): string | null {
     if (!value) return null;
-    const normalized = value.trim().replace(/[^a-zA-Z0-9]/g, '').toLowerCase().slice(0, 32);
-    return normalized || null;
+    const normalized = value.trim().toLowerCase().slice(0, 32);
+    return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(normalized) ? normalized : null;
   }
 }
