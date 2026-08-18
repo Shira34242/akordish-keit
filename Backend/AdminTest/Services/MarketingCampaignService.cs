@@ -241,7 +241,13 @@ public class MarketingCampaignService : IMarketingCampaignService
     private static string NormalizeTargetPath(string value)
     {
         var path = value.Trim();
-        if (!path.StartsWith('/') || path.StartsWith("//") || path.Contains('\\') || Uri.TryCreate(path, UriKind.Absolute, out _))
+        // Do not use UriKind.Absolute here: on Linux, rooted site paths such as
+        // "/chords" can be interpreted as absolute file URIs and rejected.
+        if (string.IsNullOrWhiteSpace(path) ||
+            !path.StartsWith('/') ||
+            path.StartsWith("//") ||
+            path.Contains('\\') ||
+            path.Any(char.IsControl))
             throw new ArgumentException("יש להזין נתיב פנימי באתר שמתחיל ב-/");
         return path;
     }
