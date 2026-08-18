@@ -8,6 +8,7 @@ namespace AkordishKeit.Services;
 public class UserTagService : IUserTagService
 {
     private readonly AkordishKeitDbContext _context;
+    private readonly IRewardService _rewardService;
 
     // סף ל-4 חודשים: אם ההעלאה האחרונה היתה לפני יותר מ-4 חודשים — איפוס
     private static readonly TimeSpan ResetPeriod = TimeSpan.FromDays(30 * 4);
@@ -22,9 +23,10 @@ public class UserTagService : IUserTagService
 
     private sealed record ContributionStats(int Count, DateTime? LatestAt);
 
-    public UserTagService(AkordishKeitDbContext context)
+    public UserTagService(AkordishKeitDbContext context, IRewardService rewardService)
     {
         _context = context;
+        _rewardService = rewardService;
     }
 
     public async Task RecalculateTagAsync(int userId)
@@ -73,6 +75,7 @@ public class UserTagService : IUserTagService
         user.RankingScore   = CalculateRankingScore(user.ContentTag, effectiveCount, referralCount);
 
         await _context.SaveChangesAsync();
+        await _rewardService.SyncContentRewardsAsync(userId, totalCount);
     }
 
     public async Task<UserTagDto?> GetUserTagAsync(int userId)

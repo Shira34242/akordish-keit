@@ -32,6 +32,7 @@ import { TranslatePipe } from '../../pipes/translate.pipe';
 import { LanguageService } from '../../services/language.service';
 import { ProfileReminderService } from '../../services/profile-reminder.service';
 import { ReferralService, ReferralSummary } from '../../services/referral.service';
+import { RewardService, RewardWallet } from '../../services/reward.service';
 import { getArticleLink } from '../../utils/article-route.utils';
 import { artistPath } from '../../utils/slug';
 
@@ -154,6 +155,7 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
   referralSummary: ReferralSummary | null = null;
   referralLoading = false;
   referralCopied = false;
+  rewardWallet: RewardWallet | null = null;
   pageLoadError = false;
   togglingPageId: number | null = null;
   songsPage = 1;
@@ -212,6 +214,7 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
     private quickAddAssistantService: QuickAddAssistantService,
     private profileReminderService: ProfileReminderService,
     private referralService: ReferralService,
+    private rewardService: RewardService,
     private ngZone: NgZone,
     public langService: LanguageService
   ) {}
@@ -243,6 +246,10 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
     this.loadMyAllPages();
     this.loadSubscription();
     this.loadReferralSummary();
+    this.loadRewardWallet();
+    this.rewardService.wallet$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(wallet => this.rewardWallet = wallet);
   }
 
   ngAfterViewInit(): void {
@@ -440,6 +447,16 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
         this.hasMoreSongs = false;
       }
     });
+  }
+
+  private loadRewardWallet(): void {
+    this.rewardService.getMyWallet()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({ next: wallet => this.rewardWallet = wallet });
+  }
+
+  isRewardsAvailable(): boolean {
+    return this.rewardWallet?.isAvailable === true;
   }
 
   private loadMyArticles() {

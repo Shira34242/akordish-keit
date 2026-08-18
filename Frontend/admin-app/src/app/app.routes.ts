@@ -555,6 +555,11 @@ export const routes: Routes = [
                 title: 'ניהול פרסום - שדות פרסום - אקורדישקייט'
             },
             {
+                path: 'advertising/links',
+                loadComponent: () => import('./components/admin/advertisements/marketing-links/marketing-links.component').then(m => m.MarketingLinksComponent),
+                title: 'קישורי שיתוף ומדידת הרשמות - אקורדישקייט'
+            },
+            {
                 path: 'advertising/clients',
                 loadComponent: () => import('./components/admin/advertisements/clients/clients-list.component').then(m => m.ClientsListComponent),
                 title: 'ניהול פרסום - לקוחות - אקורדישקייט'

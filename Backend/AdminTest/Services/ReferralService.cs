@@ -11,15 +11,18 @@ public class ReferralService : IReferralService
     private readonly AkordishKeitDbContext _context;
     private readonly IUserTagService _userTagService;
     private readonly ILogger<ReferralService> _logger;
+    private readonly IRewardService _rewardService;
 
     public ReferralService(
         AkordishKeitDbContext context,
         IUserTagService userTagService,
-        ILogger<ReferralService> logger)
+        ILogger<ReferralService> logger,
+        IRewardService rewardService)
     {
         _context = context;
         _userTagService = userTagService;
         _logger = logger;
+        _rewardService = rewardService;
     }
 
     public async Task<ReferralSummaryDto> GetSummaryAsync(int userId, string? requestOrigin)
@@ -61,7 +64,7 @@ public class ReferralService : IReferralService
             return;
         }
 
-        _context.UserReferrals.Add(new UserReferral
+        var referral = new UserReferral
         {
             ReferrerUserId = referralCodeEntity.UserId,
             ReferredUserId = referredUserId,
@@ -70,11 +73,13 @@ public class ReferralService : IReferralService
             CreatedAt = DateTime.UtcNow,
             IpAddress = Truncate(ipAddress, 64),
             UserAgent = Truncate(userAgent, 512)
-        });
+        };
+        _context.UserReferrals.Add(referral);
 
         try
         {
             await _context.SaveChangesAsync();
+            await _rewardService.RewardReferralSignupAsync(referral.Id);
             await _userTagService.RecalculateTagAsync(referralCodeEntity.UserId);
         }
         catch (DbUpdateException ex)

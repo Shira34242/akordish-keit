@@ -130,6 +130,12 @@ public class AkordishKeitDbContext : DbContext
     public DbSet<UserReferralCode> UserReferralCodes { get; set; }
     public DbSet<UserReferral> UserReferrals { get; set; }
 
+    public DbSet<MarketingCampaign> MarketingCampaigns { get; set; }
+    public DbSet<MarketingCampaignEvent> MarketingCampaignEvents { get; set; }
+
+    public DbSet<UserRewardWallet> UserRewardWallets { get; set; }
+    public DbSet<UserRewardTransaction> UserRewardTransactions { get; set; }
+
     // System Settings — Feature Flags
     public DbSet<SystemSetting> SystemSettings { get; set; }
 
@@ -241,6 +247,29 @@ public class AkordishKeitDbContext : DbContext
         modelBuilder.ApplyConfiguration(new ContentPromotionConfiguration());
         modelBuilder.ApplyConfiguration(new UserReferralCodeConfiguration());
         modelBuilder.ApplyConfiguration(new UserReferralConfiguration());
+        modelBuilder.ApplyConfiguration(new MarketingCampaignConfiguration());
+        modelBuilder.ApplyConfiguration(new MarketingCampaignEventConfiguration());
+
+        modelBuilder.Entity<UserRewardWallet>(entity =>
+        {
+            entity.ToTable("UserRewardWallets");
+            entity.HasKey(wallet => wallet.UserId);
+            entity.Property(wallet => wallet.CoinBalance).HasDefaultValue(0);
+            entity.Property(wallet => wallet.AwardedContentCount).HasDefaultValue(0);
+            entity.HasOne(wallet => wallet.User).WithOne().HasForeignKey<UserRewardWallet>(wallet => wallet.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+        modelBuilder.Entity<UserRewardTransaction>(entity =>
+        {
+            entity.ToTable("UserRewardTransactions");
+            entity.HasKey(transaction => transaction.Id);
+            entity.Property(transaction => transaction.ActionType).HasMaxLength(80).IsRequired();
+            entity.Property(transaction => transaction.IdempotencyKey).HasMaxLength(160).IsRequired();
+            entity.Property(transaction => transaction.ReferenceType).HasMaxLength(80);
+            entity.Property(transaction => transaction.Description).HasMaxLength(300);
+            entity.HasIndex(transaction => transaction.IdempotencyKey).IsUnique();
+            entity.HasIndex(transaction => new { transaction.UserId, transaction.CreatedAt });
+            entity.HasOne(transaction => transaction.Wallet).WithMany(wallet => wallet.Transactions).HasForeignKey(transaction => transaction.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
 
         // News Page Sections Configuration
         modelBuilder.ApplyConfiguration(new NewsPageSectionConfiguration());

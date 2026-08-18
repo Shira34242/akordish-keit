@@ -8,6 +8,8 @@ public class UserReferral
     public string ReferralCode { get; set; } = string.Empty;
     public string Source { get; set; } = "google";
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? ActivationRewardedAt { get; set; }
+    public DateTime? ContributionRewardedAt { get; set; }
     public string? IpAddress { get; set; }
     public string? UserAgent { get; set; }
 

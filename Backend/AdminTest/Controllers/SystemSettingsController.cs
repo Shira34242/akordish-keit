@@ -11,6 +11,8 @@ namespace AkordishKeit.Controllers;
 public class SystemSettingsController : ControllerBase
 {
     private const string TickerConfigKey = "hero_news_ticker_config";
+    public const string RewardsVisibleToMembersKey = "rewards_visible_to_members";
+    public const string RewardsVisibleToMembersDescription = "הצגת מערכת המטבעות והפקת ספר אקורדים לחברים. מנהלים תמיד רואים ויכולים לבדוק.";
     private static readonly string[] PublicBannerImageKeys =
     {
         "banner_home_hero_image",
@@ -48,6 +50,14 @@ public class SystemSettingsController : ControllerBase
 
         var value = await _settingsService.GetValueAsync(key);
         return Ok(new { key, value });
+    }
+
+    [HttpGet("public/rewards-availability")]
+    [AllowAnonymous]
+    public async Task<ActionResult<object>> GetRewardsAvailability()
+    {
+        var isEnabled = await _settingsService.GetBoolAsync(RewardsVisibleToMembersKey);
+        return Ok(new { isEnabled });
     }
 
     [HttpGet("public/banner-images")]

@@ -16,12 +16,16 @@ public class PlaylistsController : ControllerBase
 {
     private readonly AkordishKeitDbContext _context;
     private readonly IPlaylistService _playlistService;
+    private readonly IRewardService _rewardService;
+    private readonly ISystemSettingsService _settingsService;
     private readonly ILogger<PlaylistsController> _logger;
 
-    public PlaylistsController(AkordishKeitDbContext context, IPlaylistService playlistService, ILogger<PlaylistsController> logger)
+    public PlaylistsController(AkordishKeitDbContext context, IPlaylistService playlistService, IRewardService rewardService, ISystemSettingsService settingsService, ILogger<PlaylistsController> logger)
     {
         _context = context;
         _playlistService = playlistService;
+        _rewardService = rewardService;
+        _settingsService = settingsService;
         _logger = logger;
     }
 
@@ -316,6 +320,19 @@ public class PlaylistsController : ControllerBase
             return Unauthorized(new { message = "לא ניתן לזהות משתמש" });
 
         var user = await _context.Users.FindAsync(userId.Value);
+        if (user != null)
+        {
+            if (user.Role >= UserRole.Manager)
+            {
+                return Ok(new { success = true, cost = 0, balance = 0, message = string.Empty });
+            }
+
+            if (!await _settingsService.GetBoolAsync(SystemSettingsController.RewardsVisibleToMembersKey))
+                return Ok(new { success = false, cost = 0, balance = 0, message = "מערכת תרומת התוכן נמצאת בבנייה ותיפתח בקרוב." });
+
+            var result = await _rewardService.SpendForChordBookAsync(userId.Value, id);
+            return Ok(new { success = result.Success, cost = result.Cost, balance = result.Balance, transactionId = result.TransactionId, message = result.Message });
+        }
         if (user == null)
             return NotFound(new { message = "המשתמש לא נמצא" });
 

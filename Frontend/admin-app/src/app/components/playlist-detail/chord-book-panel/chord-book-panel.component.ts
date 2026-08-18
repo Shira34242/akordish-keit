@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { SongService } from '../../../services/song.service';
 import { PlaylistService } from '../../../services/playlist.service';
+import { RewardService } from '../../../services/reward.service';
 import { PlaylistDetail } from '../../../models/playlist.model';
 import { isChord, isChordLine } from '../../../utils/music-utils';
 import { LanguageService } from '../../../services/language.service';
@@ -39,6 +40,9 @@ export class ChordBookPanelComponent implements OnInit {
     progressText: string = '';
     progressPercent: number = 0;
     exportError: string | null = null;
+    showExportConfirmation = false;
+    exportWallet: { coinBalance: number; chordBookCost: number } | null = null;
+    private skipBrowserConfirm = false;
 
     private static readonly BRAND_TEXT =
         'הורד מאתר אקורדישקייט · המאגר הגדול והיחיד מסוגו לאקורדים במוזיקה היהודית';
@@ -49,7 +53,7 @@ export class ChordBookPanelComponent implements OnInit {
 
     private readonly langService = inject(LanguageService);
 
-    constructor(private songService: SongService, private playlistService: PlaylistService, private sanitizer: DomSanitizer) {}
+    constructor(private songService: SongService, private playlistService: PlaylistService, private rewardService: RewardService, private sanitizer: DomSanitizer) {}
 
     ngOnInit(): void {
         this.loadPreviewSong(0);
@@ -61,6 +65,27 @@ export class ChordBookPanelComponent implements OnInit {
 
     closeError(): void {
         this.exportError = null;
+    }
+
+    openExportConfirmation(): void {
+        this.exportError = null;
+        this.rewardService.getMyWallet().subscribe({
+            next: wallet => {
+                this.exportWallet = wallet;
+                if (wallet.coinBalance < wallet.chordBookCost) {
+                    this.exportError = `אין מספיק מטבעות ליצירת ספר אקורדים. חסרים לך ${wallet.chordBookCost - wallet.coinBalance} מטבעות.`;
+                    return;
+                }
+                this.showExportConfirmation = true;
+            },
+            error: () => this.exportError = this.langService.translate('chord_book.error_export')
+        });
+    }
+
+    confirmExport(): void {
+        this.showExportConfirmation = false;
+        this.skipBrowserConfirm = true;
+        this.exportBook();
     }
 
     get lineHeightCss(): number { return this.fontSize * 2; }
@@ -447,10 +472,25 @@ ${rows}`;
     // ===== ייצוא PDF =====
 
     async exportBook() {
+        if (!this.skipBrowserConfirm) {
+            this.openExportConfirmation();
+            return;
+        }
+
+        const confirm = (_message?: string) => true;
+        this.skipBrowserConfirm = false;
         this.exportError = null;
+        let chargedTransactionId: number | null = null;
 
         try {
-            const creditResult = await new Promise<{ success: boolean; limit: number; used: number; remaining: number; message?: string }>((resolve, reject) => {
+            const wallet = await new Promise<{ coinBalance: number; chordBookCost: number }>((resolve, reject) => {
+                this.rewardService.getMyWallet().subscribe({ next: resolve, error: reject });
+            });
+            const remaining = wallet.coinBalance - wallet.chordBookCost;
+            if (!confirm(`יצירת ספר אקורדים עולה ${wallet.chordBookCost} מטבעות. היתרה לאחר ההפקה תהיה ${remaining} מטבעות. להמשיך?`)) {
+                return;
+            }
+            const creditResult = await new Promise<{ success: boolean; cost: number; balance: number; transactionId?: number; message?: string }>((resolve, reject) => {
                 this.playlistService.exportChordBook(this.playlist.id).subscribe({ next: resolve, error: reject });
             });
 
@@ -458,6 +498,8 @@ ${rows}`;
                 this.exportError = creditResult.message || this.langService.translate('chord_book.error_restricted');
                 return;
             }
+            chargedTransactionId = creditResult.transactionId ?? null;
+            this.rewardService.applyBalance(creditResult.balance);
         } catch {
             this.exportError = this.langService.translate('chord_book.error_export');
             return;
@@ -489,9 +531,14 @@ ${rows}`;
                 this.progressText = `${this.langService.translate('chord_book.progress_song_pre')}${i + 1}${this.langService.translate('chord_book.progress_song_of')}${this.playlist.songs.length}: ${ps.songTitle}`;
                 this.progressPercent = 8 + Math.round((i / this.playlist.songs.length) * 78);
 
-                const songData = await new Promise<any>((resolve, reject) => {
-                    this.songService.getSongById(ps.songId).subscribe({ next: resolve, error: reject });
-                });
+                let songData: any;
+                try {
+                    songData = await new Promise<any>((resolve, reject) => {
+                        this.songService.getSongById(ps.songId).subscribe({ next: resolve, error: reject });
+                    });
+                } catch {
+                    continue;
+                }
 
                 const container = this.buildSongContainer(songData);
                 document.body.appendChild(container);
@@ -501,6 +548,10 @@ ${rows}`;
                 indexEntries.push({ title: ps.songTitle, artist: ps.artistName, page: currentPage });
                 currentPage += images.length;
                 songPageImages.push(images);
+            }
+
+            if (songPageImages.length === 0) {
+                throw new Error('No available songs to export');
             }
 
             // שלב 3: תוכן עניינים (כעת יודעים מספרי עמודים)
@@ -539,7 +590,12 @@ ${rows}`;
             this.progressPercent = 100;
         } catch (e) {
             console.error('Chord book export failed:', e);
-            alert(this.langService.translate('chord_book.error_export'));
+            if (chargedTransactionId) {
+                this.rewardService.refundChordBook(chargedTransactionId).subscribe({
+                    next: () => this.rewardService.getMyWallet().subscribe()
+                });
+            }
+            this.exportError = `${this.langService.translate('chord_book.error_export')} המטבעות הוחזרו ליתרה שלך.`;
         } finally {
             this.isExporting = false;
             this.progressText = '';

@@ -54,9 +54,12 @@
     <div class="profile-tags">
       <span class="profile-tag">{{ 'profile.instrument_guitar' | translate }}</span>
       <span class="profile-tag">{{ 'profile.instrument_piano' | translate }}</span>
-      <span class="profile-tag">{{ getLevelName() }}</span>
+      @if (isRewardsAvailable()) {
+        <span class="profile-tag">{{ getLevelName() }}</span>
+      }
     </div>
     <section class="level-progress-banner">
+      @if (isRewardsAvailable()) {
       <strong class="current-level-badge">
         <span class="material-icons">workspace_premium</span>
         {{ getLevelName() }}
@@ -100,6 +103,22 @@
         <span>ככל שיש לך יותר נקודות, נפתחות עבורך אפשרויות חדשות באתר.</span>
         <span>אם יש לך דף ציבורי, נקודות גבוהות יכולות לעזור לו לקבל יותר חשיפה.</span>
       </div>
+
+      @if (rewardWallet; as wallet) {
+        <div class="contribution-benefits contribution-benefits--wallet">
+          <span>המטבעות שלך</span>
+          <strong>{{ wallet.coinBalance }} מטבעות</strong>
+          <span>ספר אקורדים עולה {{ wallet.chordBookCost }} מטבעות.</span>
+          @if (wallet.transactions.length > 0) {
+            <span>{{ wallet.transactions[0].description || 'פעולה אחרונה' }} · יתרה {{ wallet.transactions[0].balanceAfter }}</span>
+          }
+        </div>
+      }
+      } @else if (rewardWallet) {
+        <div class="rewards-construction-note">
+          מערכת תרומת התוכן מתחדשת. בקרוב ייפתחו כאן אפשרויות חדשות.
+        </div>
+      }
 
       <div class="contribution-referral">
         <div class="referral-card__copy">

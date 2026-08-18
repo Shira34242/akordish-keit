@@ -2,6 +2,7 @@
 import { environment } from '../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { MarketingAttributionService } from './marketing-attribution.service';
 
 export interface UserInstrumentRef {
     id: number;
@@ -83,7 +84,7 @@ export class AuthService {
     public loginRequest$ = this.loginRequestSubject.asObservable();
     private requestedAuthMode: AuthModalMode = 'register';
 
-    constructor(private http: HttpClient) {
+    constructor(private http: HttpClient, private marketingAttribution: MarketingAttributionService) {
         this.loadUserFromStorage();
     }
 
@@ -110,10 +111,18 @@ export class AuthService {
     }
 
     register(username: string, email: string, password: string, termsApproved: boolean, marketingConsent = false): Observable<AuthResponse> {
-        return this.http.post<AuthResponse>(`${this.apiUrl}/register`, { username, email, password, termsApproved, marketingConsent }, {
+        const attribution = this.marketingAttribution.getAttribution();
+        return this.http.post<AuthResponse>(`${this.apiUrl}/register`, {
+            username, email, password, termsApproved, marketingConsent,
+            campaignCode: attribution?.campaignCode ?? null,
+            campaignVisitorId: attribution?.visitorId ?? null
+        }, {
             withCredentials: true // 🔐 מאפשר שליחת וקבלת cookies
         }).pipe(
-            tap(response => this.saveAuthResponse(response))
+            tap(response => {
+                this.saveAuthResponse(response);
+                this.marketingAttribution.clear();
+            })
         );
     }
 
@@ -126,17 +135,21 @@ export class AuthService {
     }
 
     googleLogin(idToken: string, termsApproved = false, marketingConsent = false): Observable<AuthResponse> {
+        const attribution = this.marketingAttribution.getAttribution();
         return this.http.post<AuthResponse>(`${this.apiUrl}/google-login`, {
             idToken,
             termsApproved,
             marketingConsent,
-            referralCode: this.getStoredReferralCode()
+            referralCode: this.getStoredReferralCode(),
+            campaignCode: attribution?.campaignCode ?? null,
+            campaignVisitorId: attribution?.visitorId ?? null
         }, {
             withCredentials: true
         }).pipe(
             tap(response => {
                 this.saveAuthResponse(response);
                 this.clearStoredReferralCode();
+                this.marketingAttribution.clear();
             })
         );
     }

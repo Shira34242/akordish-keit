@@ -1,0 +1,165 @@
+<section class="marketing-links-page" dir="rtl">
+  <header class="page-header">
+    <div>
+      <span class="section-label">פרסום</span>
+      <h1>קישורי שיתוף</h1>
+      <p>יצירה, ניהול ומדידת קישורים לכל פרסום ושיתוף פעולה.</p>
+    </div>
+    <button class="primary-button" type="button" (click)="openCreate()">
+      <span class="material-icons">add_link</span>
+      קישור חדש
+    </button>
+  </header>
+
+  <div class="summary-grid" *ngIf="dashboard as data">
+    <article class="summary-card">
+      <span>כניסות</span>
+      <strong>{{ data.totalVisits | number }}</strong>
+      <small title="כל פתיחה שנמדדה, כולל ביקורים חוזרים">כל הפתיחות שנמדדו</small>
+    </article>
+    <article class="summary-card">
+      <span>מבקרים ייחודיים</span>
+      <strong>{{ data.uniqueVisitors | number }}</strong>
+      <small title="כל דפדפן נספר פעם אחת בטווח התאריכים">דפדפנים שונים</small>
+    </article>
+    <article class="summary-card highlight">
+      <span>הרשמות</span>
+      <strong>{{ data.totalSignups | number }}</strong>
+      <small title="משתמשים שנרשמו לאחר שהגיעו מקישור שיתוף">נרשמו בעקבות קישור</small>
+    </article>
+    <article class="summary-card">
+      <span>אחוז המרה</span>
+      <strong>{{ data.conversionRate | number:'1.0-1' }}%</strong>
+      <small title="מספר ההרשמות מתוך מספר המבקרים הייחודיים">הרשמות מתוך מבקרים</small>
+    </article>
+  </div>
+
+  <section class="report-panel">
+    <div class="report-heading">
+      <div>
+        <h2>כל הקישורים</h2>
+        <p>{{ visibleCampaigns.length }} מתוך {{ dashboard?.campaigns?.length || 0 }} קישורים מוצגים</p>
+      </div>
+      <div class="range-shortcuts" aria-label="טווחי זמן מהירים">
+        <button type="button" (click)="setDateRange(7)">7 ימים</button>
+        <button type="button" (click)="setDateRange(30)">30 ימים</button>
+        <button type="button" (click)="setDateRange(90)">90 ימים</button>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <label class="search-field">
+        <span class="material-icons">search</span>
+        <input [(ngModel)]="searchTerm" placeholder="חיפוש לפי שם, מקור או יעד" aria-label="חיפוש קישורים">
+      </label>
+      <label>
+        <span>מצב</span>
+        <select [(ngModel)]="statusFilter">
+          <option value="all">הכול</option>
+          <option value="active">פעילים</option>
+          <option value="inactive">מושהים</option>
+        </select>
+      </label>
+      <label>
+        <span>מיון</span>
+        <select [(ngModel)]="sortBy">
+          <option value="created">החדשים קודם</option>
+          <option value="visits">הכי הרבה כניסות</option>
+          <option value="signups">הכי הרבה הרשמות</option>
+          <option value="conversion">אחוז המרה</option>
+        </select>
+      </label>
+      <div class="date-filter">
+        <label><span>מתאריך</span><input type="date" [(ngModel)]="dateFrom"></label>
+        <label><span>עד תאריך</span><input type="date" [(ngModel)]="dateTo"></label>
+        <button type="button" class="filter-button" (click)="loadDashboard()">עדכון</button>
+      </div>
+    </div>
+
+    <p class="error-message" *ngIf="errorMessage">{{ errorMessage }}</p>
+    <div class="loading-state" *ngIf="loading">טוען נתונים...</div>
+
+    <div class="campaign-table" *ngIf="!loading && visibleCampaigns.length">
+      <div class="table-head" aria-hidden="true">
+        <span>קישור</span><span>כניסות</span><span>ייחודיים</span><span>הרשמות</span><span>המרה</span><span>פעילות</span><span>פעולות</span>
+      </div>
+      <article class="campaign-row" *ngFor="let campaign of visibleCampaigns; trackBy: trackByCampaignId">
+        <div class="campaign-identity">
+          <div class="campaign-title-line">
+            <h3>{{ campaign.name }}</h3>
+            <span class="status-tag" [class.inactive]="!campaign.isActive">{{ campaign.isActive ? 'פעיל' : 'מושהה' }}</span>
+          </div>
+          <p>{{ campaign.source }} · {{ campaign.targetPath }}</p>
+          <button class="copy-link" type="button" (click)="copyLink(campaign)" [attr.aria-label]="'העתקת הקישור של ' + campaign.name">
+            <span class="material-icons">{{ copiedId === campaign.id ? 'check_circle' : 'content_copy' }}</span>
+            <span>{{ copiedId === campaign.id ? 'הקישור הועתק' : 'העתקת קישור מעקב' }}</span>
+          </button>
+        </div>
+        <div class="metric" data-label="כניסות"><strong>{{ campaign.visits | number }}</strong></div>
+        <div class="metric" data-label="ייחודיים"><strong>{{ campaign.uniqueVisitors | number }}</strong></div>
+        <div class="metric" data-label="הרשמות"><strong>{{ campaign.signups | number }}</strong></div>
+        <div class="metric conversion" data-label="המרה"><strong>{{ campaign.conversionRate | number:'1.0-1' }}%</strong></div>
+        <div class="activity" data-label="פעילות">
+          <span>נוצר: {{ campaign.createdAt | date:'dd/MM/yy' }}</span>
+          <span>{{ campaign.lastVisitAt ? ('אחרונה: ' + (campaign.lastVisitAt | date:'dd/MM/yy HH:mm')) : 'אין פעילות עדיין' }}</span>
+        </div>
+        <div class="row-actions" data-label="פעולות">
+          <button type="button" title="עריכה" (click)="openEdit(campaign)"><span class="material-icons">edit</span></button>
+          <a [href]="campaign.targetPath" target="_blank" rel="noopener" title="פתיחת דף היעד ללא מעקב"><span class="material-icons">open_in_new</span></a>
+          <button type="button" [title]="campaign.isActive ? 'השהיית קישור' : 'הפעלת קישור'" (click)="toggleStatus(campaign)">
+            <span class="material-icons">{{ campaign.isActive ? 'pause' : 'play_arrow' }}</span>
+          </button>
+          <button type="button" class="delete-action" title="מחיקה לצמיתות" (click)="askToDelete(campaign)"><span class="material-icons">delete_outline</span></button>
+        </div>
+      </article>
+    </div>
+
+    <div class="empty-state" *ngIf="!loading && !visibleCampaigns.length">
+      <span class="material-icons">link_off</span>
+      <h3>{{ dashboard?.campaigns?.length ? 'לא נמצאו קישורים מתאימים' : 'עדיין לא נוצרו קישורי שיתוף' }}</h3>
+      <p>{{ dashboard?.campaigns?.length ? 'אפשר לשנות את החיפוש או הסינון.' : 'הקישור הראשון שתיצור יופיע כאן יחד עם נתוני הביצועים שלו.' }}</p>
+      <button *ngIf="!dashboard?.campaigns?.length" class="secondary-button" type="button" (click)="openCreate()">יצירת קישור ראשון</button>
+    </div>
+  </section>
+</section>
+
+<div class="modal-backdrop" *ngIf="formOpen" (click)="closeForm()">
+  <section class="modal-card" role="dialog" aria-modal="true" [attr.aria-label]="editingCampaign ? 'עריכת קישור' : 'יצירת קישור חדש'" (click)="$event.stopPropagation()">
+    <header class="modal-header">
+      <div>
+        <h2>{{ editingCampaign ? 'עריכת קישור' : 'קישור שיתוף חדש' }}</h2>
+        <p>{{ editingCampaign ? 'קוד המעקב והנתונים הקיימים יישמרו.' : 'לאחר השמירה הקישור יועתק אוטומטית.' }}</p>
+      </div>
+      <button type="button" class="icon-button" aria-label="סגירה" (click)="closeForm()"><span class="material-icons">close</span></button>
+    </header>
+    <form (ngSubmit)="saveCampaign()" #campaignForm="ngForm">
+      <label><span>שם הפרסום</span><input name="campaignName" [(ngModel)]="campaignName" maxlength="160" required minlength="2" placeholder="לדוגמה: שיתוף פעולה עם ערוץ פלוני"></label>
+      <label><span>מקור</span><input name="source" [(ngModel)]="source" maxlength="80" required minlength="2" placeholder="לדוגמה: WhatsApp, Instagram או YouTube"></label>
+      <label><span>בחירת דף באתר</span><select name="targetSuggestion" [(ngModel)]="targetPath"><option *ngFor="let target of targetSuggestions" [value]="target.path">{{ target.label }} — {{ target.path }}</option></select></label>
+      <label><span>או נתיב מדויק באתר</span><input name="targetPath" [(ngModel)]="targetPath" maxlength="500" required placeholder="/news/כתבה-לדוגמה" dir="ltr"><small>יש להזין רק כתובת פנימית שמתחילה ב-/</small></label>
+      <div class="modal-actions">
+        <button class="secondary-button" type="button" (click)="closeForm()">ביטול</button>
+        <button class="primary-button" type="submit" [disabled]="campaignForm.invalid || saving">
+          <span class="material-icons">{{ saving ? 'hourglass_top' : 'check' }}</span>
+          {{ saving ? 'שומר...' : (editingCampaign ? 'שמירת שינויים' : 'יצירה והעתקה') }}
+        </button>
+      </div>
+    </form>
+  </section>
+</div>
+
+<div class="modal-backdrop" *ngIf="deleteCandidate as campaign" (click)="cancelDelete()">
+  <section class="modal-card delete-dialog" role="alertdialog" aria-modal="true" aria-label="אישור מחיקת קישור" (click)="$event.stopPropagation()">
+    <span class="warning-icon material-icons">delete_forever</span>
+    <h2>למחוק את „{{ campaign.name }}” לצמיתות?</h2>
+    <p>הקישור וכל נתוני המדידה שלו יימחקו ולא יהיה אפשר לשחזר אותם.</p>
+    <div class="delete-summary">
+      <span><strong>{{ campaign.visits | number }}</strong> כניסות</span>
+      <span><strong>{{ campaign.signups | number }}</strong> הרשמות</span>
+    </div>
+    <div class="modal-actions">
+      <button class="secondary-button" type="button" (click)="cancelDelete()">ביטול</button>
+      <button class="danger-button" type="button" [disabled]="deleting" (click)="confirmDelete()">{{ deleting ? 'מוחק...' : 'מחיקה לצמיתות' }}</button>
+    </div>
+  </section>
+</div>

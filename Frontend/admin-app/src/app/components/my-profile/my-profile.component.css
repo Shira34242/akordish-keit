@@ -1120,6 +1120,16 @@
   border: none;
 }
 
+.rewards-construction-note {
+  margin-top: var(--space-lg);
+  padding: var(--space-base) var(--space-lg);
+  border-radius: 20px;
+  background: #F2F2F2;
+  color: #404040;
+  font-size: var(--font-sm);
+  line-height: var(--lh-body);
+}
+
 .account-deletion-link {
   align-self: center;
   color: rgba(0, 0, 0, 0.45);

@@ -30,6 +30,8 @@ namespace AkordishKeit.Controllers
         private readonly IAzureBlobService _blobService;
         private readonly IEmailService _emailService;
         private readonly IReferralService _referralService;
+        private readonly IMarketingCampaignService _marketingCampaignService;
+        private readonly IRewardService _rewardService;
         private readonly ILogger<AuthController> _logger;
 
         private static readonly Dictionary<string, (string Code, DateTime Expiry)> _verificationCodes = new();
@@ -44,6 +46,8 @@ namespace AkordishKeit.Controllers
             IAzureBlobService blobService,
             IEmailService emailService,
             IReferralService referralService,
+            IMarketingCampaignService marketingCampaignService,
+            IRewardService rewardService,
             ILogger<AuthController> logger)
         {
             _context = context;
@@ -53,6 +57,8 @@ namespace AkordishKeit.Controllers
             _blobService = blobService;
             _emailService = emailService;
             _referralService = referralService;
+            _marketingCampaignService = marketingCampaignService;
+            _rewardService = rewardService;
             _logger = logger;
         }
 
@@ -65,6 +71,8 @@ namespace AkordishKeit.Controllers
             {
                 return Unauthorized(new { message = "משתמש לא מזוהה" });
             }
+
+            await _rewardService.RewardReferralActivationAsync(userId);
 
             var user = await _context.Users
                 .AsNoTracking()
@@ -234,6 +242,12 @@ namespace AkordishKeit.Controllers
 
                 await _referralService.TryRecordGoogleReferralAsync(
                     request.ReferralCode,
+                    user.Id,
+                    HttpContext.Connection.RemoteIpAddress?.ToString(),
+                    Request.Headers.UserAgent.ToString());
+                await _marketingCampaignService.RecordSignupAsync(
+                    request.CampaignCode,
+                    request.CampaignVisitorId,
                     user.Id,
                     HttpContext.Connection.RemoteIpAddress?.ToString(),
                     Request.Headers.UserAgent.ToString());
@@ -528,6 +542,12 @@ namespace AkordishKeit.Controllers
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
             await _emailService.SyncUserSubscriptionAsync(user.Id);
+            await _marketingCampaignService.RecordSignupAsync(
+                request.CampaignCode,
+                request.CampaignVisitorId,
+                user.Id,
+                HttpContext.Connection.RemoteIpAddress?.ToString(),
+                Request.Headers.UserAgent.ToString());
 
             _logger.LogInformation("New user registered: UserId={UserId} Email={Email} IP={IP}",
                 user.Id, user.Email, HttpContext.Connection.RemoteIpAddress);

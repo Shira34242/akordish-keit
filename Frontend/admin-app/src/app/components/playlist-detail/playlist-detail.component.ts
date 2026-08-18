@@ -9,6 +9,7 @@ import { MediaService } from '../../services/admin/media.service';
 import { ChordBookPanelComponent } from './chord-book-panel/chord-book-panel.component';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { LanguageService } from '../../services/language.service';
+import { RewardService, RewardWallet } from '../../services/reward.service';
 
 @Component({
   selector: 'app-playlist-detail',
@@ -44,6 +45,7 @@ export class PlaylistDetailComponent implements OnInit, AfterViewChecked, OnDest
   imageUploadError: string | null = null;
 
   isSavingEdit = false;
+  rewardWallet: RewardWallet | null = null;
 
   private readonly langService = inject(LanguageService);
 
@@ -66,11 +68,13 @@ export class PlaylistDetailComponent implements OnInit, AfterViewChecked, OnDest
     private router: Router,
     private playlistService: PlaylistService,
     private authService: AuthService,
+    private rewardService: RewardService,
     private mediaService: MediaService,
     private ngZone: NgZone
   ) {}
 
   ngOnInit(): void {
+    this.rewardService.getMyWallet().subscribe({ next: wallet => this.rewardWallet = wallet });
     this.route.params.subscribe(params => {
       const id = params['id'];
       if (id) {
@@ -286,10 +290,7 @@ export class PlaylistDetailComponent implements OnInit, AfterViewChecked, OnDest
   }
 
   canUseChordBook(): boolean {
-    const user = this.authService.currentUserValue;
-    if (!user) return false;
-    if (this.authService.isAdminOrManager(user)) return true;
-    return (user.contentTag ?? 0) >= 2;
+    return this.rewardWallet?.isAvailable === true;
   }
 
   dismissChordBookRestricted(): void {

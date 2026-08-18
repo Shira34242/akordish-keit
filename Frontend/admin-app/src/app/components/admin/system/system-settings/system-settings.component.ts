@@ -186,7 +186,8 @@ export class SystemSettingsComponent implements OnInit {
 
   getKeyLabel(key: string): string {
     const labels: Record<string, string> = {
-      regular_user_subscriptions_enabled: 'מנויים למשתמשים רגילים (BASIC/PLUS+/PRO)'
+      regular_user_subscriptions_enabled: 'מנויים למשתמשים רגילים (BASIC/PLUS+/PRO)',
+      rewards_visible_to_members: 'מערכת תרומת התוכן והמטבעות'
     };
     return labels[key] ?? key;
   }

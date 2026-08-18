@@ -13,6 +13,8 @@ namespace AkordishKeit.Models.DTOs
         public bool TermsApproved { get; set; }
         public bool MarketingConsent { get; set; }
         public string? ReferralCode { get; set; }
+        public string? CampaignCode { get; set; }
+        public string? CampaignVisitorId { get; set; }
     }
 
     public class RegisterRequest
@@ -33,6 +35,8 @@ namespace AkordishKeit.Models.DTOs
 
         public bool TermsApproved { get; set; }
         public bool MarketingConsent { get; set; }
+        public string? CampaignCode { get; set; }
+        public string? CampaignVisitorId { get; set; }
     }
 
     public class LoginRequest

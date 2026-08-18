@@ -131,18 +131,11 @@
               </button>
               <div class="pcard-dropdown" *ngIf="openDotsMenuId === playlist.id">
                 <button class="dropdown-item" type="button"
-                        *ngIf="canExportChordBook(); else chordBookLocked"
+                        *ngIf="canExportChordBook()"
                         (click)="printPlaylist(playlist.id)">
                   <span class="material-icons">menu_book</span>
                   {{ 'playlists.export_book' | translate }}
                 </button>
-                <ng-template #chordBookLocked>
-                  <button class="dropdown-item dropdown-item--locked" type="button"
-                          (click)="printPlaylist(playlist.id)">
-                    <span class="material-icons">lock</span>
-                    {{ 'playlists.export_book' | translate }}
-                  </button>
-                </ng-template>
                 <button class="dropdown-item" type="button" (click)="duplicatePlaylist(playlist.id)">
                   <span class="material-icons">content_copy</span>
                   {{ 'playlists.duplicate' | translate }}

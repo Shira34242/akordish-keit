@@ -12,6 +12,7 @@ import { NewsBannerComponent } from '../shared/news-banner/news-banner.component
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { LanguageService } from '../../services/language.service';
 import { AuthService } from '../../services/auth.service';
+import { RewardService, RewardWallet } from '../../services/reward.service';
 
 interface SavedSongCard {
   id: number;
@@ -57,6 +58,7 @@ export class PlaylistsPageComponent implements OnInit, AfterViewChecked, OnDestr
   isSavingImage = false;
 
   showChordBookHint = false;
+  rewardWallet: RewardWallet | null = null;
 
   visibleSongCount = 8;
   visibleContentCount = 6;
@@ -66,11 +68,13 @@ export class PlaylistsPageComponent implements OnInit, AfterViewChecked, OnDestr
     private likedContentService: LikedContentService,
     private router: Router,
     private ngZone: NgZone,
-    private authService: AuthService
+    private authService: AuthService,
+    private rewardService: RewardService
   ) {}
 
   ngOnInit(): void {
     this.loadPageData();
+    this.rewardService.getMyWallet().subscribe({ next: wallet => this.rewardWallet = wallet });
 
     this.ngZone.runOutsideAngular(() => {
       window.addEventListener('scroll', this.onScroll, { passive: true });
@@ -203,10 +207,7 @@ export class PlaylistsPageComponent implements OnInit, AfterViewChecked, OnDestr
   }
 
   canExportChordBook(): boolean {
-    const user = this.authService.currentUserValue;
-    if (!user) return false;
-    if (this.authService.isAdminOrManager(user)) return true;
-    return (user.contentTag ?? 0) >= 2;
+    return this.rewardWallet?.isAvailable === true;
   }
 
   dismissChordBookHint(): void {

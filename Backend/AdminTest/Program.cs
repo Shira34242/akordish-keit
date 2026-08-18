@@ -1,4 +1,5 @@
 using AkordishKeit.Authorization;
+using AkordishKeit.Controllers;
 using AkordishKeit.Data;
 using AkordishKeit.Middleware;
 using AkordishKeit.Services;
@@ -119,6 +120,8 @@ builder.Services.AddScoped<IBoostService, BoostService>();
 builder.Services.AddScoped<IContentPromotionService, ContentPromotionService>();
 builder.Services.AddScoped<IDisplayRankingService, DisplayRankingService>();
 builder.Services.AddScoped<IReferralService, ReferralService>();
+builder.Services.AddScoped<IMarketingCampaignService, MarketingCampaignService>();
+builder.Services.AddScoped<IRewardService, RewardService>();
 builder.Services.AddScoped<INewsPageSectionService, NewsPageSectionService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
@@ -251,12 +254,35 @@ using (var scope = app.Services.CreateScope())
             try
             {
                 dbContext.Database.Migrate(migrationId);
+                app.Logger.LogInformation("Migration {MigrationId} applied successfully.", migrationId);
             }
             catch (Exception ex)
             {
                 app.Logger.LogWarning(ex, "Migration {MigrationId} skipped. Continuing with startup.", migrationId);
             }
         }
+    }
+    else
+    {
+        app.Logger.LogInformation("Database schema is up to date. No pending migrations.");
+    }
+
+    try
+    {
+        await scope.ServiceProvider.GetRequiredService<IRewardService>().EnsureLegacyConversionAsync();
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "Reward wallet legacy conversion did not complete.");
+    }
+
+    var systemSettings = scope.ServiceProvider.GetRequiredService<ISystemSettingsService>();
+    if (await systemSettings.GetValueAsync(SystemSettingsController.RewardsVisibleToMembersKey) == null)
+    {
+        await systemSettings.UpsertAsync(
+            SystemSettingsController.RewardsVisibleToMembersKey,
+            "false",
+            SystemSettingsController.RewardsVisibleToMembersDescription);
     }
 
     dbContext.Database.ExecuteSqlRaw(@"

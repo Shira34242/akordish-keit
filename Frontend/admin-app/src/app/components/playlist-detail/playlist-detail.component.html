@@ -132,17 +132,6 @@
               <span class="material-icons chord-book-arrow">arrow_back</span>
             </div>
 
-            <div class="chord-book-card chord-book-card--locked"
-                 *ngIf="!playlist.isDefault && playlist.songs.length > 0 && !canUseChordBook()"
-                 (click)="showChordBookRestricted = true"
-                 [title]="'playlist.export_book_restricted' | translate">
-              <div class="chord-book-text">
-                <span class="chord-book-title">{{ 'playlist.chord_book_title' | translate }}</span>
-                <span class="chord-book-desc">{{ 'playlist.chord_book_desc' | translate }}</span>
-              </div>
-              <span class="material-icons chord-book-arrow" style="opacity:0.4">lock</span>
-            </div>
-
             <div class="hero-icon-btns" *ngIf="isOwner() && !playlist.isDefault && !isEditing">
               <button class="btn-icon" type="button"
                       (click)="enterEdit()" title="ערוך">
