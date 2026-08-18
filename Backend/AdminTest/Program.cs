@@ -223,7 +223,8 @@ builder.Services.AddCors(options =>
             policy.WithOrigins(corsOrigins)
                   .AllowAnyHeader()
                   .WithMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
-                  .AllowCredentials(); // 🔐 מאפשר cookies ו-authentication credentials
+                  .AllowCredentials() // 🔐 מאפשר cookies ו-authentication credentials
+                  .SetPreflightMaxAge(TimeSpan.FromHours(24));
         });
 });
 

@@ -511,26 +511,29 @@ public class ArticleService : IArticleService
                 && a.ArticleCategories.Any(ac =>
                     ac.Category.Section == ArticleCategorySection.News
                     || ac.Category.Section == ArticleCategorySection.Content))
-            .Select(a => new
-            {
-                Article = new ArticleBannerDto
-                {
-                    Id = a.Id,
-                    Title = a.Title,
-                    FeaturedImageUrl = a.FeaturedImageUrl,
-                    Slug = a.Slug,
-                    ShortDescription = a.ShortDescription,
-                    ContentType = a.ContentType,
-                    IsFeatured = a.IsFeatured,
-                    DisplayOrder = a.DisplayOrder,
-                    PublishDate = a.PublishDate
-                },
-                WeeklyViews = _context.ArticleViews.Count(av =>
-                    av.ArticleId == a.Id
-                    && av.ViewedAt >= weekAgo
+            .GroupJoin(
+                _context.ArticleViews.AsNoTracking().Where(av =>
+                    av.ViewedAt >= weekAgo
                     && av.ViewedAt <= now),
-                TotalViews = a.ViewCount
-            })
+                a => a.Id,
+                av => av.ArticleId,
+                (a, views) => new
+                {
+                    Article = new ArticleBannerDto
+                    {
+                        Id = a.Id,
+                        Title = a.Title,
+                        FeaturedImageUrl = a.FeaturedImageUrl,
+                        Slug = a.Slug,
+                        ShortDescription = a.ShortDescription,
+                        ContentType = a.ContentType,
+                        IsFeatured = a.IsFeatured,
+                        DisplayOrder = a.DisplayOrder,
+                        PublishDate = a.PublishDate
+                    },
+                    WeeklyViews = views.Count(),
+                    TotalViews = a.ViewCount
+                })
             .ToListAsync();
 
         var latestArticles = candidates

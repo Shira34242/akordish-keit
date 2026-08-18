@@ -158,6 +158,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
   private heroSurfaceEl?: HTMLElement | null;
   private heroOverlayEl?: HTMLElement | null;
   private viralObserver?: IntersectionObserver;
+  private viralLoadArmed = true;
   private viralOffset = 0;
   private restoreViralOffset = 0;
   private readonly viralPageSize = 8;
@@ -1032,19 +1033,19 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
   }
 
   private initViralObserver(): void {
-    if (this.viralObserver) this.viralObserver.disconnect();
+    if (this.viralObserver) return;
 
     this.viralObserver = new IntersectionObserver(
       entries => {
         for (const entry of entries) {
-          if (!entry.isIntersecting) continue;
+          if (entry.target !== this.viralSentinel?.nativeElement) continue;
 
-          if (entry.target === this.viralSection?.nativeElement) {
-            this.loadViralArticles();
-          }
-
-          if (entry.target === this.viralSentinel?.nativeElement) {
+          if (entry.isIntersecting) {
+            if (!this.viralLoadArmed) continue;
+            this.viralLoadArmed = false;
             this.revealMoreViralArticles();
+          } else {
+            this.viralLoadArmed = true;
           }
         }
       },
@@ -1053,14 +1054,20 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
       { rootMargin: '480px 0px', threshold: 0 }
     );
 
-    if (this.viralSection?.nativeElement) {
-      this.viralObserver.observe(this.viralSection.nativeElement);
-    }
-    if (this.viralSentinel?.nativeElement) {
-      this.viralObserver.observe(this.viralSentinel.nativeElement);
+    this.observeViralSentinel();
+  }
+
+  private observeViralSentinel(): void {
+    if (!this.viralObserver) {
+      this.initViralObserver();
+      return;
     }
 
-    this.checkViralScrollPosition();
+    const sentinel = this.viralSentinel?.nativeElement;
+    if (sentinel) {
+      this.viralObserver.disconnect();
+      this.viralObserver.observe(sentinel);
+    }
   }
 
   /**
@@ -1187,7 +1194,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
     this.viralArticlesLoaded = true;
     this.loadingViralArticles = false;
     this.scrollRestoration.saveViewState('home', { viralOffset: this.viralOffset });
-    setTimeout(() => this.initViralObserver(), 0);
+    setTimeout(() => this.observeViralSentinel(), 0);
   }
 
   private uniqueArticles<T extends { id: number }>(articles: T[]): T[] {
@@ -1204,7 +1211,6 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
     if (this.visibleViralCount < this.viralArticles.length) {
       this.visibleViralCount = Math.min(this.visibleViralCount + this.viralRevealStep, this.viralArticles.length);
       this.refreshVisibleViralArticles();
-      setTimeout(() => this.initViralObserver(), 0);
       return;
     }
     this.loadViralArticles();
