@@ -273,8 +273,8 @@ public class NotificationService : INotificationService
             .Select(group => new BroadcastNotificationAnalyticsDto
             {
                 SentAt = group.Key.CreatedAt,
-                Title = group.Max(notification => notification.Title),
-                Message = group.Max(notification => notification.Message),
+                Title = group.Max(notification => notification.Title) ?? string.Empty,
+                Message = group.Max(notification => notification.Message) ?? string.Empty,
                 CampaignName = group.Max(notification => notification.CampaignName),
                 AudienceLabel = group.Max(notification => notification.AudienceLabel),
                 SentCount = group.Count(),

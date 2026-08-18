@@ -3,7 +3,6 @@ using AkordishKeit.Models.DTOs;
 using AkordishKeit.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
-using System.Text.RegularExpressions;
 
 namespace AkordishKeit.Services;
 
@@ -92,7 +91,7 @@ public class MarketingCampaignService : IMarketingCampaignService
         {
             Name = request.Name.Trim(),
             Source = request.Source.Trim(),
-            Code = await ResolveUniqueCodeAsync(request.Code),
+            Code = await GenerateUniqueCodeAsync(),
             TargetPath = targetPath,
             CreatedByUserId = createdByUserId,
             CreatedAt = DateTime.UtcNow,
@@ -135,8 +134,6 @@ public class MarketingCampaignService : IMarketingCampaignService
         campaign.Name = request.Name.Trim();
         campaign.Source = request.Source.Trim();
         campaign.TargetPath = NormalizeTargetPath(request.TargetPath);
-        if (!string.IsNullOrWhiteSpace(request.Code))
-            campaign.Code = await ResolveUniqueCodeAsync(request.Code, campaign.Id);
         campaign.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
@@ -161,23 +158,6 @@ public class MarketingCampaignService : IMarketingCampaignService
         _context.MarketingCampaigns.Remove(campaign);
         await _context.SaveChangesAsync();
         return true;
-    }
-
-    public async Task<MarketingCampaignRedirectDto?> ResolveAsync(string code)
-    {
-        var normalizedCode = NormalizeCode(code);
-        if (string.IsNullOrEmpty(normalizedCode)) return null;
-
-        var campaign = await _context.MarketingCampaigns.AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Code == normalizedCode);
-        if (campaign == null) return null;
-
-        return new MarketingCampaignRedirectDto
-        {
-            DestinationPath = campaign.IsActive
-                ? AppendTrackingParameters(campaign.TargetPath, campaign)
-                : campaign.TargetPath
-        };
     }
 
     public async Task<bool> TrackVisitAsync(TrackMarketingCampaignVisitRequest request, int? userId, string? ipAddress, string? userAgent)
@@ -248,21 +228,8 @@ public class MarketingCampaignService : IMarketingCampaignService
         }
     }
 
-    private async Task<string> ResolveUniqueCodeAsync(string? requestedCode, int? excludedCampaignId = null)
+    private async Task<string> GenerateUniqueCodeAsync()
     {
-        if (!string.IsNullOrWhiteSpace(requestedCode))
-        {
-            var customCode = requestedCode.Trim().ToLowerInvariant();
-            if (customCode.Length < 3 ||
-                !Regex.IsMatch(customCode, "^[a-z0-9]+(?:-[a-z0-9]+)*$"))
-                throw new ArgumentException("סיומת הקישור יכולה לכלול 3–32 תווים: אותיות באנגלית, מספרים ומקפים בין המילים");
-
-            var exists = await _context.MarketingCampaigns.AsNoTracking()
-                .AnyAsync(x => x.Code == customCode && (!excludedCampaignId.HasValue || x.Id != excludedCampaignId.Value));
-            if (exists) throw new ArgumentException("סיומת הקישור כבר נמצאת בשימוש. יש לבחור סיומת אחרת");
-            return customCode;
-        }
-
         for (var attempt = 0; attempt < 8; attempt++)
         {
             var code = RandomNumberGenerator.GetHexString(6).ToLowerInvariant();
@@ -279,8 +246,6 @@ public class MarketingCampaignService : IMarketingCampaignService
         if (string.IsNullOrWhiteSpace(path) ||
             !path.StartsWith('/') ||
             path.StartsWith("//") ||
-            path.Equals("/go", StringComparison.OrdinalIgnoreCase) ||
-            path.StartsWith("/go/", StringComparison.OrdinalIgnoreCase) ||
             path.Contains('\\') ||
             path.Any(char.IsControl))
             throw new ArgumentException("יש להזין נתיב פנימי באתר שמתחיל ב-/");
@@ -289,7 +254,7 @@ public class MarketingCampaignService : IMarketingCampaignService
 
     private static string BuildTrackingUrl(string frontendBaseUrl, MarketingCampaign campaign)
     {
-        return $"{frontendBaseUrl.TrimEnd('/')}/go/{Uri.EscapeDataString(campaign.Code)}";
+        return $"{frontendBaseUrl.TrimEnd('/')}{AppendTrackingParameters(campaign.TargetPath, campaign)}";
     }
 
     private static string AppendTrackingParameters(string targetPath, MarketingCampaign campaign)

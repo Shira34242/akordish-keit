@@ -92,15 +92,6 @@ public class MarketingCampaignsController : ControllerBase
         return Ok(new { tracked });
     }
 
-    [HttpGet("resolve/{code}")]
-    [AllowAnonymous]
-    [EnableRateLimiting("analytics-tracking")]
-    public async Task<IActionResult> Resolve(string code)
-    {
-        var result = await _service.ResolveAsync(code);
-        return result == null ? NotFound() : Ok(result);
-    }
-
     private string GetFrontendBaseUrl()
     {
         var value = _configuration["Frontend:BaseUrl"]?.Trim().TrimEnd('/');

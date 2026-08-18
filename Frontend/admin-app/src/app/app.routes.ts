@@ -6,11 +6,6 @@ import { pendingArticleDraftGuard } from './guards/pending-article-draft.guard';
 
 export const routes: Routes = [
     {
-        path: 'go/:code',
-        loadComponent: () => import('./components/public/marketing-redirect/marketing-redirect.component').then(m => m.MarketingRedirectComponent),
-        title: 'מעביר אותך - אקורדישקייט'
-    },
-    {
         path: 'unsubscribe',
         loadComponent: () => import('./components/public/unsubscribe/unsubscribe.component').then(m => m.UnsubscribeComponent),
         title: 'הסרה מרשימת התפוצה - אקורדישקייט'

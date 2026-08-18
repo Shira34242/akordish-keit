@@ -42,8 +42,6 @@ export class MarketingLinksComponent implements OnInit {
   campaignName = '';
   source = '';
   targetPath = '/';
-  campaignCode = '';
-  originalCode = '';
   searchTerm = '';
   statusFilter: StatusFilter = 'all';
   sortBy: SortOption = 'created';
@@ -74,10 +72,6 @@ export class MarketingLinksComponent implements OnInit {
     });
   }
 
-  get codeChanged(): boolean {
-    return !!this.editingCampaign && this.campaignCode.trim().toLowerCase() !== this.originalCode;
-  }
-
   loadDashboard(): void {
     this.loading = true;
     this.errorMessage = '';
@@ -106,8 +100,6 @@ export class MarketingLinksComponent implements OnInit {
     this.campaignName = '';
     this.source = '';
     this.targetPath = '/';
-    this.campaignCode = '';
-    this.originalCode = '';
     this.errorMessage = '';
     this.formOpen = true;
   }
@@ -117,8 +109,6 @@ export class MarketingLinksComponent implements OnInit {
     this.campaignName = campaign.name;
     this.source = campaign.source;
     this.targetPath = campaign.targetPath;
-    this.campaignCode = campaign.code;
-    this.originalCode = campaign.code;
     this.errorMessage = '';
     this.formOpen = true;
   }
@@ -130,16 +120,10 @@ export class MarketingLinksComponent implements OnInit {
   }
 
   saveCampaign(): void {
-    const normalizedCode = this.normalizeCampaignCode(this.campaignCode);
-    if (this.campaignCode.trim() && !normalizedCode) {
-      this.errorMessage = 'סיומת הקישור צריכה להכיל 3–32 תווים: אותיות באנגלית, מספרים ומקפים בין המילים';
-      return;
-    }
     const request = {
       name: this.campaignName.trim(),
       source: this.source.trim(),
-      targetPath: this.normalizePath(this.targetPath),
-      code: normalizedCode || undefined
+      targetPath: this.normalizePath(this.targetPath)
     };
     if (request.name.length < 2 || request.source.length < 2 || !request.targetPath) {
       this.errorMessage = 'יש למלא שם פרסום, מקור ונתיב תקין שמתחיל ב-/';
@@ -219,14 +203,6 @@ export class MarketingLinksComponent implements OnInit {
     const trimmed = value.trim();
     if (!trimmed.startsWith('/') || trimmed.startsWith('//') || trimmed.includes('\\')) return null;
     return trimmed;
-  }
-
-  private normalizeCampaignCode(value: string): string | null {
-    const normalized = value.trim().toLowerCase();
-    if (!normalized) return null;
-    return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(normalized) && normalized.length >= 3 && normalized.length <= 32
-      ? normalized
-      : null;
   }
 
   private toDateInput(date: Date): string {
