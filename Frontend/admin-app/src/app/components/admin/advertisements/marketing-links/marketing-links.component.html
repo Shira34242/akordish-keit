@@ -128,13 +128,19 @@
     <header class="modal-header">
       <div>
         <h2>{{ editingCampaign ? 'עריכת קישור' : 'קישור שיתוף חדש' }}</h2>
-        <p>{{ editingCampaign ? 'קוד המעקב והנתונים הקיימים יישמרו.' : 'לאחר השמירה הקישור יועתק אוטומטית.' }}</p>
+        <p>{{ editingCampaign ? 'נתוני המדידה הקיימים יישמרו גם לאחר העריכה.' : 'לאחר השמירה הקישור הקצר יועתק אוטומטית.' }}</p>
       </div>
       <button type="button" class="icon-button" aria-label="סגירה" (click)="closeForm()"><span class="material-icons">close</span></button>
     </header>
     <form (ngSubmit)="saveCampaign()" #campaignForm="ngForm">
       <label><span>שם הפרסום</span><input name="campaignName" [(ngModel)]="campaignName" maxlength="160" required minlength="2" placeholder="לדוגמה: שיתוף פעולה עם ערוץ פלוני"></label>
       <label><span>מקור</span><input name="source" [(ngModel)]="source" maxlength="80" required minlength="2" placeholder="לדוגמה: WhatsApp, Instagram או YouTube"></label>
+      <label class="code-field">
+        <span>סיומת מותאמת לקישור <em>לא חובה</em></span>
+        <div class="code-input" dir="ltr"><span>/go/</span><input name="campaignCode" [(ngModel)]="campaignCode" maxlength="32" minlength="3" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" placeholder="instagram-daniel" autocomplete="off"></div>
+        <small>אותיות באנגלית, מספרים ומקפים בלבד. אם השדה יישאר ריק, תיווצר סיומת אוטומטית.</small>
+      </label>
+      <p class="code-warning" *ngIf="codeChanged"><span class="material-icons">warning_amber</span> שינוי הסיומת יבטל את הקישור הישן. פרסומים שכבר משתמשים בו יפסיקו לעבוד.</p>
       <label><span>בחירת דף באתר</span><select name="targetSuggestion" [(ngModel)]="targetPath"><option *ngFor="let target of targetSuggestions" [value]="target.path">{{ target.label }} — {{ target.path }}</option></select></label>
       <label><span>או נתיב מדויק באתר</span><input name="targetPath" [(ngModel)]="targetPath" maxlength="500" required placeholder="/news/כתבה-לדוגמה" dir="ltr"><small>יש להזין רק כתובת פנימית שמתחילה ב-/</small></label>
       <div class="modal-actions">

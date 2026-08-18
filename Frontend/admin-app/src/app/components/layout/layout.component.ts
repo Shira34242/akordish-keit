@@ -296,6 +296,10 @@ export class LayoutComponent implements OnInit, AfterViewInit, OnDestroy {
     return !!(this.user && (this.user.role === 'Admin' || this.user.role === 4));
   }
 
+  get isAdminOrManager(): boolean {
+    return this.authService.isAdminOrManager(this.user);
+  }
+
   get canEditArtistPage(): boolean {
     return this.isAdmin && !!this.adminEditTarget;
   }

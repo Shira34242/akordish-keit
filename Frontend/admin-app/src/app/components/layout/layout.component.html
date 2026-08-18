@@ -40,7 +40,7 @@
                         </a>
                         <div class="user-menu-divider"></div>
                         <ul class="user-menu-list">
-                            <li *ngIf="user.role === 'Admin' || user.role === 4"><button type="button" class="user-menu-item" (click)="goToAdmin()">
+                            <li *ngIf="isAdminOrManager"><button type="button" class="user-menu-item" (click)="goToAdmin()">
                                 <span class="material-icons menu-icon">admin_panel_settings</span>
                                 <span>{{ 'user.admin' | translate }}</span>
                             </button></li>
@@ -102,7 +102,7 @@
                         </a>
                         <div class="user-menu-divider"></div>
                         <ul class="user-menu-list">
-                            <li *ngIf="user.role === 'Admin' || user.role === 4"><button type="button" class="user-menu-item" (click)="goToAdmin()">
+                            <li *ngIf="isAdminOrManager"><button type="button" class="user-menu-item" (click)="goToAdmin()">
                                 <span class="material-icons menu-icon">admin_panel_settings</span>
                                 <span>{{ 'user.admin' | translate }}</span>
                             </button></li>

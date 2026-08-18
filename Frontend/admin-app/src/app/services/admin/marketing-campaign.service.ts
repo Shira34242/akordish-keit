@@ -33,6 +33,11 @@ export interface CreateMarketingCampaignRequest {
   name: string;
   source: string;
   targetPath: string;
+  code?: string;
+}
+
+export interface MarketingCampaignRedirect {
+  destinationPath: string;
 }
 
 export type UpdateMarketingCampaignRequest = CreateMarketingCampaignRequest;
@@ -64,5 +69,9 @@ export class MarketingCampaignService {
 
   setStatus(id: number, isActive: boolean): Observable<void> {
     return this.http.patch<void>(`${this.endpoint}/${id}/status`, { isActive });
+  }
+
+  resolve(code: string): Observable<MarketingCampaignRedirect> {
+    return this.http.get<MarketingCampaignRedirect>(`${this.endpoint}/resolve/${encodeURIComponent(code)}`);
   }
 }

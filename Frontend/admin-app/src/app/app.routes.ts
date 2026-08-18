@@ -6,6 +6,11 @@ import { pendingArticleDraftGuard } from './guards/pending-article-draft.guard';
 
 export const routes: Routes = [
     {
+        path: 'go/:code',
+        loadComponent: () => import('./components/public/marketing-redirect/marketing-redirect.component').then(m => m.MarketingRedirectComponent),
+        title: 'מעביר אותך - אקורדישקייט'
+    },
+    {
         path: 'unsubscribe',
         loadComponent: () => import('./components/public/unsubscribe/unsubscribe.component').then(m => m.UnsubscribeComponent),
         title: 'הסרה מרשימת התפוצה - אקורדישקייט'
@@ -318,7 +323,7 @@ export const routes: Routes = [
     {
         path: 'admin',
         loadComponent: () => import('./components/admin/admin-layout/admin-layout.component').then(m => m.AdminLayoutComponent),
-        canActivate: [adminGuard], // 🔒 הגנה! רק Admin יכול להגיע לכאן
+        canActivate: [adminGuard], // 🔒 גישה למנהלי Admin ו-Manager בלבד
         children: [
             { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
             {

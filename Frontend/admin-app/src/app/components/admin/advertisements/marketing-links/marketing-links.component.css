@@ -33,6 +33,14 @@ input:focus, select:focus { outline: 2px solid #ddff53; outline-offset: 1px; bor
 form { display: flex; flex-direction: column; gap: var(--space-base); }
 form input, form select { height: 44px; }
 form small { color: #777; font-size: var(--font-xs); font-weight: 400; }
+.code-field em { color: #777; font-size: 11px; font-style: normal; font-weight: 400; }
+.code-input { display: flex; align-items: center; overflow: hidden; height: 44px; border: 1px solid #d4d4d4; border-radius: 10px; background: #fff; }
+.code-input:focus-within { outline: 2px solid #ddff53; outline-offset: 1px; border-color: #404040; }
+.code-input > span { display: grid; height: 100%; padding: 0 var(--space-md); place-items: center; border-right: 1px solid #e1e1e1; background: #f2f2f2; color: #555; font-size: var(--font-sm); font-weight: 700; }
+.code-input input { height: 100%; border: 0; border-radius: 0; direction: ltr; }
+.code-input input:focus { outline: 0; }
+.code-warning { display: flex; align-items: flex-start; gap: var(--space-sm); margin: 0; padding: var(--space-md); border-radius: 12px; background: #f2f2f2; color: #404040; font-size: var(--font-xs); line-height: 1.5; }
+.code-warning .material-icons { flex: 0 0 auto; font-size: 19px; }
 
 .primary-button, .secondary-button, .filter-button, .danger-button { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-sm); min-height: 40px; padding: 0 var(--space-lg); border: 0; border-radius: 999px; cursor: pointer; font: inherit; font-size: var(--font-sm); font-weight: 800; }
 .primary-button { background: #000; color: #ddff53; }

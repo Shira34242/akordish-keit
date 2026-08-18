@@ -9,7 +9,7 @@ namespace AkordishKeit.Controllers;
 
 [ApiController]
 [Route("api/marketing-campaigns")]
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin,Manager")]
 public class MarketingCampaignsController : ControllerBase
 {
     private readonly IMarketingCampaignService _service;
@@ -90,6 +90,15 @@ public class MarketingCampaignsController : ControllerBase
             HttpContext.Connection.RemoteIpAddress?.ToString(),
             Request.Headers.UserAgent.ToString());
         return Ok(new { tracked });
+    }
+
+    [HttpGet("resolve/{code}")]
+    [AllowAnonymous]
+    [EnableRateLimiting("analytics-tracking")]
+    public async Task<IActionResult> Resolve(string code)
+    {
+        var result = await _service.ResolveAsync(code);
+        return result == null ? NotFound() : Ok(result);
     }
 
     private string GetFrontendBaseUrl()

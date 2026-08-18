@@ -12,6 +12,9 @@ public class CreateMarketingCampaignRequest
 
     [Required, StringLength(500)]
     public string TargetPath { get; set; } = "/";
+
+    [StringLength(32)]
+    public string? Code { get; set; }
 }
 
 public class UpdateMarketingCampaignStatusRequest
@@ -29,6 +32,14 @@ public class UpdateMarketingCampaignRequest
 
     [Required, StringLength(500)]
     public string TargetPath { get; set; } = "/";
+
+    [StringLength(32)]
+    public string? Code { get; set; }
+}
+
+public class MarketingCampaignRedirectDto
+{
+    public string DestinationPath { get; set; } = "/";
 }
 
 public class TrackMarketingCampaignVisitRequest

@@ -3,11 +3,11 @@ import { Router, CanActivateFn } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
 /**
- * AdminGuard - שומר שמוודא שהמשתמש הוא Admin
+ * AdminGuard - שומר שמוודא שהמשתמש הוא מנהל מורשה
  *
  * מה הוא עושה:
  * 1. בודק אם המשתמש מחובר
- * 2. בודק אם התפקיד שלו הוא 'Admin'
+ * 2. בודק אם התפקיד שלו הוא Admin או Manager
  * 3. אם כן - מאפשר גישה למערכת הניהול ✅
  * 4. אם לא - מונע גישה ומחזיר לדף הבית ❌
  *
@@ -26,11 +26,11 @@ export const adminGuard: CanActivateFn = (route, state) => {
     return false;
   }
 
-  // המשתמש מחובר - עכשיו בודקים אם הוא Admin
+  // המשתמש מחובר - עכשיו בודקים אם הוא מנהל מורשה
   const user = authService.currentUserValue;
 
-  if (user && (user.role === 'Admin' || user.role === 4)) {
-    // המשתמש הוא Admin - מאפשרים גישה ✅
+  if (authService.isAdminOrManager(user)) {
+    // המשתמש הוא Admin או Manager - מאפשרים גישה ✅
     return true;
   }
 
