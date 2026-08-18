@@ -866,7 +866,8 @@
                     <app-news-banner
                         *ngFor="let article of musicNewsArticles"
                         [article]="article"
-                        [showDescription]="false">
+                        [showDescription]="false"
+                        [trackRecommendationExposure]="true">
                     </app-news-banner>
 
                     <div class="music-news-loading" *ngIf="isLoadingMoreNews">

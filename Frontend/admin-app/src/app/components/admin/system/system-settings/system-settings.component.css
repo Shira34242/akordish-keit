@@ -121,10 +121,6 @@
   border: none;
 }
 
-.access-gate-card {
-  align-items: flex-start;
-}
-
 .join-index-card {
   align-items: flex-start;
 }
@@ -171,12 +167,6 @@
   align-items: center;
   gap: var(--space-sm);
   flex-shrink: 0;
-}
-
-.access-gate-control {
-  align-items: flex-start;
-  flex-wrap: wrap;
-  justify-content: flex-end;
 }
 
 .join-index-control {
@@ -327,7 +317,6 @@
   }
 
   .setting-control,
-  .access-gate-control,
   .text-control {
     align-items: stretch;
     width: 100%;

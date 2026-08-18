@@ -5,7 +5,6 @@ import { filter } from 'rxjs';
 import { AddSongModalComponent } from './components/add-song-modal/add-song-modal.component';
 import { ReportModalComponent } from './components/shared/report-modal/report-modal.component';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { ModalService, ReportModalState } from './services/modal.service';
 import { SiteAlertsComponent } from './components/shared/site-alerts/site-alerts.component';
 import { SiteAlertService } from './services/site-alert.service';
@@ -13,7 +12,6 @@ import { RequiredFieldFeedbackService } from './services/required-field-feedback
 import { AuthService } from './services/auth.service';
 import { SeoRouteService } from './services/seo-route.service';
 import { AdBlockDetectionService } from './services/adblock-detection.service';
-import { SystemSettingsService } from './services/system-settings.service';
 import { PageViewAnalyticsService } from './services/page-view-analytics.service';
 import { ReportContextService } from './services/report-context.service';
 import { ScrollRestorationService } from './services/scroll-restoration.service';
@@ -21,76 +19,12 @@ import { ScrollRestorationService } from './services/scroll-restoration.service'
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, AddSongModalComponent, ReportModalComponent, CommonModule, FormsModule, SiteAlertsComponent],
+  imports: [RouterOutlet, AddSongModalComponent, ReportModalComponent, CommonModule, SiteAlertsComponent],
   templateUrl: './app.html',
   styleUrls: ['./app.css']
 })
 export class AppComponent implements OnInit {
   title = 'אקורדישקייט';
-
-  showGate = false;
-  gateSubmitting = false;
-  gateInput = '';
-  gateError: string | null = null;
-  gateEmail = '';
-  gateInterestMessage: string | null = null;
-  gateInterestSubmitting = false;
-  gateButtonConfettiActive = false;
-  gateButtonConfettiPieces = Array.from({ length: 18 }, (_, index) => {
-    const angle = (index / 18) * Math.PI * 2;
-    const distance = 30 + (index % 3) * 10;
-
-    return {
-      x: `${Math.round(Math.cos(angle) * distance)}px`,
-      y: `${Math.round(Math.sin(angle) * distance)}px`,
-      r: `${90 + index * 28}deg`,
-      d: `${(index % 6) * 18}ms`
-    };
-  });
-
-  submitGate() {
-    if (!this.gateInput.trim() || this.gateSubmitting) return;
-
-    this.gateSubmitting = true;
-    this.gateError = null;
-
-    this.settingsService.verifyAccessGate(this.gateInput).subscribe({
-      next: (status) => {
-        this.showGate = false;
-        this.gateSubmitting = false;
-        this.gateInput = '';
-        this.startAppServices();
-      },
-      error: () => {
-        this.gateError = 'סיסמה שגויה';
-        this.gateSubmitting = false;
-      }
-    });
-  }
-
-  submitGateInterest(): void {
-    const email = this.gateEmail.trim();
-    if (!email || this.gateInterestSubmitting) {
-      this.gateInterestMessage = 'אפשר להשאיר מייל ונעדכן כשהאתר יעלה.';
-      return;
-    }
-
-    this.gateInterestSubmitting = true;
-    this.gateInterestMessage = null;
-
-    this.settingsService.subscribeComingSoon(email).subscribe({
-      next: () => {
-        this.gateInterestSubmitting = false;
-        this.gateEmail = '';
-        this.fireGateButtonConfetti();
-        this.gateInterestMessage = 'נרשמת בהצלחה לקבלת עדכון.';
-      },
-      error: () => {
-        this.gateInterestSubmitting = false;
-        this.gateInterestMessage = 'לא הצלחנו לשמור את המייל. נסו שוב בעוד רגע.';
-      }
-    });
-  }
 
   isAddSongModalOpen = false;
   editMode = false;
@@ -113,7 +47,6 @@ export class AppComponent implements OnInit {
     private authService: AuthService,
     private seoRouteService: SeoRouteService,
     private adBlockDetectionService: AdBlockDetectionService,
-    private settingsService: SystemSettingsService,
     private router: Router,
     private pageViewAnalytics: PageViewAnalyticsService,
     private reportContextService: ReportContextService,
@@ -123,49 +56,7 @@ export class AppComponent implements OnInit {
   ngOnInit() {
     void this.scrollRestoration;
     this.authService.captureReferralCodeFromUrl();
-    this.checkAccessGate();
-  }
-
-  private checkAccessGate(): void {
-    if (this.isPublicGateBypassPath()) {
-      this.showGate = false;
-      this.startAppServices();
-      return;
-    }
-
-    this.settingsService.getAccessGate().subscribe({
-      next: (status) => {
-        this.showGate = status.enabled && !status.hasAccess;
-        if (!this.showGate) {
-          this.startAppServices();
-        }
-      },
-      error: () => {
-        this.showGate = false;
-        this.startAppServices();
-        // שגיאה בבדיקת ה-gate לא חוסמת את האפליקציה
-      }
-    });
-  }
-
-  private isPublicGateBypassPath(): boolean {
-    if (typeof window === 'undefined') return false;
-
-    const path = window.location.pathname.toLowerCase();
-    return path === '/unsubscribe'
-      || path.startsWith('/unsubscribe/')
-      || path === '/join-index'
-      || path.startsWith('/join-index/')
-      || path === '/join-chords'
-      || path.startsWith('/join-chords/');
-  }
-
-  fireGateButtonConfetti(): void {
-    this.gateButtonConfettiActive = false;
-    setTimeout(() => {
-      this.gateButtonConfettiActive = true;
-      setTimeout(() => this.gateButtonConfettiActive = false, 700);
-    });
+    this.startAppServices();
   }
 
   private startAppServices(): void {

@@ -521,6 +521,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
     this.rafPending = true;
     requestAnimationFrame(() => {
       this.shrinkHero();
+      this.checkViralScrollPosition();
       this.rafPending = false;
     });
   }
@@ -1058,6 +1059,22 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
     if (this.viralSentinel?.nativeElement) {
       this.viralObserver.observe(this.viralSentinel.nativeElement);
     }
+
+    this.checkViralScrollPosition();
+  }
+
+  /**
+   * IntersectionObserver can miss a freshly rendered sentinel when the page
+   * shifts during image loading. The scroll-position check keeps the stream
+   * progressing in that case, while the loading guard prevents duplicate calls.
+   */
+  private checkViralScrollPosition(): void {
+    const sentinel = this.viralSentinel?.nativeElement;
+    if (!sentinel || !this.canRevealMoreViralArticles) return;
+
+    if (sentinel.getBoundingClientRect().top > window.innerHeight + 480) return;
+
+    this.ngZone.run(() => this.revealMoreViralArticles());
   }
 
   private loadViralArticles(): void {

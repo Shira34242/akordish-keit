@@ -6,11 +6,7 @@ import { AgencyListDto } from '../../../../models/agency.model';
 import { AgencyService } from '../../../../services/agency.service';
 import { MediaService } from '../../../../services/admin/media.service';
 import { forkJoin } from 'rxjs';
-import {
-  SiteAccessGateStatusDto,
-  SystemSettingsService,
-  SystemSettingDto
-} from '../../../../services/system-settings.service';
+import { SystemSettingsService, SystemSettingDto } from '../../../../services/system-settings.service';
 
 interface BannerImageSetting {
   key: string;
@@ -39,13 +35,6 @@ export class SystemSettingsComponent implements OnInit {
   savingKey: string | null = null;
   error: string | null = null;
   successKey: string | null = null;
-  accessGate: SiteAccessGateStatusDto | null = null;
-  accessGateDraft = {
-    enabled: false,
-    password: ''
-  };
-  accessGateSaving = false;
-  accessGateSuccess = false;
   joinIndexCopied = false;
   joinChordsCopied = false;
   agencyJoinCopied = false;
@@ -70,7 +59,6 @@ export class SystemSettingsComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadSettings();
-    this.loadAccessGate();
     this.loadAgencies();
   }
 
@@ -94,18 +82,6 @@ export class SystemSettingsComponent implements OnInit {
       error: () => {
         this.error = 'שגיאה בטעינת ההגדרות';
         this.loading = false;
-      }
-    });
-  }
-
-  loadAccessGate(): void {
-    this.settingsService.getAccessGate().subscribe({
-      next: (status) => {
-        this.accessGate = status;
-        this.accessGateDraft.enabled = status.enabled;
-      },
-      error: () => {
-        this.error = 'שגיאה בטעינת הגדרות סיסמת הכניסה';
       }
     });
   }
@@ -140,32 +116,6 @@ export class SystemSettingsComponent implements OnInit {
       error: () => {
         this.error = `שגיאה בשמירת הגדרה '${setting.key}'`;
         this.savingKey = null;
-      }
-    });
-  }
-
-  saveAccessGate(): void {
-    this.accessGateSaving = true;
-    this.accessGateSuccess = false;
-    this.error = null;
-
-    const password = this.accessGateDraft.password.trim();
-    this.settingsService.updateAccessGate({
-      enabled: this.accessGateDraft.enabled,
-      ...(password ? { password } : {})
-    }).subscribe({
-      next: (status) => {
-        this.accessGate = status;
-        this.accessGateDraft.enabled = status.enabled;
-        this.accessGateDraft.password = '';
-        this.accessGateSaving = false;
-        this.accessGateSuccess = true;
-        setTimeout(() => { this.accessGateSuccess = false; }, 2500);
-        this.loadSettings();
-      },
-      error: (error) => {
-        this.error = error?.error?.message || 'שגיאה בשמירת הגדרות סיסמת הכניסה';
-        this.accessGateSaving = false;
       }
     });
   }

@@ -97,7 +97,8 @@
   gap: var(--space-sm);
 }
 
-.soft-reminder-form label > span {
+.soft-reminder-form label > span,
+.birthday-field > span {
   color: #000000;
   font-family: 'Open Sans', sans-serif;
   font-size: var(--font-sm);
@@ -136,13 +137,24 @@
   gap: var(--space-base);
 }
 
-.month-select {
+.birthday-field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+
+.month-select,
+.year-select {
   position: relative;
   width: min(18rem, 100%);
 }
 
 .month-select-trigger,
-.month-select-options button {
+.month-select-options button,
+.year-select-trigger,
+.year-select-options button {
   width: 100%;
   min-height: 40px;
   border: 1px solid rgba(0, 0, 0, 0.18);
@@ -156,7 +168,8 @@
   padding: 0 var(--space-sm);
 }
 
-.month-select-trigger {
+.month-select-trigger,
+.year-select-trigger {
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
@@ -164,11 +177,13 @@
   padding: 0 var(--space-base);
 }
 
-.month-select-trigger .material-icons {
+.month-select-trigger .material-icons,
+.year-select-trigger .material-icons {
   font-size: 20px;
 }
 
-.month-select-options {
+.month-select-options,
+.year-select-options {
   position: absolute;
   top: calc(100% + var(--space-sm));
   right: 0;
@@ -184,20 +199,26 @@
   gap: var(--space-sm);
 }
 
-.month-select-options button {
+.month-select-options button,
+.year-select-options button {
   border-radius: 999px;
 }
 
 .month-select-trigger:hover,
 .month-select-trigger:focus-visible,
 .month-select-options button:hover,
-.month-select-options button:focus-visible {
+.month-select-options button:focus-visible,
+.year-select-trigger:hover,
+.year-select-trigger:focus-visible,
+.year-select-options button:hover,
+.year-select-options button:focus-visible {
   background: rgba(255, 255, 255, 0.35);
   outline: 2px solid rgba(0, 0, 0, 0.24);
   outline-offset: 1px;
 }
 
-.month-select-options button.is-selected {
+.month-select-options button.is-selected,
+.year-select-options button.is-selected {
   border-color: #000000;
   background: #000000;
   color: #ddff53;

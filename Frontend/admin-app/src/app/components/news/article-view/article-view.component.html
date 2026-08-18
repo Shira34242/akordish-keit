@@ -246,7 +246,10 @@
               spotTechnicalId="article_related_grid_slot_5">
             </app-media-item>
 
-            <app-news-banner [article]="relatedArticle"></app-news-banner>
+            <app-news-banner
+              [article]="relatedArticle"
+              [trackRecommendationExposure]="true">
+            </app-news-banner>
           </ng-container>
         </div>
 

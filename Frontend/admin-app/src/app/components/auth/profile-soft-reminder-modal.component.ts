@@ -31,6 +31,7 @@ export class ProfileSoftReminderModalComponent implements OnInit {
   citiesLoading = true;
   showCityDropdown = false;
   showMonthDropdown = false;
+  showYearDropdown = false;
 
   birthMonth: number | null = null;
   birthYear: number | null = null;
@@ -88,11 +89,33 @@ export class ProfileSoftReminderModalComponent implements OnInit {
 
   toggleMonthDropdown(): void {
     this.showMonthDropdown = !this.showMonthDropdown;
+    this.showYearDropdown = false;
   }
 
   selectBirthMonth(month: number): void {
     this.birthMonth = month;
     this.showMonthDropdown = false;
+  }
+
+  get birthYears(): number[] {
+    return Array.from(
+      { length: this.maxBirthYear - this.minBirthYear + 1 },
+      (_, index) => this.maxBirthYear - index
+    );
+  }
+
+  get selectedYearLabel(): string {
+    return this.birthYear?.toString() ?? 'בחירת שנה';
+  }
+
+  toggleYearDropdown(): void {
+    this.showYearDropdown = !this.showYearDropdown;
+    this.showMonthDropdown = false;
+  }
+
+  selectBirthYear(year: number): void {
+    this.birthYear = year;
+    this.showYearDropdown = false;
   }
 
   private setBirthDateFromUser(value?: string | null): void {
@@ -137,6 +160,9 @@ export class ProfileSoftReminderModalComponent implements OnInit {
     }
     if (!target.closest('.month-select')) {
       this.showMonthDropdown = false;
+    }
+    if (!target.closest('.year-select')) {
+      this.showYearDropdown = false;
     }
   }
 

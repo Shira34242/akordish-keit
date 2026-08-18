@@ -37,10 +37,11 @@ import { SeoService } from '../../services/seo.service';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { LanguageService } from '../../services/language.service';
 import { ArticleService } from '../../services/admin/article.service';
-import { Article, ArticleContentType, ArticleStatus } from '../../models/article.model';
+import { ArticleBanner, ArticleContentType } from '../../models/article.model';
 import { artistRoute, songSlug } from '../../utils/slug';
 import { CloudflareImagePipe, CloudflareImageSrcsetPipe } from '../../pipes/cloudflare-image.pipe';
 import { AdDisplayComponent } from '../public/ad-display/ad-display.component';
+import { RecommendationExposureService } from '../../services/recommendation-exposure.service';
 
 @Component({
     selector: 'app-song-page',
@@ -162,7 +163,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
     artistSongs: any[] = [];
     popularSongs: any[] = [];
     similarSongs: any[] = [];
-    musicNewsArticles: Article[] = [];
+    musicNewsArticles: ArticleBanner[] = [];
     isLoadingArtistSongs: boolean = false;
     isLoadingPopularSongs: boolean = false;
     isLoadingSimilarSongs: boolean = false;
@@ -170,7 +171,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
     isLoadingMoreNews: boolean = false;
     showMusicNewsLink: boolean = false;
     musicNewsLinkHeight: number = 44;
-    private allMusicNewsArticles: Article[] = [];
+    private allMusicNewsArticles: ArticleBanner[] = [];
     private musicNewsLoadedCount: number = 0;
     private newsObserver: IntersectionObserver | null = null;
 
@@ -195,6 +196,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
         private seo: SeoService,
         private langService: LanguageService,
         private articleService: ArticleService,
+        private recommendationExposure: RecommendationExposureService,
     ) { }
 
     handleRandomSongClick(): void {
@@ -1202,10 +1204,12 @@ private getKeyIndex(keyName: string): number {
         this.musicNewsLoadedCount = 0;
         this.musicNewsArticles = [];
         this.allMusicNewsArticles = [];
-        this.articleService.getArticles(1, 100, undefined, undefined, undefined, ArticleStatus.Published).subscribe({
+        this.articleService.getPublishedArticleBanners(ArticleContentType.News, 1, 30).subscribe({
             next: (response) => {
-                this.allMusicNewsArticles = (response.items || [])
-                    .filter(article => article.contentType == ArticleContentType.News);
+                this.allMusicNewsArticles = this.recommendationExposure.prioritize(
+                    response.items || [],
+                    article => article.id
+                );
                 this.isLoadingMusicNews = false;
                 this.expandMusicNews(5);
                 this.startNewsObserver();

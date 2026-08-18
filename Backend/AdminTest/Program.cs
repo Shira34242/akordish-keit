@@ -985,7 +985,6 @@ app.UseCors("AllowAngular");
 // Enable static files for uploaded media
 app.UseStaticFiles();
 app.UseRateLimiter();
-app.UseMiddleware<SiteAccessGateMiddleware>();
 
 // חשוב! Authentication לפני Authorization
 app.UseAuthentication();

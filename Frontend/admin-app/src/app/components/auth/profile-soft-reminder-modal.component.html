@@ -42,8 +42,8 @@
       </label>
 
       <div class="birthday-row">
-        <label>
-          <span>חודש לידה</span>
+        <div class="birthday-field" role="group" aria-labelledby="birth-month-label">
+          <span id="birth-month-label">חודש לידה</span>
           <div class="month-select">
             <button
               type="button"
@@ -66,22 +66,33 @@
               </button>
             </div>
           </div>
-        </label>
+        </div>
 
-        <label>
-          <span>שנת לידה</span>
-          <input
-            type="number"
-            name="birthYear"
-            [(ngModel)]="birthYear"
-            [min]="minBirthYear"
-            [max]="maxBirthYear"
-            step="1"
-            inputmode="numeric"
-            autocomplete="bday-year"
-            placeholder="בחירת שנה"
-            aria-label="שנת לידה">
-        </label>
+        <div class="birthday-field" role="group" aria-labelledby="birth-year-label">
+          <span id="birth-year-label">שנת לידה</span>
+          <div class="year-select">
+            <button
+              type="button"
+              class="year-select-trigger"
+              [attr.aria-expanded]="showYearDropdown"
+              aria-haspopup="listbox"
+              (click)="toggleYearDropdown()">
+              {{ selectedYearLabel }}
+              <span class="material-icons" aria-hidden="true">expand_more</span>
+            </button>
+            <div class="year-select-options" *ngIf="showYearDropdown" role="listbox" aria-label="בחירת שנת לידה">
+              <button
+                *ngFor="let year of birthYears"
+                type="button"
+                role="option"
+                [attr.aria-selected]="birthYear === year"
+                [class.is-selected]="birthYear === year"
+                (click)="selectBirthYear(year)">
+                {{ year }}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <p class="soft-reminder-error" *ngIf="errorMessage">{{ errorMessage }}</p>

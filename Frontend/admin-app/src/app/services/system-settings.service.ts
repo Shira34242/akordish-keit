@@ -17,29 +17,9 @@ export interface UpdateSystemSettingDto {
 
 export type PublicBannerImages = Record<string, string>;
 
-export interface SiteAccessGateStatusDto {
-  enabled: boolean;
-  passwordConfigured: boolean;
-  hasAccess: boolean;
-  accessVersion: string;
-}
-
-export interface UpdateSiteAccessGateDto {
-  enabled: boolean;
-  password?: string;
-}
-
-export interface ComingSoonSubscriptionDto {
-  id: number;
-  email: string;
-  createdAt: string;
-  isActive: boolean;
-}
-
 @Injectable({ providedIn: 'root' })
 export class SystemSettingsService {
   private readonly base = `${environment.apiBaseUrl}/api/SystemSettings`;
-  private readonly comingSoonBase = `${environment.apiBaseUrl}/api/ComingSoonSubscriptions`;
 
   constructor(private http: HttpClient) {}
 
@@ -52,27 +32,7 @@ export class SystemSettingsService {
     return this.http.put<SystemSettingDto>(`${this.base}/${key}`, body, { withCredentials: true });
   }
 
-  getAccessGate(): Observable<SiteAccessGateStatusDto> {
-    return this.http.get<SiteAccessGateStatusDto>(`${this.base}/access-gate`, { withCredentials: true });
-  }
-
-  verifyAccessGate(password: string): Observable<SiteAccessGateStatusDto> {
-    return this.http.post<SiteAccessGateStatusDto>(
-      `${this.base}/access-gate/verify`,
-      { password },
-      { withCredentials: true }
-    );
-  }
-
-  updateAccessGate(body: UpdateSiteAccessGateDto): Observable<SiteAccessGateStatusDto> {
-    return this.http.put<SiteAccessGateStatusDto>(`${this.base}/access-gate`, body, { withCredentials: true });
-  }
-
   getPublicBannerImages(): Observable<PublicBannerImages> {
     return this.http.get<PublicBannerImages>(`${this.base}/public/banner-images`);
-  }
-
-  subscribeComingSoon(email: string): Observable<ComingSoonSubscriptionDto> {
-    return this.http.post<ComingSoonSubscriptionDto>(this.comingSoonBase, { email });
   }
 }

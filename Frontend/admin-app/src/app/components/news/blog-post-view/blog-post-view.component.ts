@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
 import { ArticleService } from '../../../services/admin/article.service';
-import { Article, ArticleCategory, ArticleContentType, ArticleStatus } from '../../../models/article.model';
+import { Article, ArticleBanner, ArticleCategory, ArticleContentType } from '../../../models/article.model';
 import { AdDisplayComponent } from '../../public/ad-display/ad-display.component';
 import { NewsBannerComponent } from '../../shared/news-banner/news-banner.component';
 import { LikedContentService } from '../../../services/liked-content.service';
@@ -22,6 +22,7 @@ import { getArticlePath, getArticleSlug } from '../../../utils/article-route.uti
 import { attachArticleContentImageFallbacks, attachArticleContentMentionRouting, prepareArticleContentHtml } from '../../../utils/article-content-html.utils';
 import { artistRoute } from '../../../utils/slug';
 import { ScrollRestorationService } from '../../../services/scroll-restoration.service';
+import { RecommendationExposureService } from '../../../services/recommendation-exposure.service';
 
 @Component({
   selector: 'app-blog-post-view',
@@ -44,6 +45,7 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
   private readonly langService = inject(LanguageService);
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly scrollRestoration = inject(ScrollRestorationService);
+  private readonly recommendationExposure = inject(RecommendationExposureService);
 
   constructor() {
     this.destroyRef.onDestroy(() => this.contentPageService.clearCurrentArticle());
@@ -93,7 +95,7 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
   feedbackYesCount = 0;
   feedbackNoCount = 0;
   feedbackErrorMessage: string | null = null;
-  relatedArticles: Article[] = [];
+  relatedArticles: ArticleBanner[] = [];
   relatedArticlesVisibleCount = 4;
   isReportModalOpen = false;
   fullHeroHeight = 0;
@@ -118,7 +120,7 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
     return size;
   }
 
-  get visibleRelatedArticles(): Article[] {
+  get visibleRelatedArticles(): ArticleBanner[] {
     return this.relatedArticles.slice(0, this.relatedArticlesVisibleCount);
   }
 
@@ -259,6 +261,7 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
 
   private handleLoadedArticle(article: Article): void {
     this.article = article;
+    this.recommendationExposure.markId(article.id);
     this.isVideoActive = false;
     this.articleContentHtml = this.sanitizer.bypassSecurityTrustHtml(prepareArticleContentHtml(article.content));
     setTimeout(() => {
@@ -291,19 +294,19 @@ export class BlogPostViewComponent implements OnInit, AfterViewInit {
     this.relatedArticlesVisibleCount = 4;
     // Load articles from the same category and content type, excluding current article
     const categoryId = article.categoryIds && article.categoryIds.length > 0 ? article.categoryIds[0] : undefined;
-    this.articleService.getArticles(
-      1,
-      12, // Get 12 related articles
-      undefined,
-      categoryId,
+    this.articleService.getPublishedArticleBanners(
       article.contentType,
-      ArticleStatus.Published,
-      undefined
+      1,
+      12,
+      categoryId ? [categoryId] : undefined
     ).pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (result) => {
           // Filter out the current article and keep only even count
-          const filtered = result.items.filter(a => a.id !== article.id);
+          const filtered = this.recommendationExposure.prioritize(
+            result.items.filter(a => a.id !== article.id),
+            relatedArticle => relatedArticle.id
+          );
           const evenCount = Math.floor(filtered.length / 2) * 2;
           this.relatedArticles = filtered.slice(0, evenCount);
           this.relatedArticlesVisibleCount = Math.min(this.relatedArticlesVisibleCount, this.relatedArticles.length);

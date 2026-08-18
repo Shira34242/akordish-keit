@@ -241,7 +241,8 @@
         <div class="related-content-grid">
           <app-news-banner
             *ngFor="let relatedArticle of visibleRelatedArticles"
-            [article]="relatedArticle">
+            [article]="relatedArticle"
+            [trackRecommendationExposure]="true">
           </app-news-banner>
         </div>
 
