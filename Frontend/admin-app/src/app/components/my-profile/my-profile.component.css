@@ -1544,12 +1544,247 @@
    RESPONSIVE
    =========================== */
 
+@media (max-width: 768px) {
+  .profile-page {
+    margin-top: -50px;
+  }
+
+  .profile-hero {
+    position: relative;
+    top: auto;
+    left: auto;
+    right: auto;
+    width: 100%;
+    height: var(--profile-hero-full-height) !important;
+    padding: calc(50px + var(--space-lg)) var(--space-base) var(--space-xl);
+    border-radius: 0;
+    will-change: auto;
+  }
+
+  .profile-hero::after {
+    display: none;
+  }
+
+  .profile-hero-spacer {
+    display: none;
+  }
+
+  .profile-title {
+    font-size: var(--font-xl);
+    margin-bottom: var(--space-xs);
+  }
+
+  .profile-subtitle {
+    max-width: 24rem;
+    margin-bottom: var(--space-base);
+    font-size: var(--font-xs);
+    line-height: var(--lh-small);
+  }
+
+  .profile-avatar {
+    border-width: 4px;
+  }
+
+  .edit-avatar-btn,
+  .focus-avatar-btn {
+    width: 30px;
+    height: 30px;
+  }
+
+  .edit-avatar-btn .material-icons,
+  .focus-avatar-btn .material-icons {
+    font-size: 18px;
+  }
+
+  .profile-identity {
+    margin: calc(var(--space-3xl) + var(--space-base)) auto 0;
+    padding: 0 var(--space-base);
+  }
+
+  .profile-name {
+    font-size: var(--font-xl);
+  }
+
+  .profile-tags {
+    margin-top: var(--space-sm);
+  }
+
+  .profile-tag {
+    min-height: 26px;
+    padding: 0 var(--space-md);
+    font-size: var(--font-xs);
+  }
+
+  .level-progress-banner {
+    margin-top: var(--space-lg);
+    padding: var(--space-base);
+    border-radius: 16px;
+  }
+
+  .level-progress-copy {
+    padding-left: calc(var(--space-3xl) + var(--space-sm));
+  }
+
+  .level-loader {
+    margin-top: calc(var(--space-xl) + var(--space-base));
+    margin-bottom: var(--space-xl);
+  }
+
+  .contribution-benefits {
+    margin-top: var(--space-base);
+    font-size: var(--font-xs);
+  }
+
+  .contribution-referral {
+    gap: var(--space-md);
+    margin-top: var(--space-base);
+    padding-top: var(--space-base);
+  }
+
+  .referral-card__stats {
+    min-width: 0;
+    padding: var(--space-md);
+  }
+
+  .referral-card__stats strong {
+    font-size: var(--font-xl);
+  }
+
+  .referral-card__link input,
+  .referral-card__link button {
+    height: 36px;
+  }
+
+  .profile-content {
+    padding: var(--space-lg) var(--space-base);
+    gap: var(--space-lg);
+  }
+
+  .content-section {
+    gap: var(--space-base);
+  }
+
+  .section-title {
+    font-size: var(--font-base);
+  }
+
+  .content-row {
+    gap: var(--space-xs);
+  }
+
+  .row-cards-wrap {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-sm);
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: var(--space-xs);
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .row-cards-wrap::-webkit-scrollbar {
+    display: none;
+  }
+
+  .song-card-shell {
+    flex: 0 0 15rem;
+    width: 15rem;
+    scroll-snap-align: start;
+  }
+
+  .news-banner-shell {
+    flex: 0 0 15rem;
+    width: 15rem;
+    scroll-snap-align: start;
+  }
+
+  .event-card-shell {
+    flex: 0 0 10rem;
+    width: 10rem;
+    scroll-snap-align: start;
+  }
+
+  .song-card-shell app-song-card ::ng-deep .song-card {
+    aspect-ratio: 12 / 5;
+  }
+
+  .song-card-shell app-song-card ::ng-deep .song-card-title {
+    font-size: var(--font-lg);
+    line-height: 1.15;
+  }
+
+  .event-card-shell app-event-card ::ng-deep .event-card__poster {
+    aspect-ratio: 3 / 4;
+  }
+
+  .known-chords-board {
+    gap: var(--space-sm);
+  }
+
+  .known-chords-column {
+    padding: var(--space-base);
+    gap: var(--space-md);
+    border-radius: 14px;
+  }
+
+  .known-chord-pill {
+    min-height: 26px;
+    font-size: var(--font-xs);
+  }
+
+  .completion-banner {
+    padding: var(--space-base) var(--space-lg);
+    border-radius: 16px;
+  }
+
+  .completion-banner-text p,
+  .completion-banner-cta {
+    font-size: var(--font-sm);
+  }
+
+  .saved-lists-row {
+    padding: var(--space-base) 0 var(--space-lg);
+  }
+
+  .manage-card {
+    min-height: 0;
+    padding: var(--space-base);
+    gap: var(--space-base);
+    border-radius: 16px;
+  }
+
+  .manage-card--subscription,
+  .manage-card--requests {
+    min-height: 0;
+  }
+
+  .manage-card-col {
+    gap: var(--space-base);
+  }
+
+  .manage-card-title {
+    font-size: var(--font-base);
+  }
+
+  .manage-btn {
+    height: 34px;
+    padding: 0 var(--space-base);
+  }
+
+  .rewards-construction-note {
+    margin-top: var(--space-base);
+    padding: var(--space-md) var(--space-base);
+    border-radius: 16px;
+  }
+}
+
 @media (max-width: 600px) {
   .profile-hero {
-    padding: var(--space-xl) var(--space-base) var(--space-2xl);
-    left: 4px;
-    right: 4px;
-    top: 4px;
+    padding: calc(50px + var(--space-lg)) var(--space-base) var(--space-xl);
   }
 
   .contribution-referral {
@@ -1562,35 +1797,38 @@
   }
 
   .referral-card__link {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .referral-card__link input {
+    grid-column: 1 / -1;
   }
 
   .referral-card__link button {
     width: 100%;
+    min-width: 0;
   }
 
   .profile-content {
-    padding: var(--space-xl) var(--space-base);
-    gap: var(--space-xl);
+    padding: var(--space-lg) var(--space-base);
+    gap: var(--space-lg);
   }
 
   .manage-card {
-    flex-direction: column-reverse;
+    flex-direction: column;
   }
 
   .manage-card-col--info {
     border-right: none;
-    border-bottom: 1.5px solid #F2F2F2;
+    border-top: 1.5px solid #F2F2F2;
+    border-bottom: none;
     padding-right: 0;
-    padding-bottom: var(--space-lg);
-  }
-
-  .profile-hero {
-    border-radius: 18px;
+    padding-top: var(--space-base);
+    padding-bottom: 0;
   }
 
   .level-progress-banner {
-    padding: var(--space-md) var(--space-base) var(--space-xl);
+    padding: var(--space-base) var(--space-base) var(--space-lg);
   }
 
   .level-progress-copy {
@@ -1607,8 +1845,19 @@
     grid-template-columns: 1fr;
   }
 
-  .row-cards-wrap {
-    grid-template-columns: 1fr;
+  .event-card-shell {
+    flex-basis: 9rem;
+    width: 9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-page {
+    margin-top: -46px;
+  }
+
+  .profile-hero {
+    padding-top: calc(46px + var(--space-lg));
   }
 }
 

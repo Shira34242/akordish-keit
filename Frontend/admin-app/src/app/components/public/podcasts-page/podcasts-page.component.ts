@@ -489,6 +489,11 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
   private initHeroHeight(): void {
     const bg = this.heroBg?.nativeElement;
     if (!bg) return;
+    if (window.innerWidth <= 768) {
+      this.fullHeroHeight = Math.round(bg.clientWidth * 3 / 4);
+      bg.style.height = `${this.fullHeroHeight}px`;
+      return;
+    }
     this.fullHeroHeight = Math.round(window.innerHeight * 0.6);
     bg.style.height = `${this.fullHeroHeight}px`;
     this.shrinkHero();
@@ -497,6 +502,7 @@ export class PodcastsPageComponent implements OnInit, AfterViewInit, OnDestroy {
   private shrinkHero(): void {
     const bg = this.heroBg?.nativeElement;
     if (!bg || this.fullHeroHeight === 0) return;
+    if (window.innerWidth <= 768) return;
 
     const minHeight = 56;
     const newHeight = Math.max(minHeight, this.fullHeroHeight - window.scrollY);

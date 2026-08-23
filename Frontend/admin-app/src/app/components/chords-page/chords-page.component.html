@@ -6,10 +6,11 @@
     <!-- ═══════════════════════════════════════════
          HERO BG — fixed, full screen, shrinks on scroll
     ═══════════════════════════════════════════ -->
-    <div class="hero-bg" #heroBg>
-        <img *ngIf="bannerImagesLoaded" class="hero-bg-image" [src]="(heroImage || '/artist-composer-creating-new-song-his-electro-guitar-studio.png') | cfImage:'hero'" [style.transform]="'scale(' + (heroImageZoom / 100) + ')'" alt="" aria-hidden="true" loading="eager" decoding="async" fetchpriority="high">
-        <div class="hero-collapse-overlay"></div>
-    </div>
+    <div class="hero-bg">
+        <div class="hero-bg-visual" #heroBg>
+            <img *ngIf="bannerImagesLoaded" class="hero-bg-image" [src]="(heroImage || '/artist-composer-creating-new-song-his-electro-guitar-studio.png') | cfImage:'hero'" [style.transform]="'scale(' + (heroImageZoom / 100) + ')'" alt="" aria-hidden="true" loading="eager" decoding="async" fetchpriority="high">
+            <div class="hero-collapse-overlay"></div>
+        </div>
 
     <!-- ═══════════════════════════════════════════
          HERO CONTENT AREA — flows with page, holds title + search + filters
@@ -160,6 +161,7 @@
 
         </div>
     </div>
+    </div>
 
 
     <!-- ═══════════════════════════════════════════
@@ -190,19 +192,21 @@
                             </div>
                             <span class="artist-name">{{ artist.name }}</span>
                         </div>
-                        <div class="artist-item"
-                             *ngFor="let artist of artists; trackBy: trackByArtist"
-                             [class.active]="selectedFilterArtistId === artist.id"
-                             (click)="selectFilterArtist(artist)"
-                             aria-hidden="true">
-                            <div class="artist-avatar">
-                                <img [src]="artist.imageUrl || 'assets/default-artist.png'"
-                                     [alt]="artist.name"
-                                     class="artist-img"
-                                     loading="lazy">
+                        <ng-container *ngIf="artists.length > 1">
+                            <div class="artist-item"
+                                 *ngFor="let artist of artists; trackBy: trackByArtist"
+                                 [class.active]="selectedFilterArtistId === artist.id"
+                                 (click)="selectFilterArtist(artist)"
+                                 aria-hidden="true">
+                                <div class="artist-avatar">
+                                    <img [src]="artist.imageUrl || 'assets/default-artist.png'"
+                                         [alt]="artist.name"
+                                         class="artist-img"
+                                         loading="lazy">
+                                </div>
+                                <span class="artist-name">{{ artist.name }}</span>
                             </div>
-                            <span class="artist-name">{{ artist.name }}</span>
-                        </div>
+                        </ng-container>
                     </div>
                 </div>
                 <button class="strip-arrow strip-arrow--next" (click)="scrollStrip(artistsStrip, true)" [attr.aria-label]="'chords.next' | translate">

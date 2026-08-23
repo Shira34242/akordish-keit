@@ -1,4 +1,5 @@
 .podcasts-page {
+  position: relative;
   min-height: 100vh;
   direction: rtl;
   overflow-x: clip;
@@ -240,6 +241,14 @@
 
 .podcasts-section {
   margin-bottom: var(--space-2xl);
+}
+
+.podcasts-section-title {
+  margin: 0 0 var(--space-base);
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-xl);
+  font-weight: 800;
+  line-height: var(--lh-heading);
 }
 
 .section-header,
@@ -1341,10 +1350,25 @@
 
 @media (max-width: 768px) {
   .podcasts-intro {
-    border-radius: 20px;
+    position: absolute;
+    top: -50px;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    border-radius: 0;
+    will-change: auto;
+  }
+
+  .hero-collapse-overlay {
+    display: none;
   }
 
   .podcasts-hero-content {
+    height: calc(75vw - 50px);
+    min-height: 0;
+    margin-top: 0;
     padding: 0 var(--space-lg);
   }
 
@@ -1362,7 +1386,42 @@
   }
 
   .podcasts-content {
+    margin-top: 0;
     padding: 0 var(--space-base) var(--space-2xl);
+  }
+
+  .podcasts-home-track {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-md);
+  }
+
+  .podcast-episodes-row {
+    overflow: visible;
+    padding-bottom: 0;
+  }
+
+  .podcast-episodes-track {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-md);
+    width: 100%;
+  }
+
+  .podcast-episodes-track > .podcast-episode-card {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .episodes-list-section .podcast-episodes-track {
+    grid-template-columns: 1fr;
+  }
+
+  .episodes-list-section .podcast-episode-card:nth-child(n + 5) {
+    display: none;
+  }
+
+  .episodes-list-section .podcast-episode-card ::ng-deep .episode-banner {
+    aspect-ratio: 4 / 3;
   }
 
   .section-header,
@@ -1464,6 +1523,21 @@
 
   .podcasts-page.playing-episode .series-episode {
     grid-template-columns: 6.5rem minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .podcasts-intro {
+    top: -46px;
+  }
+
+  .podcasts-hero-content {
+    height: calc(75vw - 46px);
+  }
+
+  .podcasts-home-track,
+  .podcast-episodes-track {
+    gap: var(--space-sm);
   }
 }
 .media-login-backdrop {

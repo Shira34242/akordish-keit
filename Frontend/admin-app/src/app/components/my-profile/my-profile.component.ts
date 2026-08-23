@@ -188,6 +188,7 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
 
   @HostListener('window:scroll')
   onWindowScroll(): void {
+    if (window.matchMedia('(max-width: 768px)').matches) return;
     if (this.heroRafPending) return;
     this.heroRafPending = true;
     requestAnimationFrame(() => {
@@ -306,15 +307,27 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
     const hero = this.profileHero?.nativeElement;
     if (!hero) return;
 
-    this.fullHeroHeight = 300;
-    this.expandedAvatarSize = window.innerWidth <= 600 ? 144 : 160;
-    this.expandedAvatarBottom = window.innerWidth <= 600 ? -60 : -68;
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    const isSmallMobile = window.matchMedia('(max-width: 480px)').matches;
+    this.fullHeroHeight = isMobile ? 220 : 300;
+    this.expandedAvatarSize = isSmallMobile ? 120 : isMobile ? 132 : 160;
+    this.expandedAvatarBottom = isSmallMobile ? -48 : isMobile ? -54 : -68;
     hero.style.height = `${this.fullHeroHeight}px`;
     hero.style.setProperty('--profile-hero-full-height', `${this.fullHeroHeight}px`);
+
+    if (isMobile) {
+      hero.style.setProperty('--profile-collapse-progress', '0');
+      hero.style.setProperty('--profile-avatar-size', `${this.expandedAvatarSize}px`);
+      hero.style.setProperty('--profile-avatar-bottom', `${this.expandedAvatarBottom}px`);
+      return;
+    }
+
     this.shrinkHero();
   }
 
   private shrinkHero(): void {
+    if (window.matchMedia('(max-width: 768px)').matches) return;
+
     const hero = this.profileHero?.nativeElement;
     if (!hero || this.fullHeroHeight === 0) return;
 

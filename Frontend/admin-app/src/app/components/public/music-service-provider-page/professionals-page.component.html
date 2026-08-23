@@ -6,10 +6,11 @@
   <!-- ════════════════════════════════════════
        HERO BG — fixed, מצטמצם בגלילה
   ════════════════════════════════════════ -->
-  <div class="hero-bg" #heroBg>
-    <img *ngIf="bannerImagesLoaded" class="hero-bg-image" [src]="(heroImage || '/collection-guitars-guitars-are-display-room.png') | cfImage:'hero'" [style.transform]="'scale(' + (heroImageZoom / 100) + ')'" alt="" aria-hidden="true" loading="eager" decoding="async" fetchpriority="high">
-    <div class="hero-collapse-overlay"></div>
-  </div>
+  <div class="hero-bg">
+    <div class="hero-bg-visual" #heroBg>
+      <img *ngIf="bannerImagesLoaded" class="hero-bg-image" [src]="(heroImage || '/collection-guitars-guitars-are-display-room.png') | cfImage:'hero'" [style.transform]="'scale(' + (heroImageZoom / 100) + ')'" alt="" aria-hidden="true" loading="eager" decoding="async" fetchpriority="high">
+      <div class="hero-collapse-overlay"></div>
+    </div>
 
   <!-- לחצן הצטרפות — fixed, צמוד לפינה השמאלית-תחתונה של ה-hero (זז יחד איתו בגלילה) -->
   <button class="btn-join-index"
@@ -67,9 +68,10 @@
         </div>
 
         <!-- פילטר עיר -->
-        <div class="filter-btn-wrap"
+        <div class="filter-btn-wrap filter-btn-location"
              [class.filter-active]="selectedCityId !== null"
              (click)="toggleCityDropdown()">
+          <span class="filter-btn-label filter-btn-location-label">מיקום</span>
           <svg class="filter-btn-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
           </svg>
@@ -167,6 +169,7 @@
     </div>
 
   </div>
+  </div>
 
 
   <!-- ════════════════════════════════════════
@@ -233,7 +236,7 @@
       <div class="sections-area" *ngIf="!isFiltered">
 
         <!-- מומלצים -->
-        <div class="section" *ngIf="featuredProfessionals.length > 0">
+        <div class="section featured-professionals-section" *ngIf="featuredProfessionals.length > 0">
           <div class="section-header">
             <span class="section-tag section-tag--accent">מומלצים</span>
             <button class="btn-show-all" (click)="onViewMore('featured')">הצג הכל ›</button>
@@ -504,7 +507,7 @@
       <div class="sections-area" *ngIf="!isFilteredTeachers">
 
         <!-- מורים מומלצים -->
-        <div class="section" *ngIf="featuredTeachers.length > 0">
+        <div class="section featured-teachers-section" *ngIf="featuredTeachers.length > 0">
           <div class="section-header">
             <span class="section-tag section-tag--accent">מורים מומלצים</span>
             <button class="btn-show-all" (click)="onViewMoreTeachers('featured')">הצג הכל ›</button>

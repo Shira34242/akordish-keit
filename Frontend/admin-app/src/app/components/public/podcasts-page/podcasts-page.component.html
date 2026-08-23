@@ -58,10 +58,7 @@
 
     <ng-container *ngIf="!isViewingSeries && podcasts.length > 0">
       <section class="podcasts-section">
-        <div class="section-header">
-          <h2>פודקאסטים</h2>
-          <span>{{ podcasts.length }} פודקאסטים</span>
-        </div>
+        <h2 class="podcasts-section-title">פודקאסטים</h2>
 
         <div class="podcasts-home-panel">
           <div class="podcasts-home-track">
@@ -78,11 +75,8 @@
         </div>
       </section>
 
-      <section class="podcasts-section" *ngIf="latestEpisodes.length > 0">
-        <div class="section-header">
-          <h2>פרקים אחרונים</h2>
-          <span>{{ latestEpisodes.length }} פרקים</span>
-        </div>
+      <section class="podcasts-section episodes-list-section" *ngIf="latestEpisodes.length > 0">
+        <h2 class="podcasts-section-title">פרקים אחרונים</h2>
 
         <div class="podcast-episodes-row">
           <div class="podcast-episodes-track">
@@ -96,11 +90,8 @@
         </div>
       </section>
 
-      <section class="podcasts-section" *ngIf="popularEpisodes.length > 0">
-        <div class="section-header">
-          <h2>פרקים מובילים</h2>
-          <span>לפי צפיות באתר</span>
-        </div>
+      <section class="podcasts-section episodes-list-section" *ngIf="popularEpisodes.length > 0">
+        <h2 class="podcasts-section-title">פרקים מובילים</h2>
 
         <div class="podcast-episodes-row">
           <div class="podcast-episodes-track">
@@ -114,10 +105,8 @@
         </div>
       </section>
 
-      <section class="podcasts-section recommendations-section" *ngIf="recommendedEpisodes.length > 0">
-        <div class="section-header">
-          <h2>יעניין אותך גם...</h2>
-        </div>
+      <section class="podcasts-section recommendations-section episodes-list-section" *ngIf="recommendedEpisodes.length > 0">
+        <h2 class="podcasts-section-title">יכול לעניין אותך גם...</h2>
 
         <div class="podcast-episodes-row">
           <div class="podcast-episodes-track">

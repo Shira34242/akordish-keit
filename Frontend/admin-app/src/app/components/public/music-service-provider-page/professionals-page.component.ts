@@ -299,6 +299,12 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
   private initHeroHeight(): void {
     const bg = this.heroBg?.nativeElement;
     if (!bg) return;
+    if (window.innerWidth <= 768) {
+      this.fullHeroHeight = 0;
+      bg.style.height = '';
+      this.hostRef.nativeElement.style.removeProperty('--hero-height');
+      return;
+    }
     this.fullHeroHeight = Math.round(window.innerHeight * 0.6);
     bg.style.height = this.fullHeroHeight + 'px';
     this.shrinkHero();
@@ -307,6 +313,7 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
   private shrinkHero(): void {
     const bg = this.heroBg?.nativeElement;
     if (!bg || this.fullHeroHeight === 0) return;
+    if (window.innerWidth <= 768) return;
     const minHeight = 56;
     const newHeight = Math.max(minHeight, this.fullHeroHeight - window.scrollY);
     bg.style.height = newHeight + 'px';
