@@ -52,7 +52,12 @@
             </label>
           </div>
 
-          <div class="custom-dropdown">
+          <label class="whatsapp-toggle field-full">
+            <input type="checkbox" [(ngModel)]="isOnlineBusiness" name="teacherIsOnlineBusiness">
+            <span>עסק אונליין</span>
+          </label>
+
+          <div class="custom-dropdown" *ngIf="!isOnlineBusiness">
             <div class="dropdown-selected">
               <input
                 type="text"
@@ -75,7 +80,7 @@
               </div>
             </div>
           </div>
-          <input type="text" class="form-input" [(ngModel)]="location" placeholder="כתובת">
+          <input *ngIf="!isOnlineBusiness" type="text" class="form-input" [(ngModel)]="location" placeholder="כתובת">
           <textarea class="form-textarea field-full" [(ngModel)]="shortBio" rows="2" placeholder="תיאור קצר"></textarea>
         </div>
       </div>
@@ -143,7 +148,7 @@
       <div class="form-step" *ngIf="currentStep === 3">
         <div class="field-grid">
           <textarea class="form-textarea field-full" [(ngModel)]="fullDescription" rows="4" placeholder="תיאור מלא"></textarea>
-          <input type="url" class="form-input field-full" [(ngModel)]="websiteUrl" placeholder="אתר אינטרנט">
+          <input type="text" inputmode="url" class="form-input field-full" [(ngModel)]="websiteUrl" placeholder="אתר אינטרנט, למשל example.com">
         </div>
 
         <section class="mini-section">

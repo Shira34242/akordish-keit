@@ -13,7 +13,7 @@
 
   <div class="summary-grid" *ngIf="dashboard as data">
     <article class="summary-card">
-      <span>כניסות</span>
+      <span>כניסות / לחיצות</span>
       <strong>{{ data.totalVisits | number }}</strong>
       <small title="כל פתיחה שנמדדה, כולל ביקורים חוזרים">כל הפתיחות שנמדדו</small>
     </article>
@@ -81,13 +81,14 @@
 
     <div class="campaign-table" *ngIf="!loading && visibleCampaigns.length">
       <div class="table-head" aria-hidden="true">
-        <span>קישור</span><span>כניסות</span><span>ייחודיים</span><span>הרשמות</span><span>המרה</span><span>פעילות</span><span>פעולות</span>
+        <span>קישור</span><span>כניסות / לחיצות</span><span>ייחודיים</span><span>הרשמות</span><span>המרה</span><span>פעילות</span><span>פעולות</span>
       </div>
       <article class="campaign-row" *ngFor="let campaign of visibleCampaigns; trackBy: trackByCampaignId">
         <div class="campaign-identity">
           <div class="campaign-title-line">
             <h3>{{ campaign.name }}</h3>
             <span class="status-tag" [class.inactive]="!campaign.isActive">{{ campaign.isActive ? 'פעיל' : 'מושהה' }}</span>
+            <span class="target-tag" *ngIf="campaign.isExternal">חיצוני</span>
           </div>
           <p>{{ campaign.source }} · {{ campaign.targetPath }}</p>
           <button class="copy-link" type="button" (click)="copyLink(campaign)" [attr.aria-label]="'העתקת הקישור של ' + campaign.name">
@@ -95,10 +96,10 @@
             <span>{{ copiedId === campaign.id ? 'הקישור הועתק' : 'העתקת קישור מעקב' }}</span>
           </button>
         </div>
-        <div class="metric" data-label="כניסות"><strong>{{ campaign.visits | number }}</strong></div>
+        <div class="metric" [attr.data-label]="campaign.isExternal ? 'לחיצות' : 'כניסות'"><strong>{{ campaign.visits | number }}</strong></div>
         <div class="metric" data-label="ייחודיים"><strong>{{ campaign.uniqueVisitors | number }}</strong></div>
-        <div class="metric" data-label="הרשמות"><strong>{{ campaign.signups | number }}</strong></div>
-        <div class="metric conversion" data-label="המרה"><strong>{{ campaign.conversionRate | number:'1.0-1' }}%</strong></div>
+        <div class="metric" data-label="הרשמות"><strong>{{ campaign.isExternal ? '—' : (campaign.signups | number) }}</strong></div>
+        <div class="metric conversion" data-label="המרה"><strong>{{ campaign.isExternal ? '—' : ((campaign.conversionRate | number:'1.0-1') + '%') }}</strong></div>
         <div class="activity" data-label="פעילות">
           <span>נוצר: {{ campaign.createdAt | date:'dd/MM/yy' }}</span>
           <span>{{ campaign.lastVisitAt ? ('אחרונה: ' + (campaign.lastVisitAt | date:'dd/MM/yy HH:mm')) : 'אין פעילות עדיין' }}</span>
@@ -135,8 +136,20 @@
     <form (ngSubmit)="saveCampaign()" #campaignForm="ngForm">
       <label><span>שם הפרסום</span><input name="campaignName" [(ngModel)]="campaignName" maxlength="160" required minlength="2" placeholder="לדוגמה: שיתוף פעולה עם ערוץ פלוני"></label>
       <label><span>מקור</span><input name="source" [(ngModel)]="source" maxlength="80" required minlength="2" placeholder="לדוגמה: WhatsApp, Instagram או YouTube"></label>
-      <label><span>בחירת דף באתר</span><select name="targetSuggestion" [(ngModel)]="targetPath"><option *ngFor="let target of targetSuggestions" [value]="target.path">{{ target.label }} — {{ target.path }}</option></select></label>
-      <label><span>או נתיב מדויק באתר</span><input name="targetPath" [(ngModel)]="targetPath" maxlength="500" required placeholder="/news/כתבה-לדוגמה" dir="ltr"><small>יש להזין רק כתובת פנימית שמתחילה ב-/</small></label>
+      <div class="target-type-field">
+        <span>סוג היעד</span>
+        <div class="target-type-buttons">
+          <button type="button" [class.active]="targetType === 'internal'" (click)="setTargetType('internal')">דף באתר שלי</button>
+          <button type="button" [class.active]="targetType === 'external'" (click)="setTargetType('external')">אתר חיצוני</button>
+        </div>
+      </div>
+      <ng-container *ngIf="targetType === 'internal'; else externalTarget">
+        <label><span>בחירת דף באתר</span><select name="targetSuggestion" [(ngModel)]="targetPath"><option *ngFor="let target of targetSuggestions" [value]="target.path">{{ target.label }} — {{ target.path }}</option></select></label>
+        <label><span>או נתיב מדויק באתר</span><input name="targetPath" [(ngModel)]="targetPath" maxlength="500" required placeholder="/news/כתבה-לדוגמה" dir="ltr"><small>יש להזין רק כתובת פנימית שמתחילה ב-/</small></label>
+      </ng-container>
+      <ng-template #externalTarget>
+        <label><span>כתובת האתר החיצוני</span><input name="externalTargetUrl" [(ngModel)]="targetPath" maxlength="500" required placeholder="https://example.com/page" dir="ltr"><small>הקישור שתקבל יספור את הלחיצה ואז יעביר לכתובת הזאת. הרשמות באתר החיצוני אינן נמדדות.</small></label>
+      </ng-template>
       <div class="modal-actions">
         <button class="secondary-button" type="button" (click)="closeForm()">ביטול</button>
         <button class="primary-button" type="submit" [disabled]="campaignForm.invalid || saving">

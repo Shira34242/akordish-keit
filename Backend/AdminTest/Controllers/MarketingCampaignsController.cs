@@ -26,7 +26,7 @@ public class MarketingCampaignsController : ControllerBase
     {
         try
         {
-            return Ok(await _service.GetDashboardAsync(dateFrom, dateTo, GetFrontendBaseUrl()));
+            return Ok(await _service.GetDashboardAsync(dateFrom, dateTo, GetFrontendBaseUrl(), GetBackendBaseUrl()));
         }
         catch (ArgumentException ex)
         {
@@ -41,7 +41,7 @@ public class MarketingCampaignsController : ControllerBase
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         try
         {
-            var created = await _service.CreateAsync(request, userId, GetFrontendBaseUrl());
+            var created = await _service.CreateAsync(request, userId, GetFrontendBaseUrl(), GetBackendBaseUrl());
             return CreatedAtAction(nameof(GetDashboard), new { id = created.Id }, created);
         }
         catch (ArgumentException ex)
@@ -62,7 +62,7 @@ public class MarketingCampaignsController : ControllerBase
         if (!ModelState.IsValid) return ValidationProblem(ModelState);
         try
         {
-            var updated = await _service.UpdateAsync(id, request, GetFrontendBaseUrl());
+            var updated = await _service.UpdateAsync(id, request, GetFrontendBaseUrl(), GetBackendBaseUrl());
             return updated == null ? NotFound() : Ok(updated);
         }
         catch (ArgumentException ex)
@@ -92,11 +92,55 @@ public class MarketingCampaignsController : ControllerBase
         return Ok(new { tracked });
     }
 
+    [HttpGet("open/{code}")]
+    [AllowAnonymous]
+    [EnableRateLimiting("analytics-tracking")]
+    public async Task<IActionResult> OpenExternal(string code)
+    {
+        Response.Headers.CacheControl = "no-store, no-cache";
+        Response.Headers.Pragma = "no-cache";
+        const string visitorCookie = "ak_marketing_click_visitor";
+        var visitorId = Request.Cookies[visitorCookie];
+        if (string.IsNullOrWhiteSpace(visitorId) || visitorId.Length != 32 || !visitorId.All(Uri.IsHexDigit))
+        {
+            visitorId = Guid.NewGuid().ToString("N");
+            Response.Cookies.Append(visitorCookie, visitorId, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = Request.IsHttps,
+                SameSite = SameSiteMode.Lax,
+                IsEssential = true,
+                Path = "/api/marketing-campaigns/open",
+                Expires = DateTimeOffset.UtcNow.AddYears(1)
+            });
+        }
+
+        var destination = await _service.TrackExternalClickAsync(
+            code,
+            visitorId,
+            Request.Headers.Referer.ToString(),
+            HttpContext.Connection.RemoteIpAddress?.ToString(),
+            Request.Headers.UserAgent.ToString());
+        return destination == null ? NotFound() : Redirect(destination);
+    }
+
     private string GetFrontendBaseUrl()
     {
         var value = _configuration["Frontend:BaseUrl"]?.Trim().TrimEnd('/');
         if (string.IsNullOrWhiteSpace(value) || !Uri.TryCreate(value, UriKind.Absolute, out _))
             throw new InvalidOperationException("Frontend base URL is not configured");
+        return value;
+    }
+
+    private string GetBackendBaseUrl()
+    {
+        if (Request.Host.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase) ||
+            Request.Host.Host.Equals("127.0.0.1", StringComparison.OrdinalIgnoreCase))
+            return $"{Request.Scheme}://{Request.Host.Value}".TrimEnd('/');
+
+        var value = _configuration["Backend:BaseUrl"]?.Trim().TrimEnd('/');
+        if (string.IsNullOrWhiteSpace(value) || !Uri.TryCreate(value, UriKind.Absolute, out _))
+            throw new InvalidOperationException("Backend base URL is not configured");
         return value;
     }
 }

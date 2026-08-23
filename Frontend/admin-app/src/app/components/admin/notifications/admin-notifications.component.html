@@ -176,7 +176,6 @@
         <form class="composer" (ngSubmit)="sendMessage()">
           <article class="message-bubble composer-bubble" *ngIf="hasDraftBubble">
             <span class="marketing-tag" *ngIf="isMarketingContent">תוכן שיווקי</span>
-            <span class="message-title" *ngIf="message.trim()">{{ buildTitle() }}</span>
             <p *ngIf="message.trim()">{{ message }}</p>
             <a *ngIf="mediaUrl && mediaType === 'image' && getDraftActionUrl()" [href]="getDraftActionUrl() || ''" target="_blank" rel="noopener">
               <img [src]="mediaUrl" [alt]="mediaAltText || message" class="message-media" [ngClass]="getMediaSizeClass(mediaDisplaySize)">

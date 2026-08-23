@@ -14,6 +14,8 @@ import { UserWithProfileDto } from '../../../../models/user.model';
 import { BumpModalComponent } from '../../../shared/bump-modal/bump-modal.component';
 import { ContentPromotionModalComponent } from '../../../shared/content-promotion-modal/content-promotion-modal.component';
 import { ContentPromotionTargetType } from '../../../../services/content-promotion.service';
+import { NotificationService } from '../../../../services/notification.service';
+import { NotificationCategory, NotificationType } from '../../../../models/notification.model';
 
 @Component({
   selector: 'app-songs-list',
@@ -36,6 +38,7 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
   private readonly modalService = inject(ModalService);
   private readonly artistService = inject(ArtistService);
   private readonly userService = inject(UserService);
+  private readonly notificationService = inject(NotificationService);
   private isDestroyed = false;
   private scrollObserver?: IntersectionObserver;
   private _pendingScrollY = 0;
@@ -53,6 +56,7 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
   loading = false;
   loadError = '';
   bulkActionLoading = false;
+  sendingApprovalNotificationIds = new Set<number>();
   selectedSongIds = new Set<number>();
   bumpModalOpen = false;
   promotionModalOpen = false;
@@ -1013,6 +1017,35 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
 
   formatGenres(song: SongDto): string {
     return song.genres?.map(g => g.name).join(', ') || '';
+  }
+
+  async sendApprovalNotification(song: SongDto): Promise<void> {
+    const userId = this.getSubmittingUserId(song);
+    if (!song.isApproved || !userId || this.sendingApprovalNotificationIds.has(song.id)) return;
+
+    if (!await this.siteAlerts.confirm(`לשלוח למשתמש הודעה שהשיר "${song.title}" אושר?`)) return;
+
+    this.sendingApprovalNotificationIds.add(song.id);
+    this.notificationService.sendStatusUpdate({
+      userId,
+      title: 'השיר אושר',
+      message: `השיר "${song.title}" אושר וניתן לצפייה באתר.`,
+      type: NotificationType.Approval,
+      category: NotificationCategory.Song,
+      relatedEntityType: 'Song',
+      relatedEntityId: song.id,
+      actionUrl: `/song/${song.id}`
+    }).subscribe({
+      next: () => {
+        this.sendingApprovalNotificationIds.delete(song.id);
+        this.siteAlerts.show('הודעת האישור נשלחה למשתמש');
+      },
+      error: (error) => {
+        console.error('Error sending song approval notification:', error);
+        this.sendingApprovalNotificationIds.delete(song.id);
+        this.siteAlerts.show(error?.error?.message || 'שליחת הודעת האישור נכשלה');
+      }
+    });
   }
 
   getSubmittingUserId(song: SongDto): number | null {

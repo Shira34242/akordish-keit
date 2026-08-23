@@ -25,6 +25,7 @@ import { UserListDto } from '../../../models/user.model';
 import { SiteAlertService } from '../../../services/site-alert.service';
 import { RequiredFieldFeedbackService } from '../../../services/required-field-feedback.service';
 import { getSocialPlatformIconSvg, normalizeSocialPlatform } from '../../../utils/social-platform-icons';
+import { normalizeWebsiteUrl } from '../../../utils/url-utils';
 
 
 interface PlatformLinkOption {
@@ -72,6 +73,7 @@ export class ServiceProviderFormComponent implements OnInit {
   fullDescription: string = '';
   cityId: number | undefined = undefined;
   location: string = '';
+  isOnlineBusiness = false;
   phoneNumber: string = '';
   whatsAppNumber: string = '';
   email: string = '';
@@ -218,6 +220,7 @@ export class ServiceProviderFormComponent implements OnInit {
         this.fullDescription = provider.fullDescription || '';
         this.cityId = provider.cityId;
         this.location = provider.location || '';
+        this.isOnlineBusiness = provider.location?.trim() === 'עסק אונליין';
         this.phoneNumber = provider.phoneNumber || '';
         this.whatsAppNumber = provider.whatsAppNumber || '';
         this.email = provider.email || '';
@@ -276,12 +279,12 @@ export class ServiceProviderFormComponent implements OnInit {
       displayName: this.displayName.trim(),
       shortBio: this.optionalText(this.shortBio),
       fullDescription: this.optionalText(this.fullDescription),
-      cityId: this.cityId,
-      location: this.optionalText(this.location),
+      cityId: this.isOnlineBusiness ? undefined : this.cityId,
+      location: this.isOnlineBusiness ? 'עסק אונליין' : this.optionalText(this.location),
       phoneNumber: this.phoneNumber.trim(),
       whatsAppNumber: this.optionalText(this.whatsAppNumber),
       email: this.email.trim(),
-      websiteUrl: this.optionalText(this.websiteUrl),
+      websiteUrl: normalizeWebsiteUrl(this.websiteUrl),
       bannerImageUrl: this.optionalText(this.bannerImageUrl),
       bannerBlur: this.normalizedBannerBlur(this.bannerBlur),
       profileImageUrl: this.optionalText(this.profileImageUrl),

@@ -21,7 +21,9 @@ import { UserWithProfileDto } from '../../../../models/user.model';
 import { BumpModalComponent } from '../../../shared/bump-modal/bump-modal.component';
 import { ContentPromotionModalComponent } from '../../../shared/content-promotion-modal/content-promotion-modal.component';
 import { ContentPromotionTargetType } from '../../../../services/content-promotion.service';
-import { getArticleLink } from '../../../../utils/article-route.utils';
+import { NotificationService } from '../../../../services/notification.service';
+import { NotificationCategory, NotificationType } from '../../../../models/notification.model';
+import { getArticleLink, getArticlePath } from '../../../../utils/article-route.utils';
 
 @Component({
   selector: 'app-articles-list',
@@ -38,6 +40,7 @@ export class ArticlesListComponent implements OnInit, OnDestroy, AfterViewInit {
   private readonly systemTablesService = inject(SystemTablesService);
   private readonly artistService = inject(ArtistService);
   private readonly userService = inject(UserService);
+  private readonly notificationService = inject(NotificationService);
   private isDestroyed = false;
   private scrollObserver?: IntersectionObserver;
 
@@ -49,6 +52,7 @@ export class ArticlesListComponent implements OnInit, OnDestroy, AfterViewInit {
   artists: ArtistListDto[] = [];
   loading = false;
   publishingArticleIds = new Set<number>();
+  sendingApprovalNotificationIds = new Set<number>();
   selectedArticleIds = new Set<number>();
   bumpModalOpen = false;
   promotionModalOpen = false;
@@ -942,8 +946,37 @@ export class ArticlesListComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
+  async sendApprovalNotification(article: Article): Promise<void> {
+    const userId = this.getSubmittingUserId(article);
+    if (article.status !== ArticleStatus.Published || !userId || this.sendingApprovalNotificationIds.has(article.id)) return;
+
+    if (!await this.siteAlerts.confirm(`לשלוח למשתמש הודעה שהכתבה "${article.title}" פורסמה?`)) return;
+
+    this.sendingApprovalNotificationIds.add(article.id);
+    this.notificationService.sendStatusUpdate({
+      userId,
+      title: 'הכתבה פורסמה',
+      message: `הכתבה "${article.title}" פורסמה באתר.`,
+      type: NotificationType.Approval,
+      category: NotificationCategory.Article,
+      relatedEntityType: 'Article',
+      relatedEntityId: article.id,
+      actionUrl: getArticlePath(article)
+    }).subscribe({
+      next: () => {
+        this.sendingApprovalNotificationIds.delete(article.id);
+        this.siteAlerts.show('הודעת האישור נשלחה למשתמש');
+      },
+      error: (error) => {
+        console.error('Error sending article approval notification:', error);
+        this.sendingApprovalNotificationIds.delete(article.id);
+        this.siteAlerts.show(error?.error?.message || 'שליחת הודעת האישור נכשלה');
+      }
+    });
+  }
+
   getSubmittingUserId(article: Article): number | null {
-    return article.uploaderUserId ?? null;
+    return article.submittedByUserId ?? article.uploaderUserId ?? null;
   }
 
   getPublicCreditLabel(article: Article): string {

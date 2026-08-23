@@ -309,14 +309,7 @@ namespace AkordishKeit.Services
             await _context.SaveChangesAsync();
 
             // טעינה מחדש עם האומנים
-            if (!wasActive && eventEntity.IsActive && eventEntity.SubmittedByUserId.HasValue)
-            {
-                await _notificationService.NotifyEventApprovedAsync(
-                    eventEntity.SubmittedByUserId.Value,
-                    eventEntity.Id,
-                    eventEntity.Name);
-            }
-            else if (wasActive && !eventEntity.IsActive && eventEntity.SubmittedByUserId.HasValue)
+            if (wasActive && !eventEntity.IsActive && eventEntity.SubmittedByUserId.HasValue)
             {
                 await _notificationService.NotifyEventRejectedAsync(
                     eventEntity.SubmittedByUserId.Value,
@@ -407,6 +400,7 @@ namespace AkordishKeit.Services
                 UpdatedAt = eventEntity.UpdatedAt,
                 CreatedBy = eventEntity.CreatedBy,
                 UpdatedBy = eventEntity.UpdatedBy,
+                SubmittedByUserId = eventEntity.SubmittedByUserId,
                 DaysUntilEvent = daysUntil,
                 IsToday = daysUntil == 0 && !IsPastEvent(eventEntity.EventDate),
                 IsPast = IsPastEvent(eventEntity.EventDate),

@@ -203,6 +203,16 @@
     gap: var(--space-xs);
 }
 
+.song-breadcrumbs {
+    display: block;
+    width: 100%;
+}
+
+.song-breadcrumbs ::ng-deep .breadcrumbs {
+    justify-content: flex-start;
+    padding: 0 0 var(--space-xs);
+}
+
 .header-subtitle {
     font-size: var(--font-md);
     color: rgba(0, 0, 0, 0.55);
@@ -292,6 +302,7 @@
 .header-actions {
     display: flex;
     gap: var(--space-sm);
+    flex-wrap: wrap;
     align-self: flex-end; /* RTL flex-column → שמאל פיזי של עמודת הפרטים */
     margin-top: var(--space-sm);
 }
@@ -299,16 +310,21 @@
 .action-btn {
     background: transparent;
     border: none;
-    padding: 0;
+    padding: 0 var(--space-base);
     cursor: pointer;
     color: rgba(0, 0, 0, 0.6);
     transition: background-color 0.2s, color 0.2s;
-    border-radius: 50%;
-    width: 36px;
+    border-radius: 999px;
+    width: auto;
     height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: var(--space-xs);
+    font-family: 'Open Sans', sans-serif;
+    font-size: var(--font-sm);
+    font-weight: 600;
+    white-space: nowrap;
 }
 
 .action-btn:hover {
@@ -320,6 +336,11 @@
     width: 20px;
     height: 20px;
     stroke-width: 2px;
+    flex-shrink: 0;
+}
+
+.action-btn-label {
+    line-height: 1;
 }
 /* 2. Floating Toolbar */
 .sticky-toolbar {
@@ -834,6 +855,35 @@
     color: #ffffff;
 }
 
+.song-report-link {
+    margin: var(--space-xl) 0 0;
+    padding-top: var(--space-base);
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    text-align: center;
+    direction: rtl;
+    color: rgba(0, 0, 0, 0.45);
+    font-family: 'Open Sans', sans-serif;
+    font-size: var(--font-xs);
+    font-weight: 300;
+    cursor: pointer;
+}
+
+.song-report-link-action {
+    color: rgba(0, 0, 0, 0.65);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.lyrics-column.dark-mode .song-report-link {
+    border-top-color: rgba(255, 255, 255, 0.16);
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.lyrics-column.dark-mode .song-report-link-action {
+    color: #ffffff;
+}
+
 /* Chords Styling */
 ::ng-deep .chord-inline {
     color: #000000;
@@ -1154,6 +1204,10 @@
         justify-content: center;
     }
 
+    .song-breadcrumbs ::ng-deep .breadcrumbs {
+        justify-content: center;
+    }
+
     .header-actions {
         align-self: center;
     }
@@ -1421,8 +1475,10 @@
     }
 
     .action-btn {
-        width: 32px;
+        width: auto;
         height: 32px;
+        padding: 0 var(--space-md);
+        font-size: var(--font-xs);
     }
 
     .action-btn svg {
@@ -2032,11 +2088,247 @@
     font-family: 'Open Sans', sans-serif;
     font-weight: 300;
     font-size: var(--font-xs);
-    color: rgba(0, 0, 0, 0.6);
+    color: rgba(0, 0, 0, 0.45);
     text-align: center;
+    direction: rtl;
+    margin: var(--space-sm) 0 0;
+    padding: 0;
+}
+
+@media (max-width: 600px) {
+    .song-main-column .related-content-box {
+        padding: var(--space-base);
+        border-radius: 16px;
+    }
+
+    .related-content-box .related-content-grid {
+        grid-template-columns: 1fr;
+    }
+
+    :host ::ng-deep .related-content-box .related-content-ad .media-wrapper {
+        aspect-ratio: 4 / 3 !important;
+        border-radius: 16px;
+    }
+}
+
+.lyrics-column.dark-mode .copyright-notice {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* Related content — mirrors the music-news article pattern */
+.popular-chords-box {
+    padding: var(--space-xl);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 24px;
+    background: #ffffff;
+    direction: rtl;
+    overflow: hidden;
+}
+
+.popular-chords-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md);
+    margin-bottom: var(--space-base);
+}
+
+.popular-chords-title {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    color: #000000;
+    font-family: 'Open Sans', sans-serif;
+    font-size: var(--font-xl);
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.popular-chords-title::after {
+    content: '\203A';
+    color: rgba(0, 0, 0, 0.5);
+    font-size: var(--font-lg);
+    line-height: 1;
+}
+
+.popular-chords-controls {
+    display: inline-flex;
+    gap: var(--space-sm);
+    color: rgba(0, 0, 0, 0.58);
+}
+
+.popular-chords-controls button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: rgba(242, 242, 242, 0.86);
+    color: rgba(0, 0, 0, 0.58);
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, transform 0.2s;
+}
+
+.popular-chords-controls button:hover {
+    background: #ddff53;
+    color: #000000;
+    transform: translateY(-1px);
+}
+
+.popular-chords-controls .material-icons {
+    font-size: 20px;
+}
+
+.popular-chords-row {
+    display: flex;
+    gap: var(--space-md);
+    overflow-x: auto;
+    padding-bottom: var(--space-xs);
+    scrollbar-width: none;
+}
+
+.popular-chords-row::-webkit-scrollbar {
+    display: none;
+}
+
+.popular-chords-row app-song-card,
+.popular-chords-more {
+    flex: 0 0 280px;
+}
+
+.popular-chords-row app-song-card ::ng-deep .song-card,
+.popular-chords-more {
+    aspect-ratio: 12 / 5;
+}
+
+.popular-chords-row app-song-card ::ng-deep .song-card-title {
+    font-size: var(--font-lg);
+    line-height: 1.15;
+}
+
+.popular-chords-more {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    box-sizing: border-box;
+    border-radius: 24px;
+    background: #F2F2F2;
+    color: #000000;
+    font-family: 'Open Sans', sans-serif;
+    font-size: var(--font-base);
+    font-weight: 800;
+    text-align: center;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.popular-chords-more:hover {
+    background: #ddff53;
+    transform: translateY(-1px);
+}
+
+@media (max-width: 600px) {
+    .popular-chords-box {
+        padding: var(--space-base);
+        border-radius: 16px;
+    }
+
+    .popular-chords-title {
+        font-size: var(--font-base);
+    }
+
+    .popular-chords-controls {
+        display: none;
+    }
+
+    .popular-chords-row {
+        flex-direction: column;
+        gap: var(--space-sm);
+        overflow: visible;
+        padding-bottom: 0;
+    }
+
+    .popular-chords-row app-song-card {
+        flex: 0 0 auto;
+        width: 100%;
+    }
+
+    .popular-chords-row app-song-card:nth-of-type(n + 5),
+    .popular-chords-more {
+        display: none;
+    }
+
+    .popular-chords-row app-song-card ::ng-deep .song-card {
+        aspect-ratio: 18 / 5;
+    }
+}
+
+.related-content-box {
+    margin-top: var(--space-base);
+    padding: var(--space-xl);
+    border-radius: 24px;
+    background: #F2F2F2;
+}
+
+.related-content-section {
+    margin-top: var(--space-xl);
+}
+
+.related-content-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-base);
+    margin-bottom: var(--space-base);
+    direction: rtl;
+}
+
+.related-content-label {
+    display: inline-flex;
+    align-items: center;
+    min-height: 26px;
+    padding: 0 var(--space-md);
+    border-radius: 999px;
+    background: #ddff53;
+    color: #000000;
+    font-family: 'Open Sans', sans-serif;
+    font-size: var(--font-xs);
+    font-weight: 800;
+}
+
+.related-content-title {
     margin: 0;
-    padding-top: var(--space-md);
-    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    color: #000000;
+    font-family: 'Open Sans', sans-serif;
+    font-size: var(--font-lg);
+    font-weight: 800;
+    line-height: var(--lh-heading);
+    text-align: right;
+}
+
+.related-content-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-md);
+}
+
+.related-content-ad.media-item--loaded:not(.media-item--ready) {
+    display: none;
+}
+
+:host ::ng-deep .related-content-ad .media-wrapper {
+    max-width: none !important;
+    aspect-ratio: 4 / 2.7 !important;
+    border-radius: 24px;
+    background: #F2F2F2;
+}
+
+:host ::ng-deep .related-content-ad .media-asset {
+    object-fit: cover;
 }
 
 /* --- Keyframe Animations --- */

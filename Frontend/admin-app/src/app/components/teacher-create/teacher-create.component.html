@@ -110,7 +110,15 @@
             <input id="displayName" type="text" [(ngModel)]="displayName" name="displayName" class="text-input name-input" required placeholder="שם מלא *" />
             <p class="field-note center">השם שיוצג בדף הציבורי שלך</p>
 
-            <div class="two-fields">
+            <label class="choice-toggle">
+              <input type="checkbox" [(ngModel)]="isOnlineBusiness" name="isOnlineBusiness" />
+              <span class="checkbox-mark">
+                <span class="material-icons" *ngIf="isOnlineBusiness">check</span>
+              </span>
+              <span>עסק אונליין</span>
+            </label>
+
+            <div class="two-fields" *ngIf="!isOnlineBusiness">
               <div class="custom-dropdown">
                 <button type="button" class="select-field" (click)="toggleCityDropdown()">{{ getSelectedCityName() }}</button>
                 <div *ngIf="cityDropdownOpen" class="dropdown-menu">
@@ -153,7 +161,7 @@
               </button>
             </div>
 
-            <input id="websiteUrl" type="url" [(ngModel)]="websiteUrl" name="websiteUrl" class="text-input" placeholder="אתר אישי" />
+            <input id="websiteUrl" type="text" inputmode="url" [(ngModel)]="websiteUrl" name="websiteUrl" class="text-input" placeholder="אתר אישי, למשל example.com" />
 
             <div class="soft-block">
               <div class="soft-label">רשתות חברתיות</div>

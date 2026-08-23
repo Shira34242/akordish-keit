@@ -203,6 +203,7 @@
   accent-color: #000000;
   flex-shrink: 0;
 }
+.online-business-toggle { margin-bottom: var(--space-base); }
 
 /* ── User Selection Box ── */
 .user-selection-box {

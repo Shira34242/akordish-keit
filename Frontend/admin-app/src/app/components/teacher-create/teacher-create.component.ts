@@ -23,6 +23,7 @@ import {
 import { ProfileStatus, CreateGalleryImageDto, SocialLinkDto, SocialPlatform } from '../../models/music-service-provider.model';
 import { TeachingLanguage, getTeachingLanguageOptions } from '../../models/teaching-language.enum';
 import { TargetAudience, getTargetAudienceOptions } from '../../models/target-audience.enum';
+import { normalizeWebsiteUrl } from '../../utils/url-utils';
 import {
   SubscriptionPlan,
   SubscriptionDto
@@ -78,6 +79,7 @@ export class TeacherCreateComponent implements OnInit, OnDestroy {
   shortBio: string = '';
   fullDescription: string = '';
   location: string = '';
+  isOnlineBusiness = false;
   phoneNumber: string = '';
   hasWhatsAppOnPhone = false;
   email: string = '';
@@ -835,12 +837,12 @@ export class TeacherCreateComponent implements OnInit, OnDestroy {
       shortBio: this.shortBio?.trim() || undefined,
       fullDescription: this.withOtherDetails(this.fullDescription?.trim()) || undefined,
       isTeacher: true,
-      cityId: this.cityId,
-      location: this.location?.trim() || undefined,
+      cityId: this.isOnlineBusiness ? undefined : this.cityId,
+      location: this.isOnlineBusiness ? 'עסק אונליין' : this.location?.trim() || undefined,
       phoneNumber: this.phoneNumber.trim(),
       whatsAppNumber: this.hasWhatsAppOnPhone ? this.phoneNumber.trim() : undefined,
       email: this.email.trim(),
-      websiteUrl: this.websiteUrl?.trim() || undefined,
+      websiteUrl: normalizeWebsiteUrl(this.websiteUrl),
       bannerImageUrl: this.bannerImageUrl?.trim() || undefined,
       bannerBlur: this.normalizedBannerBlur(this.bannerBlur),
       profileImageUrl: this.profileImageUrl?.trim() || undefined,

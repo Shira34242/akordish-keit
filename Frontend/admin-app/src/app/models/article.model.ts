@@ -59,6 +59,7 @@ export interface Article {
     galleryImages: ArticleGalleryImage[];
     taggedArtists: ArticleArtist[];
     uploaderProfile?: ContentUploaderProfile;
+    submittedByUserId?: number | null;
     uploaderUserId?: number | null;
     uploaderProfileType?: 'artist' | 'serviceProvider' | 'user';
     uploaderProfileId?: number;

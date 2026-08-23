@@ -12,6 +12,8 @@ import { EventModalComponent } from '../../../shared/event-modal/event-modal.com
 import { ArtistService } from '../../../../services/artist.service';
 import { ArtistListDto } from '../../../../models/artist.model';
 import { SmartAddComponent } from '../smart-add/smart-add.component';
+import { NotificationService } from '../../../../services/notification.service';
+import { NotificationCategory, NotificationType } from '../../../../models/notification.model';
 
 
 @Component({
@@ -26,6 +28,7 @@ export class EventsListComponent implements OnInit, OnDestroy, AfterViewInit {
   private readonly eventService = inject(EventService);
   private readonly router = inject(Router);
   private readonly artistService = inject(ArtistService);
+  private readonly notificationService = inject(NotificationService);
   private isDestroyed = false;
   private scrollObserver?: IntersectionObserver;
 
@@ -38,6 +41,7 @@ export class EventsListComponent implements OnInit, OnDestroy, AfterViewInit {
   bulkActionLoading = false;
   selectedEventIds = new Set<number>();
   savingStatusId: number | null = null;
+  sendingApprovalNotificationIds = new Set<number>();
   selectedEventPreview: EventCardData | null = null;
   smartImportOpen = false;
   viewMode: 'list' | 'grid' = (localStorage.getItem('admin-events-view-v2') as 'list' | 'grid') || 'grid';
@@ -336,6 +340,39 @@ export class EventsListComponent implements OnInit, OnDestroy, AfterViewInit {
         this.savingStatusId = null;
       }
     });
+  }
+
+  async sendApprovalNotification(event: Event): Promise<void> {
+    const userId = this.getSubmittingUserId(event);
+    if (!event.isActive || !userId || this.sendingApprovalNotificationIds.has(event.id)) return;
+
+    if (!await this.siteAlerts.confirm(`לשלוח למשתמש הודעה שהאירוע "${event.name}" אושר?`)) return;
+
+    this.sendingApprovalNotificationIds.add(event.id);
+    this.notificationService.sendStatusUpdate({
+      userId,
+      title: 'האירוע אושר',
+      message: `האירוע "${event.name}" אושר ופורסם באתר.`,
+      type: NotificationType.Approval,
+      category: NotificationCategory.Event,
+      relatedEntityType: 'Event',
+      relatedEntityId: event.id,
+      actionUrl: '/events'
+    }).subscribe({
+      next: () => {
+        this.sendingApprovalNotificationIds.delete(event.id);
+        this.siteAlerts.show('הודעת האישור נשלחה למשתמש');
+      },
+      error: (error) => {
+        console.error('Error sending event approval notification:', error);
+        this.sendingApprovalNotificationIds.delete(event.id);
+        this.siteAlerts.show(error?.error?.message || 'שליחת הודעת האישור נכשלה');
+      }
+    });
+  }
+
+  getSubmittingUserId(event: Event): number | null {
+    return event.submittedByUserId ?? event.uploaderUserId ?? null;
   }
 
   async bulkDeleteSelected(): Promise<void> {

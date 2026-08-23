@@ -53,6 +53,7 @@ public class ArticleDto
     public ContentUploaderProfileDto? UploaderProfile { get; set; }
 
     /// <summary>שדות גולמיים — לשימוש בטופס עריכה</summary>
+    public int? SubmittedByUserId { get; set; }
     public int? UploaderUserId { get; set; }
     public string? UploaderProfileType { get; set; }
     public int? UploaderProfileId { get; set; }

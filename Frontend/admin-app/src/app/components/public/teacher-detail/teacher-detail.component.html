@@ -46,7 +46,15 @@
           {{ agencyBadge.agencyName }}
         </span>
         <h1 class="hero-name">{{ teacher.displayName }}</h1>
-        <p class="hero-role">{{ heroRole }}</p>
+        <p class="hero-role" *ngIf="getOrderedInstruments().length; else genericTeacherRole">
+          {{ 'teacher.role_prefix' | translate }}<ng-container *ngFor="let instrument of getOrderedInstruments(); let last = last"><a
+            class="hero-role-link"
+            [routerLink]="['/professionals']"
+            [queryParams]="{ tab: 'teachers', instrumentId: instrument.instrumentId }">{{ instrument.instrumentName }}</a><span *ngIf="!last">, </span></ng-container>
+        </p>
+        <ng-template #genericTeacherRole>
+          <p class="hero-role">{{ heroRole }}</p>
+        </ng-template>
         <p class="hero-location" *ngIf="heroLocationLine">
           <span class="material-icons">location_on</span>
           {{ heroLocationLine }}

@@ -839,9 +839,6 @@ export class LayoutComponent implements OnInit, AfterViewInit, OnDestroy {
     localStorage.setItem('pendingProfessionalType', userType);
 
     switch (userType) {
-      case UserType.Artist:
-        this.router.navigate(['/artist/create'], { queryParams: { from: 'registration' } });
-        break;
       case UserType.Teacher:
         this.router.navigate(['/teacher/create'], { queryParams: { from: 'registration' } });
         break;

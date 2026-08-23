@@ -174,6 +174,14 @@
         </span>
       </div>
       <div class="grid-card-actions">
+        <button
+          *ngIf="song.isApproved && getSubmittingUserId(song)"
+          class="btn-action btn-notify"
+          [disabled]="sendingApprovalNotificationIds.has(song.id)"
+          (click)="sendApprovalNotification(song); $event.stopPropagation()"
+          title="שליחת הודעת אישור למשתמש">
+          <span class="material-icons">{{ sendingApprovalNotificationIds.has(song.id) ? 'hourglass_empty' : 'outgoing_mail' }}</span>
+        </button>
         <button class="btn-action" (click)="editSong(song.id); $event.stopPropagation()" title="עריכה"><span class="material-icons">edit</span></button>
       </div>
     </div>
@@ -302,6 +310,14 @@
               (click)="toggleApproval(song)"
               [title]="song.isApproved ? 'ביטול אישור' : 'אישור'">
               <span class="material-icons">{{ song.isApproved ? 'check_circle' : 'schedule' }}</span>
+            </button>
+            <button
+              *ngIf="song.isApproved && getSubmittingUserId(song)"
+              class="btn-action btn-notify"
+              [disabled]="sendingApprovalNotificationIds.has(song.id)"
+              (click)="sendApprovalNotification(song)"
+              title="שליחת הודעת אישור למשתמש">
+              <span class="material-icons">{{ sendingApprovalNotificationIds.has(song.id) ? 'hourglass_empty' : 'outgoing_mail' }}</span>
             </button>
             <button
               class="btn-action btn-edit"

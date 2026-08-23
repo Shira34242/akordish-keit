@@ -869,12 +869,6 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  getAddPageUrl(type: 'artist' | 'teacher' | 'provider'): string {
-    if (type === 'artist') return '/artist/create';
-    if (type === 'teacher') return '/teacher/create';
-    return '/service-provider/create';
-  }
-
   canAddManagedPage(): boolean {
     return this.myPages.length < 5;
   }

@@ -156,6 +156,15 @@
       </div>
 
       <div class="grid-card-actions">
+        <button
+          *ngIf="event.isActive && getSubmittingUserId(event)"
+          class="btn-action btn-notify"
+          type="button"
+          [disabled]="sendingApprovalNotificationIds.has(event.id)"
+          (click)="sendApprovalNotification(event); $event.stopPropagation()"
+          title="שליחת הודעת אישור למשתמש">
+          <span class="material-icons">{{ sendingApprovalNotificationIds.has(event.id) ? 'hourglass_empty' : 'outgoing_mail' }}</span>
+        </button>
         <button class="btn-action primary-grid-action" type="button" (click)="editEvent(event); $event.stopPropagation()" title="עריכה"><span class="material-icons">edit</span></button>
       </div>
     </div>
@@ -244,6 +253,15 @@
           <td>
             <div class="action-buttons">
               <button class="btn-action" type="button" (click)="previewEvent(event)" title="תצוגה"><span class="material-icons">visibility</span></button>
+              <button
+                *ngIf="event.isActive && getSubmittingUserId(event)"
+                class="btn-action btn-notify"
+                type="button"
+                [disabled]="sendingApprovalNotificationIds.has(event.id)"
+                (click)="sendApprovalNotification(event)"
+                title="שליחת הודעת אישור למשתמש">
+                <span class="material-icons">{{ sendingApprovalNotificationIds.has(event.id) ? 'hourglass_empty' : 'outgoing_mail' }}</span>
+              </button>
               <button class="btn-action btn-edit" type="button" (click)="editEvent(event)" title="עריכה"><span class="material-icons">edit</span></button>
               <button class="btn-action btn-duplicate" type="button" (click)="duplicateEvent(event)" title="שכפול"><span class="material-icons">content_copy</span></button>
               <button class="btn-action btn-delete" type="button" (click)="deleteEvent(event)" title="מחיקה"><span class="material-icons">delete</span></button>

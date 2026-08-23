@@ -29,6 +29,7 @@ import { ReportModalComponent } from '../shared/report-modal/report-modal.compon
 import { ContentUploaderBadgeComponent } from '../shared/content-uploader-badge/content-uploader-badge.component';
 import { PrintPanelComponent } from './print-panel/print-panel.component';
 import { NewsBannerComponent } from '../shared/news-banner/news-banner.component';
+import { SongCardComponent } from '../shared/song-card/song-card.component';
 import { PlaylistService } from '../../services/playlist.service';
 import { PlaylistDetail } from '../../models/playlist.model';
 import { UserKnownChordService, KnownChordInstrument } from '../../services/user-known-chord.service';
@@ -42,11 +43,12 @@ import { artistRoute, songSlug } from '../../utils/slug';
 import { CloudflareImagePipe, CloudflareImageSrcsetPipe } from '../../pipes/cloudflare-image.pipe';
 import { AdDisplayComponent } from '../public/ad-display/ad-display.component';
 import { RecommendationExposureService } from '../../services/recommendation-exposure.service';
+import { BreadcrumbItem, BreadcrumbsComponent } from '../shared/breadcrumbs/breadcrumbs.component';
 
 @Component({
     selector: 'app-song-page',
     standalone: true,
-    imports: [CommonModule, RouterModule, ChordTooltipComponent, AddSongModalComponent, PlaylistPopupComponent, ReportModalComponent, ContentUploaderBadgeComponent, PrintPanelComponent, NewsBannerComponent, TranslatePipe, CloudflareImagePipe, CloudflareImageSrcsetPipe, AdDisplayComponent],
+    imports: [CommonModule, RouterModule, ChordTooltipComponent, AddSongModalComponent, PlaylistPopupComponent, ReportModalComponent, ContentUploaderBadgeComponent, PrintPanelComponent, NewsBannerComponent, SongCardComponent, BreadcrumbsComponent, TranslatePipe, CloudflareImagePipe, CloudflareImageSrcsetPipe, AdDisplayComponent],
     templateUrl: './song-page.component.html',
     styleUrls: ['./song-page.component.css']
 })
@@ -57,6 +59,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
     @ViewChild('newsSentinel') newsSentinel?: ElementRef<HTMLDivElement>;
     @ViewChild('mainColumn') mainColumn?: ElementRef<HTMLDivElement>;
     @ViewChild('ratingSection') ratingSection?: ElementRef<HTMLDivElement>;
+    @ViewChild('popularChordsRow') popularChordsRow?: ElementRef<HTMLDivElement>;
     @ViewChild('youtubeModalCard') youtubeModalCard?: ElementRef<HTMLDivElement>;
     @ViewChild('youtubeModalClose') youtubeModalClose?: ElementRef<HTMLButtonElement>;
     private headerLayoutDone = false;
@@ -154,6 +157,15 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
         }
     }
 
+    get breadcrumbItems(): BreadcrumbItem[] {
+        if (!this.song) return [];
+        return [
+            { label: this.langService.translate('nav.home_label'), route: '/' },
+            { label: this.langService.translate('song_page.breadcrumb_chords'), route: '/chords' },
+            { label: this.song.title }
+        ];
+    }
+
     getDailyLimitMessage(): string {
         if (!this.dailyLimitInfo) return '';
         const tpl = this.langService.translate('song.daily_limit_message');
@@ -162,8 +174,10 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
     }
     artistSongs: any[] = [];
     popularSongs: any[] = [];
+    popularChordSongs: any[] = [];
     similarSongs: any[] = [];
     musicNewsArticles: ArticleBanner[] = [];
+    relatedContentArticles: ArticleBanner[] = [];
     isLoadingArtistSongs: boolean = false;
     isLoadingPopularSongs: boolean = false;
     isLoadingSimilarSongs: boolean = false;
@@ -1187,14 +1201,28 @@ private getKeyIndex(keyName: string): number {
     loadPopularSongs(): void {
         this.isLoadingPopularSongs = true;
         
-        this.songService.getPopularSongs(5).subscribe({
+        this.songService.getPopularSongs(8).subscribe({
             next: (songs) => {
-                this.popularSongs = songs;
+                this.popularSongs = songs.slice(0, 5);
+                this.popularChordSongs = songs
+                    .filter(song => song?.id !== this.songId)
+                    .slice(0, 8);
                 this.isLoadingPopularSongs = false;
             },
             error: () => {
+                this.popularChordSongs = [];
                 this.isLoadingPopularSongs = false;
             }
+        });
+    }
+
+    scrollPopularChords(direction: 'left' | 'right'): void {
+        const row = this.popularChordsRow?.nativeElement;
+        if (!row) return;
+        const distance = Math.max(row.clientWidth * 0.72, 180);
+        row.scrollBy({
+            left: (direction === 'left' ? -1 : 1) * distance,
+            behavior: 'smooth'
         });
     }
 
@@ -1203,13 +1231,17 @@ private getKeyIndex(keyName: string): number {
         this.showMusicNewsLink = false;
         this.musicNewsLoadedCount = 0;
         this.musicNewsArticles = [];
+        this.relatedContentArticles = [];
         this.allMusicNewsArticles = [];
         this.articleService.getPublishedArticleBanners(ArticleContentType.News, 1, 30).subscribe({
             next: (response) => {
-                this.allMusicNewsArticles = this.recommendationExposure.prioritize(
+                const prioritizedArticles = this.recommendationExposure.prioritize(
                     response.items || [],
                     article => article.id
                 );
+                // Keep the sidebar's original article pool and height behaviour unchanged.
+                this.relatedContentArticles = prioritizedArticles.slice(-4);
+                this.allMusicNewsArticles = prioritizedArticles;
                 this.isLoadingMusicNews = false;
                 this.expandMusicNews(5);
                 this.startNewsObserver();
@@ -1217,6 +1249,7 @@ private getKeyIndex(keyName: string): number {
             error: () => {
                 this.allMusicNewsArticles = [];
                 this.musicNewsArticles = [];
+                this.relatedContentArticles = [];
                 this.isLoadingMusicNews = false;
             }
         });

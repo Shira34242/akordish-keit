@@ -124,6 +124,7 @@ namespace AkordishKeit.Models.DTOs
         public DateTime? UpdatedAt { get; set; }
         public string? CreatedBy { get; set; }
         public string? UpdatedBy { get; set; }
+        public int? SubmittedByUserId { get; set; }
 
         // Calculated fields for UI
         public int DaysUntilEvent { get; set; }

@@ -47,7 +47,18 @@
           {{ agencyBadge.agencyName }}
         </span>
         <h1 class="hero-name">{{ professional.displayName }}</h1>
-        <p class="hero-role">{{ heroRole }}</p>
+        <p class="hero-role" *ngIf="professional.categories?.length; else genericProfessionalRole">
+          <ng-container *ngFor="let category of professional.categories; let last = last">
+            <a class="hero-role-link"
+               [routerLink]="['/professionals']"
+               [queryParams]="{ categoryId: category.categoryId }">
+              {{ category.categoryName }}<ng-container *ngIf="category.subCategory"> · {{ category.subCategory }}</ng-container>
+            </a><span *ngIf="!last">, </span>
+          </ng-container>
+        </p>
+        <ng-template #genericProfessionalRole>
+          <p class="hero-role">{{ heroRole }}</p>
+        </ng-template>
         <p class="hero-location" *ngIf="heroLocationLine">
           <span class="material-icons">location_on</span>
           {{ heroLocationLine }}

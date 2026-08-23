@@ -738,8 +738,6 @@ public class ArticleService : IArticleService
             throw new KeyNotFoundException("Article not found");
         }
 
-        var wasPublished = article.Status == (int)ArticleStatus.Published;
-
         // Validate slug uniqueness (excluding current article)
         if (article.Slug != dto.Slug && await SlugExistsAsync(dto.Slug, id))
         {
@@ -814,18 +812,6 @@ public class ArticleService : IArticleService
 
         await _context.SaveChangesAsync();
 
-        if (!wasPublished &&
-            article.Status == (int)ArticleStatus.Published &&
-            article.SubmittedByUserId.HasValue)
-        {
-            await _notificationService.NotifyArticleApprovedAsync(
-                article.SubmittedByUserId.Value,
-                article.Id,
-                article.Title,
-                article.Slug,
-                article.ContentType);
-        }
-
         return (await GetArticleByIdAsync(id))!;
     }
 
@@ -858,16 +844,6 @@ public class ArticleService : IArticleService
         {
             article.PublishDate = DateTime.UtcNow;
             article.ScheduledDate = null;
-
-            if (article.SubmittedByUserId.HasValue)
-            {
-                await _notificationService.NotifyArticleApprovedAsync(
-                    article.SubmittedByUserId.Value,
-                    article.Id,
-                    article.Title,
-                    article.Slug,
-                    article.ContentType);
-            }
         }
 
         await _context.SaveChangesAsync();
@@ -1838,6 +1814,7 @@ public class ArticleService : IArticleService
                 ArtistImageUrl = aa.Artist.ImageUrl
             }).ToList() ?? new List<ArticleArtistDto>(),
             UploaderProfile = ResolveUploaderProfile(article.UploaderUser, article.UploaderProfileType, article.UploaderProfileId),
+            SubmittedByUserId = article.SubmittedByUserId,
             UploaderUserId = article.UploaderUserId,
             UploaderProfileType = article.UploaderProfileType,
             UploaderProfileId = article.UploaderProfileId

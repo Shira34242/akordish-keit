@@ -262,6 +262,14 @@
       </div>
       </div>
       <div class="grid-card-actions">
+        <button
+          *ngIf="article.status === ArticleStatus.Published && getSubmittingUserId(article)"
+          class="btn-action btn-notify"
+          [disabled]="sendingApprovalNotificationIds.has(article.id)"
+          (click)="sendApprovalNotification(article); $event.stopPropagation()"
+          title="שליחת הודעת אישור למשתמש">
+          <span class="material-icons">{{ sendingApprovalNotificationIds.has(article.id) ? 'hourglass_empty' : 'outgoing_mail' }}</span>
+        </button>
         <button class="btn-action primary-grid-action" (click)="editArticle(article.id); $event.stopPropagation()" title="עריכה"><span class="material-icons">edit</span></button>
       </div>
     </div>
@@ -412,6 +420,14 @@
             </button>
             <button class="btn-action btn-view" (click)="viewArticle(article)" title="צפייה">
               <span class="material-icons">visibility</span>
+            </button>
+            <button
+              *ngIf="article.status === ArticleStatus.Published && getSubmittingUserId(article)"
+              class="btn-action btn-notify"
+              [disabled]="sendingApprovalNotificationIds.has(article.id)"
+              (click)="sendApprovalNotification(article)"
+              title="שליחת הודעת אישור למשתמש">
+              <span class="material-icons">{{ sendingApprovalNotificationIds.has(article.id) ? 'hourglass_empty' : 'outgoing_mail' }}</span>
             </button>
             <button class="btn-action btn-category" (click)="openCategoryModal(article)" title="שיוך קטגוריות">
               <span class="material-icons">sell</span>

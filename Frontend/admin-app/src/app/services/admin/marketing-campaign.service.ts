@@ -10,6 +10,7 @@ export interface MarketingCampaignSummary {
   code: string;
   targetPath: string;
   trackingUrl: string;
+  isExternal: boolean;
   isActive: boolean;
   createdAt: string;
   visits: number;

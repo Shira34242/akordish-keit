@@ -115,9 +115,9 @@
           <p class="teacher-instrument" *ngIf="teacher.primaryInstrument">
             {{ teacher.primaryInstrument }}
           </p>
-          <p class="teacher-location" *ngIf="teacher.cityId">
+          <p class="teacher-location" *ngIf="getTeacherLocationLine(teacher)">
             <span class="material-icons">location_on</span>
-            {{ getCityName(teacher.cityId) }}
+            {{ getTeacherLocationLine(teacher) }}
           </p>
           <p class="teacher-experience" *ngIf="teacher.yearsOfExperience">
             {{ teacher.yearsOfExperience }} {{ 'teachers.experience_suffix' | translate }}
@@ -170,9 +170,9 @@
             <p class="teacher-instrument" *ngIf="getTeacherInstruments(teacher)">
               {{ getTeacherInstruments(teacher) }}
             </p>
-            <p class="teacher-location" *ngIf="teacher.cityId">
+            <p class="teacher-location" *ngIf="getTeacherLocationLine(teacher)">
               <span class="material-icons">location_on</span>
-              {{ getCityName(teacher.cityId) }}
+              {{ getTeacherLocationLine(teacher) }}
             </p>
             <p class="teacher-experience" *ngIf="teacher.yearsOfExperience">
               {{ teacher.yearsOfExperience }} {{ 'teachers.experience_suffix' | translate }}
@@ -207,9 +207,9 @@
           </div>
           <div class="teacher-info">
             <h3 class="teacher-name">{{ teacher.displayName }}</h3>
-            <p class="teacher-location" *ngIf="teacher.cityId">
+            <p class="teacher-location" *ngIf="getTeacherLocationLine(teacher)">
               <span class="material-icons">location_on</span>
-              {{ getCityName(teacher.cityId) }}
+              {{ getTeacherLocationLine(teacher) }}
             </p>
             <p class="teacher-experience" *ngIf="teacher.yearsOfExperience">
               {{ teacher.yearsOfExperience }} {{ 'teachers.experience_suffix' | translate }}
@@ -244,9 +244,9 @@
           </div>
           <div class="teacher-info">
             <h3 class="teacher-name">{{ teacher.displayName }}</h3>
-            <p class="teacher-location" *ngIf="teacher.cityId">
+            <p class="teacher-location" *ngIf="getTeacherLocationLine(teacher)">
               <span class="material-icons">location_on</span>
-              {{ getCityName(teacher.cityId) }}
+              {{ getTeacherLocationLine(teacher) }}
             </p>
             <p class="teacher-experience" *ngIf="teacher.yearsOfExperience">
               {{ teacher.yearsOfExperience }} {{ 'teachers.experience_suffix' | translate }}
@@ -281,9 +281,9 @@
           </div>
           <div class="teacher-info">
             <h3 class="teacher-name">{{ teacher.displayName }}</h3>
-            <p class="teacher-location" *ngIf="teacher.cityId">
+            <p class="teacher-location" *ngIf="getTeacherLocationLine(teacher)">
               <span class="material-icons">location_on</span>
-              {{ getCityName(teacher.cityId) }}
+              {{ getTeacherLocationLine(teacher) }}
             </p>
             <p class="teacher-experience" *ngIf="teacher.yearsOfExperience">
               {{ teacher.yearsOfExperience }} {{ 'teachers.experience_suffix' | translate }}
@@ -317,9 +317,9 @@
                 <span class="material-icons">music_note</span>
                 {{ getTeacherInstruments(teacher) }}
               </span>
-              <span *ngIf="teacher.cityId" class="detail-item">
+              <span *ngIf="getTeacherLocationLine(teacher)" class="detail-item">
                 <span class="material-icons">location_on</span>
-                {{ getCityName(teacher.cityId) }}
+                {{ getTeacherLocationLine(teacher) }}
               </span>
               <span *ngIf="teacher.yearsOfExperience" class="detail-item">
                 <span class="material-icons">work</span>

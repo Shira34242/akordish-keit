@@ -13,6 +13,7 @@ import { RequiredFieldFeedbackService } from '../../../services/required-field-f
 import { MediaService } from '../../../services/admin/media.service';
 import { LanguageService } from '../../../services/language.service';
 import { ProfileImageCropperComponent } from '../../shared/profile-image-cropper/profile-image-cropper.component';
+import { normalizeWebsiteUrl } from '../../../utils/url-utils';
 
 @Component({
   selector: 'app-become-teacher-form',
@@ -43,6 +44,7 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
   shortBio: string = '';
   fullDescription: string = '';
   location: string = '';
+  isOnlineBusiness = false;
   phoneNumber: string = '';
   whatsAppNumber: string = '';
   email: string = '';
@@ -524,12 +526,12 @@ export class BecomeTeacherFormComponent implements OnInit, OnDestroy {
       shortBio: this.shortBio,
       fullDescription: this.fullDescription,
       isTeacher: true,
-      cityId: this.cityId,
-      location: this.location,
+      cityId: this.isOnlineBusiness ? undefined : this.cityId,
+      location: this.isOnlineBusiness ? 'עסק אונליין' : this.location?.trim() || undefined,
       phoneNumber: this.phoneNumber,
       whatsAppNumber: this.hasWhatsAppForPhone ? this.phoneNumber : this.whatsAppNumber,
       email: this.email,
-      websiteUrl: this.websiteUrl?.trim() || undefined,
+      websiteUrl: normalizeWebsiteUrl(this.websiteUrl),
       bannerImageUrl: this.bannerImageUrl?.trim() || undefined,
       profileImageUrl: this.profileImageUrl,
       videoUrl: this.videoUrl,

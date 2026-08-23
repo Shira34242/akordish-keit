@@ -68,13 +68,6 @@
         <button
           type="button"
           class="choice-tile"
-          [class.selected]="selectedUserType === UserType.Artist"
-          (click)="selectUserType(UserType.Artist)">
-          אמן
-        </button>
-        <button
-          type="button"
-          class="choice-tile"
           *ngFor="let category of serviceProviderCategories; trackBy: trackByCategory"
           [class.selected]="selectedServiceProviderCategoryId === category.id"
           (click)="selectUserType(UserType.ServiceProvider, category.id)">

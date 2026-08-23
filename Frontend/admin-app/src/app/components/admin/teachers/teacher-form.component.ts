@@ -15,6 +15,7 @@ import { UserSelectionModalComponent } from './user-selection-modal.component';
 import { FileUploadInputComponent } from '../../shared/file-upload-input/file-upload-input.component';
 import { SiteAlertService } from '../../../services/site-alert.service';
 import { RequiredFieldFeedbackService } from '../../../services/required-field-feedback.service';
+import { normalizeWebsiteUrl } from '../../../utils/url-utils';
 
 
 @Component({
@@ -53,6 +54,7 @@ export class TeacherFormComponent implements OnInit {
   shortBio: string = '';
   fullDescription: string = '';
   location: string = '';
+  isOnlineBusiness = false;
   phoneNumber: string = '';
   whatsAppNumber: string = '';
   email: string = '';
@@ -360,6 +362,7 @@ export class TeacherFormComponent implements OnInit {
         this.fullDescription = teacher.fullDescription || '';
         this.cityId = teacher.cityId;
         this.location = teacher.location || '';
+        this.isOnlineBusiness = teacher.location?.trim() === 'עסק אונליין';
         this.phoneNumber = teacher.phoneNumber || '';
         this.whatsAppNumber = teacher.whatsAppNumber || '';
         this.email = teacher.email || '';
@@ -418,12 +421,12 @@ export class TeacherFormComponent implements OnInit {
       displayName: this.displayName.trim(),
       shortBio: this.optionalText(this.shortBio),
       fullDescription: this.optionalText(this.fullDescription),
-      cityId: this.cityId,
-      location: this.optionalText(this.location),
+      cityId: this.isOnlineBusiness ? undefined : this.cityId,
+      location: this.isOnlineBusiness ? 'עסק אונליין' : this.optionalText(this.location),
       phoneNumber: this.phoneNumber.trim(),
       whatsAppNumber: this.optionalText(this.whatsAppNumber),
       email: this.email.trim(),
-      websiteUrl: this.optionalText(this.websiteUrl),
+      websiteUrl: normalizeWebsiteUrl(this.websiteUrl),
       bannerImageUrl: this.optionalText(this.bannerImageUrl),
       bannerBlur: this.normalizedBannerBlur(this.bannerBlur),
       profileImageUrl: this.optionalText(this.profileImageUrl),

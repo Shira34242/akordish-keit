@@ -11,6 +11,7 @@ import { RequiredFieldFeedbackService } from '../../../services/required-field-f
 import { MediaService } from '../../../services/admin/media.service';
 import { LanguageService } from '../../../services/language.service';
 import { getSocialPlatformIconSvg, normalizeSocialPlatform } from '../../../utils/social-platform-icons';
+import { normalizeWebsiteUrl } from '../../../utils/url-utils';
 import { ProfileImageCropperComponent } from '../../shared/profile-image-cropper/profile-image-cropper.component';
 
 interface Category {
@@ -48,6 +49,7 @@ export class BecomeProfessionalFormComponent implements OnInit, OnDestroy {
   shortBio: string = '';
   fullDescription: string = '';
   location: string = '';
+  isOnlineBusiness = false;
   phoneNumber: string = '';
   whatsAppNumber: string = '';
   email: string = '';
@@ -431,12 +433,12 @@ export class BecomeProfessionalFormComponent implements OnInit, OnDestroy {
       shortBio: this.shortBio,
       fullDescription: this.fullDescription,
       isTeacher: false, // Always false - this creates a professional profile
-      cityId: this.cityId,
-      location: this.location,
+      cityId: this.isOnlineBusiness ? undefined : this.cityId,
+      location: this.isOnlineBusiness ? 'עסק אונליין' : this.location?.trim() || undefined,
       phoneNumber: this.phoneNumber,
       whatsAppNumber: this.hasWhatsAppForPhone ? this.phoneNumber : this.whatsAppNumber,
       email: this.email,
-      websiteUrl: this.websiteUrl?.trim() || undefined,
+      websiteUrl: normalizeWebsiteUrl(this.websiteUrl),
       profileImageUrl: this.profileImageUrl,
       bannerImageUrl: this.bannerImageUrl?.trim() || undefined,
       videoUrl: this.videoUrl,

@@ -1136,6 +1136,9 @@
 }
 
 .btn-action:hover { background: #ddff53; }
+.btn-action:disabled { opacity: 0.45; cursor: wait; }
+.btn-notify { background: #ddff53; }
+.btn-notify:hover { background: #000000; color: #ddff53; }
 .btn-delete:hover { background: #404040; color: #ffffff; }
 
 /* Empty State */

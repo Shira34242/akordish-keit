@@ -19,7 +19,7 @@ public class MarketingCampaignService : IMarketingCampaignService
         _logger = logger;
     }
 
-    public async Task<MarketingCampaignDashboardDto> GetDashboardAsync(DateTime? dateFrom, DateTime? dateTo, string frontendBaseUrl)
+    public async Task<MarketingCampaignDashboardDto> GetDashboardAsync(DateTime? dateFrom, DateTime? dateTo, string frontendBaseUrl, string backendBaseUrl)
     {
         var end = (dateTo ?? DateTime.UtcNow).ToUniversalTime();
         var start = (dateFrom ?? end.AddDays(-30)).ToUniversalTime();
@@ -55,7 +55,8 @@ public class MarketingCampaignService : IMarketingCampaignService
                 Source = campaign.Source,
                 Code = campaign.Code,
                 TargetPath = campaign.TargetPath,
-                TrackingUrl = BuildTrackingUrl(frontendBaseUrl, campaign),
+                TrackingUrl = BuildTrackingUrl(frontendBaseUrl, backendBaseUrl, campaign),
+                IsExternal = IsExternalTarget(campaign.TargetPath),
                 IsActive = campaign.IsActive,
                 CreatedAt = campaign.CreatedAt,
                 Visits = row?.Visits ?? 0,
@@ -67,9 +68,13 @@ public class MarketingCampaignService : IMarketingCampaignService
         }).ToList();
 
         var totalVisits = rows.Sum(x => x.Visits);
-        var totalSignups = rows.Sum(x => x.Signups);
+        var totalSignups = rows.Where(x => !x.IsExternal).Sum(x => x.Signups);
         var totalUnique = await _context.MarketingCampaignEvents.AsNoTracking()
             .Where(x => x.EventType == VisitEvent && x.OccurredAt >= start && x.OccurredAt < end)
+            .Select(x => x.VisitorId).Distinct().CountAsync();
+        var totalInternalUnique = await _context.MarketingCampaignEvents.AsNoTracking()
+            .Where(x => x.EventType == VisitEvent && x.OccurredAt >= start && x.OccurredAt < end &&
+                        x.MarketingCampaign.TargetPath.StartsWith("/"))
             .Select(x => x.VisitorId).Distinct().CountAsync();
 
         return new MarketingCampaignDashboardDto
@@ -79,12 +84,12 @@ public class MarketingCampaignService : IMarketingCampaignService
             TotalVisits = totalVisits,
             UniqueVisitors = totalUnique,
             TotalSignups = totalSignups,
-            ConversionRate = totalUnique == 0 ? 0 : Math.Round(totalSignups * 100m / totalUnique, 1),
+            ConversionRate = totalInternalUnique == 0 ? 0 : Math.Round(totalSignups * 100m / totalInternalUnique, 1),
             Campaigns = rows
         };
     }
 
-    public async Task<MarketingCampaignSummaryDto> CreateAsync(CreateMarketingCampaignRequest request, int createdByUserId, string frontendBaseUrl)
+    public async Task<MarketingCampaignSummaryDto> CreateAsync(CreateMarketingCampaignRequest request, int createdByUserId, string frontendBaseUrl, string backendBaseUrl)
     {
         var targetPath = NormalizeTargetPath(request.TargetPath);
         var campaign = new MarketingCampaign
@@ -107,7 +112,8 @@ public class MarketingCampaignService : IMarketingCampaignService
             Source = campaign.Source,
             Code = campaign.Code,
             TargetPath = campaign.TargetPath,
-            TrackingUrl = BuildTrackingUrl(frontendBaseUrl, campaign),
+            TrackingUrl = BuildTrackingUrl(frontendBaseUrl, backendBaseUrl, campaign),
+            IsExternal = IsExternalTarget(campaign.TargetPath),
             IsActive = true,
             CreatedAt = campaign.CreatedAt
         };
@@ -126,7 +132,8 @@ public class MarketingCampaignService : IMarketingCampaignService
     public async Task<MarketingCampaignSummaryDto?> UpdateAsync(
         int id,
         UpdateMarketingCampaignRequest request,
-        string frontendBaseUrl)
+        string frontendBaseUrl,
+        string backendBaseUrl)
     {
         var campaign = await _context.MarketingCampaigns.FindAsync(id);
         if (campaign == null) return null;
@@ -144,7 +151,8 @@ public class MarketingCampaignService : IMarketingCampaignService
             Source = campaign.Source,
             Code = campaign.Code,
             TargetPath = campaign.TargetPath,
-            TrackingUrl = BuildTrackingUrl(frontendBaseUrl, campaign),
+            TrackingUrl = BuildTrackingUrl(frontendBaseUrl, backendBaseUrl, campaign),
+            IsExternal = IsExternalTarget(campaign.TargetPath),
             IsActive = campaign.IsActive,
             CreatedAt = campaign.CreatedAt
         };
@@ -190,6 +198,54 @@ public class MarketingCampaignService : IMarketingCampaignService
         });
         await _context.SaveChangesAsync();
         return true;
+    }
+
+    public async Task<string?> TrackExternalClickAsync(
+        string campaignCode,
+        string visitorId,
+        string? referrer,
+        string? ipAddress,
+        string? userAgent)
+    {
+        var code = NormalizeCode(campaignCode);
+        var normalizedVisitorId = NormalizeVisitorId(visitorId);
+        if (string.IsNullOrEmpty(code) || string.IsNullOrEmpty(normalizedVisitorId)) return null;
+
+        var campaign = await _context.MarketingCampaigns.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Code == code);
+        if (campaign == null || !IsExternalTarget(campaign.TargetPath)) return null;
+
+        if (!campaign.IsActive || IsAutomatedAgent(userAgent)) return campaign.TargetPath;
+
+        try
+        {
+            var duplicateAfter = DateTime.UtcNow.AddMinutes(-30);
+            var duplicate = await _context.MarketingCampaignEvents.AnyAsync(x =>
+                x.MarketingCampaignId == campaign.Id && x.EventType == VisitEvent &&
+                x.VisitorId == normalizedVisitorId && x.OccurredAt >= duplicateAfter);
+
+            if (!duplicate)
+            {
+                _context.MarketingCampaignEvents.Add(new MarketingCampaignEvent
+                {
+                    MarketingCampaignId = campaign.Id,
+                    EventType = VisitEvent,
+                    VisitorId = normalizedVisitorId,
+                    PagePath = Truncate(campaign.TargetPath, 500),
+                    Referrer = Truncate(referrer, 500),
+                    IpAddress = Truncate(ipAddress, 64),
+                    UserAgent = Truncate(userAgent, 500),
+                    OccurredAt = DateTime.UtcNow
+                });
+                await _context.SaveChangesAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "External marketing click tracking failed for campaign {CampaignId}", campaign.Id);
+        }
+
+        return campaign.TargetPath;
     }
 
     public async Task RecordSignupAsync(string? campaignCode, string? visitorId, int userId, string? ipAddress, string? userAgent)
@@ -241,21 +297,37 @@ public class MarketingCampaignService : IMarketingCampaignService
     private static string NormalizeTargetPath(string value)
     {
         var path = value.Trim();
-        // Do not use UriKind.Absolute here: on Linux, rooted site paths such as
-        // "/chords" can be interpreted as absolute file URIs and rejected.
-        if (string.IsNullOrWhiteSpace(path) ||
-            !path.StartsWith('/') ||
-            path.StartsWith("//") ||
-            path.Contains('\\') ||
-            path.Any(char.IsControl))
-            throw new ArgumentException("יש להזין נתיב פנימי באתר שמתחיל ב-/");
-        return path;
+        if (path.StartsWith('/') && !path.StartsWith("//"))
+        {
+            if (path.Contains('\\') || path.Any(char.IsControl))
+                throw new ArgumentException("יש להזין נתיב פנימי תקין באתר שמתחיל ב-/");
+            return path;
+        }
+
+        if (Uri.TryCreate(path, UriKind.Absolute, out var externalUri) &&
+            externalUri.Scheme == Uri.UriSchemeHttps &&
+            !string.IsNullOrWhiteSpace(externalUri.Host) &&
+            string.IsNullOrEmpty(externalUri.UserInfo) &&
+            !path.Any(char.IsControl))
+        {
+            var normalizedUrl = externalUri.AbsoluteUri;
+            if (normalizedUrl.Length > 500)
+                throw new ArgumentException("הכתובת החיצונית ארוכה מדי");
+            return normalizedUrl;
+        }
+
+        throw new ArgumentException("יש להזין נתיב פנימי שמתחיל ב-/ או כתובת חיצונית שמתחילה ב-https://");
     }
 
-    private static string BuildTrackingUrl(string frontendBaseUrl, MarketingCampaign campaign)
+    private static string BuildTrackingUrl(string frontendBaseUrl, string backendBaseUrl, MarketingCampaign campaign)
     {
+        if (IsExternalTarget(campaign.TargetPath))
+            return $"{backendBaseUrl.TrimEnd('/')}/api/marketing-campaigns/open/{Uri.EscapeDataString(campaign.Code)}";
         return $"{frontendBaseUrl.TrimEnd('/')}{AppendTrackingParameters(campaign.TargetPath, campaign)}";
     }
+
+    private static bool IsExternalTarget(string targetPath) =>
+        Uri.TryCreate(targetPath, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps;
 
     private static string AppendTrackingParameters(string targetPath, MarketingCampaign campaign)
     {
@@ -277,7 +349,7 @@ public class MarketingCampaignService : IMarketingCampaignService
     private static bool IsAutomatedAgent(string? userAgent)
     {
         var value = (userAgent ?? string.Empty).ToLowerInvariant();
-        string[] markers = ["bot", "crawler", "spider", "preview", "facebookexternalhit", "telegrambot", "slackbot", "discordbot"];
+        string[] markers = ["bot", "crawler", "spider", "preview", "facebookexternalhit", "telegrambot", "slackbot", "discordbot", "safelinks", "linkchecker", "urlcheck", "proofpoint", "barracuda"];
         return string.IsNullOrWhiteSpace(value) || markers.Any(value.Contains);
     }
 

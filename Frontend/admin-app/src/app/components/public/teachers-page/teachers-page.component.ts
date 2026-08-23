@@ -353,6 +353,10 @@ export class TeachersPageComponent implements OnInit {
     return city?.name || '';
   }
 
+  getTeacherLocationLine(teacher: TeacherListDto): string {
+    return this.getCityName(teacher.cityId) || teacher.cityName || teacher.location?.trim() || '';
+  }
+
   getTeacherInstruments(teacher: TeacherListDto): string {
     if (!teacher.instrumentIds || teacher.instrumentIds.length === 0) return '';
 

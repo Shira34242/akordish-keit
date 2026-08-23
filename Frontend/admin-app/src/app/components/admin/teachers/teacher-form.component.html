@@ -134,6 +134,11 @@
         </div>
       </div>
 
+      <label class="checkbox-label online-business-toggle">
+        <input type="checkbox" [(ngModel)]="isOnlineBusiness" name="isOnlineBusiness" />
+        <span>עסק אונליין</span>
+      </label>
+
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">WhatsApp</label>
@@ -146,7 +151,7 @@
           />
         </div>
 
-        <div class="form-group">
+        <div class="form-group" *ngIf="!isOnlineBusiness">
           <label class="form-label">עיר</label>
           <div class="custom-dropdown" [class.open]="cityDropdownOpen">
             <div class="dropdown-trigger">
@@ -191,7 +196,7 @@
           </div>
         </div>
 
-        <div class="form-group">
+        <div class="form-group" *ngIf="!isOnlineBusiness">
           <label class="form-label">כתובת/אזור (פירוט נוסף)</label>
           <input
             type="text"
@@ -206,11 +211,12 @@
       <div class="form-group">
         <label class="form-label">אתר אינטרנט</label>
         <input
-          type="url"
+          type="text"
+          inputmode="url"
           [(ngModel)]="websiteUrl"
           name="websiteUrl"
           class="form-input"
-          placeholder="https://..."
+          placeholder="example.com"
         />
       </div>
       <div class="form-group">

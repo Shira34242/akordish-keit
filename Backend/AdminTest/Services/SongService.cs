@@ -2070,14 +2070,7 @@ public class SongService : ISongService
 
             await _context.SaveChangesAsync();
 
-            if (song.UploadedByUserId.HasValue && isApproved && !wasApproved)
-            {
-                await _notificationService.NotifySongApprovedAsync(
-                    song.UploadedByUserId.Value,
-                    song.Id,
-                    song.Title);
-            }
-            else if (song.UploadedByUserId.HasValue
+            if (song.UploadedByUserId.HasValue
                 && !isApproved
                 && (wasApproved || previousSubmissionStatus != SubmissionStatus.Rejected))
             {

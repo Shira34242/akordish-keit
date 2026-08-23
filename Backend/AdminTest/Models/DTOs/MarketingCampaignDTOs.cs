@@ -56,6 +56,7 @@ public class MarketingCampaignSummaryDto
     public string Code { get; set; } = string.Empty;
     public string TargetPath { get; set; } = string.Empty;
     public string TrackingUrl { get; set; } = string.Empty;
+    public bool IsExternal { get; set; }
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
     public int Visits { get; set; }

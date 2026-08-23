@@ -128,7 +128,12 @@
         </div>
       </div>
 
-      <div class="form-row">
+      <label class="checkbox-label online-business-toggle">
+        <input type="checkbox" [(ngModel)]="isOnlineBusiness" name="isOnlineBusiness" />
+        <span>עסק אונליין</span>
+      </label>
+
+      <div class="form-row" *ngIf="!isOnlineBusiness">
         <div class="form-group">
           <label class="form-label">עיר</label>
           <div class="custom-dropdown" [class.open]="cityDropdownOpen">
@@ -189,11 +194,12 @@
       <div class="form-group">
         <label class="form-label">אתר אינטרנט</label>
         <input
-          type="url"
+          type="text"
+          inputmode="url"
           [(ngModel)]="websiteUrl"
           name="websiteUrl"
           class="form-input"
-          placeholder="https://..."
+          placeholder="example.com"
         />
       </div>
 

@@ -196,9 +196,23 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
       },
       error: () => this.bannerImagesLoaded = true
     });
-    const tab = this.route.snapshot.queryParamMap.get('tab');
-    if (tab === 'teachers') {
+    const queryParams = this.route.snapshot.queryParamMap;
+    const categoryId = Number(queryParams.get('categoryId'));
+    const instrumentId = Number(queryParams.get('instrumentId'));
+    const hasCategoryFilter = Number.isFinite(categoryId) && categoryId > 0;
+    const hasInstrumentFilter = Number.isFinite(instrumentId) && instrumentId > 0;
+    const tab = queryParams.get('tab');
+
+    if (hasCategoryFilter) {
+      this.selectedCategoryId = categoryId;
+      this.topFilterValue = categoryId.toString();
+    } else if (hasInstrumentFilter) {
       this.activeTab = 'teachers';
+      this.selectedInstrumentId = instrumentId;
+      this.topFilterValue = 'teachers';
+    } else if (tab === 'teachers') {
+      this.activeTab = 'teachers';
+      this.topFilterValue = 'teachers';
     }
     this.loadCities();
     this.loadAgencyBanners();
@@ -421,6 +435,9 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
         this.additionalProfessionalsPage = results.catalog.pageNumber || 1;
         this.additionalProfessionalsTotal = results.catalog.totalCount || this.additionalProfessionals.length;
         this.loading = false;
+        if (this.selectedCategoryId !== null) {
+          this.onSearchProfessionals();
+        }
         this.scrollRestoration.restoreWhenReady();
       },
       error: (err) => { console.error('Error loading professionals:', err); this.loading = false; }
@@ -467,6 +484,9 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
         this.additionalTeachersPage = results.catalog.pageNumber || 1;
         this.additionalTeachersTotal = results.catalog.totalCount || this.additionalTeachers.length;
         this.loadingTeachers = false;
+        if (this.selectedInstrumentId !== null) {
+          this.onSearchTeachers();
+        }
         this.scrollRestoration.restoreWhenReady();
       },
       error: (err) => { console.error('Error loading teachers:', err); this.loadingTeachers = false; }
@@ -974,7 +994,7 @@ export class ProfessionalsPageComponent implements OnInit, AfterViewInit {
       const city = this.getCityName(cityId);
       if (city) cityNames.add(city);
     });
-    return Array.from(cityNames).join(', ');
+    return Array.from(cityNames).join(', ') || provider.location?.trim() || '';
   }
 
   private findCityFromSearchTerm(): City | undefined {

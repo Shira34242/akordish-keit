@@ -178,7 +178,6 @@ export class AdditionalDetailsModalComponent {
   }
 
   get publicPageTitle(): string {
-    if (this.selectedUserType === UserType.Artist) return 'רוצה לפתוח דף אמן ציבורי באתר?';
     if (this.selectedUserType === UserType.Teacher) return 'רוצה לפתוח דף מורה ציבורי באתר?';
     return 'רוצה לפתוח דף ציבורי לשירות שלך באתר?';
   }

@@ -996,6 +996,17 @@
   line-height: var(--lh-small);
 }
 
+.hero-role-link {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.hero-role-link:hover,
+.hero-role-link:focus-visible {
+  color: #ddff53;
+}
+
 .contact-panel-logo {
   width: 44px;
   height: 44px;

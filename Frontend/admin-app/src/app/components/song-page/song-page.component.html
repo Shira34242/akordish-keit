@@ -46,6 +46,7 @@
 
             <!-- Info Section -->
             <div class="header-info-section">
+                <app-breadcrumbs class="song-breadcrumbs" [items]="breadcrumbItems" />
                 <p class="header-subtitle">{{ songViewSubtitle }}</p>
                 <h1 class="main-title">{{ song.title }}</h1>
                 <div class="artist-names">
@@ -72,6 +73,7 @@
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path>
                         </svg>
+                        <span class="action-btn-label">{{ 'song.save_action' | translate }}</span>
                     </button>
                     <button class="action-btn btn-share" [title]="'song.share' | translate" (click)="handleShare()">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -82,6 +84,7 @@
                             <line x1="8.59" x2="15.42" y1="13.51" y2="17.49"></line>
                             <line x1="15.41" x2="8.59" y1="6.51" y2="10.49"></line>
                         </svg>
+                        <span class="action-btn-label">{{ 'song.share_action' | translate }}</span>
                     </button>
                     <button class="action-btn btn-print" [title]="'song.print' | translate" (click)="handlePrint()">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -90,14 +93,7 @@
                             <path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"></path>
                             <rect x="6" y="14" width="12" height="8" rx="1"></rect>
                         </svg>
-                    </button>
-                    <button class="action-btn btn-report" [title]="'song.report_error' | translate" (click)="openReportModal()">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path>
-                            <path d="M12 9v4"></path>
-                            <path d="M12 17h.01"></path>
-                        </svg>
+                        <span class="action-btn-label">{{ 'song.print_action' | translate }}</span>
                     </button>
                 </div>
 
@@ -562,6 +558,13 @@
                 (click)="handleLyricsClick($event)">
             </div>
 
+            <p class="song-report-link" *ngIf="hasFullSongContent" (click)="openReportModal()">
+                {{ 'song.report_prompt' | translate }}
+                <span class="song-report-link-action">{{ 'song.report_action' | translate }}</span>
+            </p>
+
+            <p class="copyright-notice" *ngIf="hasFullSongContent">כל הזכויות שמורות לאתר אקורדישקייט ולמחברים. כל העתקה / הפצה של חומר זה ללא אישור אסורה בהחלט ©</p>
+
             <ng-template #lockedSongContent>
                 <div class="daily-limit-card" style="position:relative;margin:var(--space-xl) auto 0;">
                     <h2 class="daily-limit-title">התחברו לצפייה בתוכן הדף</h2>
@@ -734,7 +737,61 @@
             <p class="rating-login-hint" *ngIf="!isLoggedIn">{{ 'song.login_to_rate' | translate }}</p>
         </div>
 
-        <p class="copyright-notice">כל הזכויות שמורות לאתר אקורדישקייט ולמחברים. כל העתקה / הפצה של חומר זה ללא אישור אסורה בהחלט ©</p>
+        <section class="popular-chords-box" *ngIf="popularChordSongs.length > 0">
+            <div class="popular-chords-header">
+                <a routerLink="/chords" class="popular-chords-title">{{ 'home.popular_chords' | translate }}</a>
+                <div class="popular-chords-controls">
+                    <button type="button" (click)="scrollPopularChords('right')" aria-label="גלילה ימינה">
+                        <span class="material-icons" aria-hidden="true">chevron_right</span>
+                    </button>
+                    <button type="button" (click)="scrollPopularChords('left')" aria-label="גלילה שמאלה">
+                        <span class="material-icons" aria-hidden="true">chevron_left</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="popular-chords-row" #popularChordsRow>
+                <app-song-card
+                    *ngFor="let popularSong of popularChordSongs"
+                    [song]="popularSong">
+                </app-song-card>
+
+                <a routerLink="/chords" class="popular-chords-more" aria-label="לכל האקורדים">
+                    <span>{{ 'home.promo_chords_link' | translate }}</span>
+                    <span class="material-icons" aria-hidden="true">arrow_back</span>
+                </a>
+            </div>
+        </section>
+
+        <div class="related-content-box"
+            *ngIf="hasFullSongContent && relatedContentArticles.length > 0">
+            <app-media-item spotTechnicalId="song_after_rating_before_more_content"></app-media-item>
+
+            <section class="related-content-section"
+                [attr.aria-label]="'song.related_content_aria' | translate">
+                <div class="related-content-header">
+                    <span class="related-content-label">{{ 'song.related_content_label' | translate }}</span>
+                    <h2 class="related-content-title">{{ 'song.related_content_title' | translate }}</h2>
+                </div>
+
+                <div class="related-content-grid">
+                    <app-media-item class="related-content-ad" spotTechnicalId="song_related_grid_slot_1"></app-media-item>
+
+                    <ng-container *ngFor="let relatedArticle of relatedContentArticles; let i = index">
+                        <app-media-item
+                            *ngIf="i === 3"
+                            class="related-content-ad"
+                            spotTechnicalId="song_related_grid_slot_5">
+                        </app-media-item>
+
+                        <app-news-banner
+                            [article]="relatedArticle"
+                            [trackRecommendationExposure]="true">
+                        </app-news-banner>
+                    </ng-container>
+                </div>
+            </section>
+        </div>
 
         </div>
         <!-- Left Column: Sidebar -->

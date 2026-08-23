@@ -9,6 +9,7 @@ import {
 
 type StatusFilter = 'all' | 'active' | 'inactive';
 type SortOption = 'created' | 'visits' | 'signups' | 'conversion';
+type TargetType = 'internal' | 'external';
 
 @Component({
   selector: 'app-marketing-links',
@@ -42,6 +43,7 @@ export class MarketingLinksComponent implements OnInit {
   campaignName = '';
   source = '';
   targetPath = '/';
+  targetType: TargetType = 'internal';
   searchTerm = '';
   statusFilter: StatusFilter = 'all';
   sortBy: SortOption = 'created';
@@ -100,6 +102,7 @@ export class MarketingLinksComponent implements OnInit {
     this.campaignName = '';
     this.source = '';
     this.targetPath = '/';
+    this.targetType = 'internal';
     this.errorMessage = '';
     this.formOpen = true;
   }
@@ -109,6 +112,7 @@ export class MarketingLinksComponent implements OnInit {
     this.campaignName = campaign.name;
     this.source = campaign.source;
     this.targetPath = campaign.targetPath;
+    this.targetType = campaign.isExternal ? 'external' : 'internal';
     this.errorMessage = '';
     this.formOpen = true;
   }
@@ -119,6 +123,12 @@ export class MarketingLinksComponent implements OnInit {
     this.editingCampaign = null;
   }
 
+  setTargetType(type: TargetType): void {
+    if (this.targetType === type) return;
+    this.targetType = type;
+    this.targetPath = type === 'external' ? '' : '/';
+  }
+
   saveCampaign(): void {
     const request = {
       name: this.campaignName.trim(),
@@ -126,7 +136,9 @@ export class MarketingLinksComponent implements OnInit {
       targetPath: this.normalizePath(this.targetPath)
     };
     if (request.name.length < 2 || request.source.length < 2 || !request.targetPath) {
-      this.errorMessage = 'יש למלא שם פרסום, מקור ונתיב תקין שמתחיל ב-/';
+      this.errorMessage = this.targetType === 'external'
+        ? 'יש למלא שם, מקור וכתובת חיצונית תקינה שמתחילה ב-https://'
+        : 'יש למלא שם, מקור ונתיב פנימי תקין שמתחיל ב-/';
       return;
     }
 
@@ -201,6 +213,14 @@ export class MarketingLinksComponent implements OnInit {
 
   private normalizePath(value: string): string | null {
     const trimmed = value.trim();
+    if (this.targetType === 'external') {
+      try {
+        const url = new URL(trimmed);
+        return url.protocol === 'https:' && !url.username && !url.password ? url.toString() : null;
+      } catch {
+        return null;
+      }
+    }
     if (!trimmed.startsWith('/') || trimmed.startsWith('//') || trimmed.includes('\\')) return null;
     return trimmed;
   }

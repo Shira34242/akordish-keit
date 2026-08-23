@@ -26,6 +26,7 @@ export interface Event {
   updatedAt?: string;
   createdBy?: string;
   updatedBy?: string;
+  submittedByUserId?: number | null;
 
   // Uploader profile
   uploaderUserId?: number | null;

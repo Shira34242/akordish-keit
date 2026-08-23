@@ -731,13 +731,16 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
       .filter((s: string) => s);
   }
 
-  private getInstrumentNames(): string {
-    if (!this.teacher?.instruments?.length) return '';
+  getOrderedInstruments(): TeacherDto['instruments'] {
+    if (!this.teacher?.instruments?.length) return [];
     const primary = this.teacher.instruments.find(i => i.isPrimary);
-    const ordered = primary
+    return primary
       ? [primary, ...this.teacher.instruments.filter(i => i.id !== primary.id)]
       : this.teacher.instruments;
-    return ordered.map(i => i.instrumentName).filter(Boolean).join(', ');
+  }
+
+  private getInstrumentNames(): string {
+    return this.getOrderedInstruments().map(i => i.instrumentName).filter(Boolean).join(', ');
   }
 
   // ============================================================

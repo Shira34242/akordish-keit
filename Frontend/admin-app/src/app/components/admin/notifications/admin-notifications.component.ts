@@ -732,7 +732,7 @@ export class AdminNotificationsComponent implements OnInit, OnDestroy {
 
     this.notificationService.sendUserMessage({
       userId: this.selectedUserId!,
-      title: this.buildTitle(),
+      title: '',
       message: this.buildMessage(),
       actionUrl: this.buildActionUrl(),
       mediaUrl: this.mediaUrl.trim() || null,
@@ -753,7 +753,7 @@ export class AdminNotificationsComponent implements OnInit, OnDestroy {
 
   sendGroupMessage(): void {
     this.notificationService.sendBroadcast({
-      title: this.buildTitle(),
+      title: '',
       message: this.buildMessage(),
       actionUrl: this.buildActionUrl(),
       mediaUrl: this.mediaUrl.trim() || null,
@@ -873,15 +873,6 @@ export class AdminNotificationsComponent implements OnInit, OnDestroy {
       default:
         return 'רגיל';
     }
-  }
-
-  buildTitle(): string {
-    const messageTitle = this.message.trim().replace(/\s+/g, ' ').slice(0, 80);
-    if (messageTitle) return messageTitle;
-    if (this.mediaType === 'image' || this.attachments.some(item => item.type === 'image')) return 'תמונה מצורפת';
-    if (this.mediaType === 'video' || this.attachments.some(item => item.type === 'video')) return 'וידאו מצורף';
-    if (this.mediaUrl.trim() || this.attachments.length) return 'צירוף חדש';
-    return 'הודעה מהמערכת';
   }
 
   private buildMessage(): string {
