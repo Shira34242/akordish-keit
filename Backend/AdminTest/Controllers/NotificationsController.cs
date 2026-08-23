@@ -124,7 +124,7 @@ public class NotificationsController : ControllerBase
                 return Unauthorized();
             }
 
-            if (dto.UserId <= 0 || string.IsNullOrWhiteSpace(dto.Title) || !HasNotificationContent(dto.Message, dto.MediaUrl, dto.ActionUrl, dto.Attachments))
+            if (dto.UserId <= 0 || !HasNotificationContent(dto.Message, dto.MediaUrl, dto.ActionUrl, dto.Attachments))
             {
                 return BadRequest(new { message = "חובה לבחור משתמש ולהוסיף הודעה, תמונה או צירוף" });
             }
@@ -159,7 +159,7 @@ public class NotificationsController : ControllerBase
                 return Unauthorized();
             }
 
-            if (string.IsNullOrWhiteSpace(dto.Title) || !HasNotificationContent(dto.Message, dto.MediaUrl, dto.ActionUrl, dto.Attachments))
+            if (!HasNotificationContent(dto.Message, dto.MediaUrl, dto.ActionUrl, dto.Attachments))
             {
                 return BadRequest(new { message = "חובה להוסיף הודעה, תמונה או צירוף" });
             }

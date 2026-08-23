@@ -14,7 +14,7 @@
         class="tab"
         [class.active]="activeTab === 'campaigns'"
         (click)="switchTab('campaigns')">
-        קמפיינים פעילים
+        קמפיינים
       </button>
       <button
         class="tab"
@@ -28,6 +28,7 @@
         (click)="switchTab('clients')">
         לקוחות
       </button>
+      <button class="tab" (click)="switchTab('links')">קישורי שיתוף</button>
     </div>
   </div>
 
@@ -74,8 +75,8 @@
         <span class="status-badge" [ngClass]="spot.isActive ? 'active' : 'inactive'">
           {{ spot.isActive ? 'פעיל' : 'לא פעיל' }}
         </span>
-        <span class="availability-badge" [ngClass]="getAvailabilityClass(spot.availability)">
-          {{ getAvailabilityText(spot.availability) }}
+        <span class="availability-badge" [ngClass]="getCapacityClass(spot)">
+          {{ getCapacityText(spot) }}
         </span>
       </div>
       <div class="grid-card-meta">
@@ -111,8 +112,8 @@
           <th>שם המיקום</th>
           <th>מזהה טכני</th>
           <th>סטטוס</th>
-          <th>זמינות</th>
-          <th>פני החל מ-</th>
+          <th>קיבולת פעילה</th>
+          <th>סיום קרוב</th>
           <th>מידות</th>
           <th>תקציב כולל</th>
           <th>פעולות</th>
@@ -140,15 +141,15 @@
 
           <!-- Availability -->
           <td>
-            <span class="availability-badge" [ngClass]="getAvailabilityClass(spot.availability)">
-              {{ getAvailabilityText(spot.availability) }}
+            <span class="availability-badge" [ngClass]="getCapacityClass(spot)">
+              {{ getCapacityText(spot) }}
             </span>
           </td>
 
           <!-- Next Available Date -->
           <td>
             <div class="next-available">
-              {{ formatDate(spot.nextAvailableDate) }}
+              {{ spot.activeCampaigns > 0 ? formatDate(spot.nextAvailableDate) : 'אין קמפיין פעיל' }}
             </div>
           </td>
 

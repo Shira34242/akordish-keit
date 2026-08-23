@@ -29,6 +29,7 @@ import { LanguageService, Lang } from '../../services/language.service';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { AnalyticsService } from '../../services/analytics.service';
 import { ContentRefreshNoticeService } from '../../services/content-refresh-notice.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-layout',
@@ -85,6 +86,8 @@ export class LayoutComponent implements OnInit, AfterViewInit, OnDestroy {
   showAuthModal = false;
   authModalMode: AuthModalMode = 'register';
   showAdditionalDetailsModal = false;
+  onboardingPreviewMode = false;
+  onboardingSeamlessEntry = false;
   showSoftReminderModal = false;
   softReminderKind: ReminderKind = 'profile';
   softReminderUser: User | null = null;
@@ -102,6 +105,7 @@ export class LayoutComponent implements OnInit, AfterViewInit, OnDestroy {
   private lastScrollY = 0;
   private readonly authPromptStorageKey = 'akordish-auth-prompt-date';
   private authPromptTimer: ReturnType<typeof setTimeout> | null = null;
+  private hasHandledOnboardingPreview = false;
 
   constructor(
     private router: Router,
@@ -181,6 +185,8 @@ export class LayoutComponent implements OnInit, AfterViewInit, OnDestroy {
         this.notificationsCenter = [];
         this.showNotificationsCenterModal = false;
       }
+
+      this.openOnboardingPreviewIfRequested();
     });
 
     this.profileReminderService.request$.subscribe(req => {
@@ -789,6 +795,8 @@ export class LayoutComponent implements OnInit, AfterViewInit, OnDestroy {
     this.closeSoftReminderModal();
 
     if (response.requiresProfileCompletion) {
+      this.onboardingPreviewMode = false;
+      this.onboardingSeamlessEntry = true;
       this.showAdditionalDetailsModal = true;
       return;
     }
@@ -810,6 +818,20 @@ export class LayoutComponent implements OnInit, AfterViewInit, OnDestroy {
 
   closeAdditionalDetailsModal(): void {
     this.showAdditionalDetailsModal = false;
+    this.onboardingPreviewMode = false;
+    this.onboardingSeamlessEntry = false;
+  }
+
+  private openOnboardingPreviewIfRequested(): void {
+    if (environment.production || this.hasHandledOnboardingPreview) return;
+
+    const previewRequested = this.router.parseUrl(this.router.url).queryParams['previewOnboarding'] === '1';
+    if (!previewRequested) return;
+
+    this.hasHandledOnboardingPreview = true;
+    this.onboardingPreviewMode = true;
+    this.onboardingSeamlessEntry = false;
+    this.showAdditionalDetailsModal = true;
   }
 
   onProfileComplete(choice: OnboardingProfileChoice): void {

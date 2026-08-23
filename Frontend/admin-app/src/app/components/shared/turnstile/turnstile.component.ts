@@ -44,7 +44,7 @@ declare global {
   template: `
     <div class="turnstile-shell" aria-label="בדיקת אבטחה">
       <div #container class="turnstile-container"></div>
-      <p *ngIf="loadFailed" class="turnstile-error" role="alert">
+      <p *ngIf="loadFailed && showError" class="turnstile-error" role="alert">
         לא הצלחנו לטעון את בדיקת האבטחה. נסו לרענן את העמוד.
       </p>
     </div>
@@ -80,6 +80,7 @@ export class TurnstileComponent implements AfterViewInit, OnDestroy {
   private static scriptPromise?: Promise<void>;
 
   @Input() action = 'registration';
+  @Input() showError = true;
   @Output() tokenChange = new EventEmitter<string | null>();
   @Output() verificationError = new EventEmitter<void>();
   @ViewChild('container', { static: true }) container!: ElementRef<HTMLElement>;

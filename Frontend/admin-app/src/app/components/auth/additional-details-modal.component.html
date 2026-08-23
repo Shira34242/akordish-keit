@@ -1,50 +1,148 @@
-<div class="modal-backdrop" (click)="onBackdropClick($event)">
-  <div class="modal-container" (click)="$event.stopPropagation()">
+<div class="modal-backdrop" [class.modal-backdrop--seamless]="seamlessEntry" (click)="onBackdropClick($event)">
+  <div class="modal-container" [class.modal-container--seamless]="seamlessEntry" (click)="$event.stopPropagation()">
 
     <button class="close-btn" type="button" (click)="onClose()" aria-label="סגירה">×</button>
+
+    <p class="preview-notice" *ngIf="previewMode">תצוגה מקדימה — השינויים לא יישמרו</p>
 
     <div class="progress-track" aria-hidden="true">
       <span class="progress-fill" [style.width.%]="progressPercent"></span>
     </div>
 
-    <header class="modal-header" *ngIf="currentStep === 'name'">
-      <h2>ברוכים הבאים לאקורדישקייט</h2>
-      <p class="eyebrow">שאלון קצר להתאמת החוויה באתר</p>
+    <header class="modal-header" *ngIf="currentStep === 'instrument'">
+      <h2>שאלון קצר להתאמת החוויה באתר</h2>
     </header>
 
     <div class="error-message" *ngIf="errorMessage">{{ errorMessage }}</div>
 
-    <section class="step-panel" *ngIf="currentStep === 'name'">
-      <h3>מה השם שלך?</h3>
-      <input
-        class="name-input"
-        type="text"
-        name="profileName"
-        [(ngModel)]="profileName"
-        placeholder="השם שלך"
-        autocomplete="name"
-      />
-    </section>
-
     <section class="step-panel" *ngIf="currentStep === 'instrument'">
       <h3>מנגן/ת על משהו?</h3>
+      <p class="selection-hint">אפשר לבחור יותר מכלי אחד</p>
 
-      <div class="choice-grid instrument-grid">
-        <button
-          type="button"
-          class="choice-tile"
-          *ngFor="let instrument of instrumentOptions"
-          [class.selected]="isInstrumentSelected(instrument.id)"
-          (click)="toggleInstrument(instrument.id)">
-          {{ instrument.label }}
+      <div class="instrument-grid">
+        <div class="instrument-row">
+          <button
+            type="button"
+            class="choice-tile"
+            *ngFor="let instrument of instrumentOptions.slice(0, 3)"
+            [class.selected]="isInstrumentSelected(instrument.id)"
+            (click)="toggleInstrument(instrument.id)">
+            {{ instrument.label }}
+            <span class="choice-check" aria-hidden="true">✓</span>
+          </button>
+        </div>
+
+        <div class="instrument-row">
+          <button
+            type="button"
+            class="choice-tile"
+            *ngFor="let instrument of instrumentOptions.slice(3)"
+            [class.selected]="isInstrumentSelected(instrument.id)"
+            (click)="toggleInstrument(instrument.id)">
+            {{ instrument.label }}
+            <span class="choice-check" aria-hidden="true">✓</span>
+          </button>
+          <button
+            *ngIf="!otherInstrumentEditing"
+            type="button"
+            class="choice-tile"
+            [class.selected]="otherInstrumentSelected"
+            (click)="toggleOtherInstrument()">
+            {{ otherInstrumentSelected ? otherInstrumentName : 'אחר' }}
+            <span class="choice-check" aria-hidden="true">✓</span>
+          </button>
+          <div class="other-instrument-editor" *ngIf="otherInstrumentEditing">
+            <input
+              type="text"
+              name="otherInstrumentName"
+              [(ngModel)]="otherInstrumentName"
+              maxlength="50"
+              placeholder="איזה כלי?"
+              aria-label="שם כלי נגינה אחר"
+              autofocus
+              (keydown.enter)="confirmOtherInstrument(); $event.preventDefault()"
+              (keydown.escape)="cancelOtherInstrument()"
+            />
+            <button
+              type="button"
+              class="other-instrument-confirm"
+              [disabled]="otherInstrumentName.trim().length < 2"
+              (click)="confirmOtherInstrument()"
+              aria-label="אישור כלי נגינה אחר">
+              ✓
+            </button>
+          </div>
+          <button
+            type="button"
+            class="choice-tile"
+            [class.selected]="notPlaying"
+            (click)="selectNotPlaying()">
+            לא מנגן/ת
+            <span class="choice-check" aria-hidden="true">✓</span>
+          </button>
+        </div>
+      </div>
+
+      <p class="level-prompt" *ngIf="canChooseLevel">מה רמת הנגינה שלך?</p>
+
+      <div class="level-row" *ngIf="canChooseLevel" aria-label="רמת נגינה">
+        <button type="button" class="level-pill" [class.selected]="selectedLevel === 1" (click)="selectLevel(1)">מתחיל/ה</button>
+        <button type="button" class="level-pill" [class.selected]="selectedLevel === 2" (click)="selectLevel(2)">מתקדם/ת</button>
+        <button type="button" class="level-pill" [class.selected]="selectedLevel === 3" (click)="selectLevel(3)">מקצועי/ת</button>
+      </div>
+    </section>
+
+    <section class="step-panel profile-details-panel" *ngIf="currentStep === 'profileDetails'">
+      <h3>עוד כמה פרטים להשלמת החוויה באתר</h3>
+
+      <form class="onboarding-details-form" (ngSubmit)="saveProfileDetails()">
+        <div class="details-fields-grid">
+          <label>
+            <span>טלפון</span>
+            <input type="tel" name="onboardingPhone" [(ngModel)]="phone" placeholder="מספר טלפון" autocomplete="tel">
+          </label>
+
+          <label class="onboarding-city-field">
+            <span>עיר</span>
+            <input
+              type="text"
+              name="onboardingCity"
+              [(ngModel)]="citySearch"
+              (input)="onCityInput()"
+              (focus)="showCityDropdown = true"
+              (blur)="onCityBlur()"
+              placeholder="חיפוש עיר"
+              autocomplete="address-level2">
+
+            <div class="onboarding-city-dropdown" *ngIf="showCityDropdown && filteredCities.length > 0">
+              <button type="button" *ngFor="let city of filteredCities" (click)="selectCity(city)">
+                {{ city.name }}
+              </button>
+            </div>
+          </label>
+
+          <label class="details-address-field">
+            <span>כתובת</span>
+            <input type="text" name="onboardingAddress" [(ngModel)]="address" placeholder="כתובת מגורים" autocomplete="street-address">
+          </label>
+
+          <fieldset class="birthday-fields">
+            <legend>תאריך לידה</legend>
+            <select name="birthMonth" [(ngModel)]="birthMonth" aria-label="חודש לידה">
+              <option [ngValue]="null" disabled>חודש</option>
+              <option *ngFor="let month of months" [ngValue]="month.value">{{ month.label }}</option>
+            </select>
+            <select name="birthYear" [(ngModel)]="birthYear" aria-label="שנת לידה">
+              <option [ngValue]="null" disabled>שנה</option>
+              <option *ngFor="let year of birthYears" [ngValue]="year">{{ year }}</option>
+            </select>
+          </fieldset>
+        </div>
+
+        <button type="submit" class="details-continue-btn" [disabled]="!canContinueProfileDetails">
+          {{ loading ? 'שומר...' : 'המשך' }}
         </button>
-      </div>
-
-      <div class="level-row" aria-label="רמת נגינה">
-        <button type="button" class="level-pill" [class.selected]="selectedLevel === 1" (click)="selectedLevel = 1">מתחיל/ה</button>
-        <button type="button" class="level-pill" [class.selected]="selectedLevel === 2" (click)="selectedLevel = 2">מתקדם/ת</button>
-        <button type="button" class="level-pill" [class.selected]="selectedLevel === 3" (click)="selectedLevel = 3">מקצועי/ת</button>
-      </div>
+      </form>
     </section>
 
     <section class="step-panel" *ngIf="currentStep === 'userType'">
@@ -57,6 +155,7 @@
           [class.selected]="selectedUserType === UserType.Regular"
           (click)="selectUserType(UserType.Regular)">
           משתמש רגיל
+          <span class="choice-check" aria-hidden="true">✓</span>
         </button>
         <button
           type="button"
@@ -64,6 +163,7 @@
           [class.selected]="selectedUserType === UserType.Teacher"
           (click)="selectUserType(UserType.Teacher)">
           מורה לנגינה
+          <span class="choice-check" aria-hidden="true">✓</span>
         </button>
         <button
           type="button"
@@ -72,6 +172,7 @@
           [class.selected]="selectedServiceProviderCategoryId === category.id"
           (click)="selectUserType(UserType.ServiceProvider, category.id)">
           {{ category.name }}
+          <span class="choice-check" aria-hidden="true">✓</span>
         </button>
         <button
           type="button"
@@ -79,6 +180,7 @@
           [class.selected]="isGeneralServiceSelected()"
           (click)="selectUserType(UserType.ServiceProvider)">
           אחר
+          <span class="choice-check" aria-hidden="true">✓</span>
         </button>
       </div>
 
@@ -99,18 +201,6 @@
         <button type="button" class="continue-site-btn" (click)="onSkipPublicPage()" [disabled]="loading">להמשיך לאתר</button>
       </div>
     </section>
-
-    <footer class="step-actions" *ngIf="currentStep !== 'publicPage'">
-      <button type="button" class="skip-link" (click)="skipStep()">דלג</button>
-      <button type="button" class="arrow-btn" (click)="goNext()" [disabled]="loading" aria-label="המשך">
-        <svg *ngIf="!loading" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <line x1="19" y1="12" x2="5" y2="12"></line>
-          <polyline points="12 19 5 12 12 5"></polyline>
-        </svg>
-        <span *ngIf="loading" class="spinner"></span>
-      </button>
-    </footer>
 
   </div>
 </div>

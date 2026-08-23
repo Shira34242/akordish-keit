@@ -1,8 +1,8 @@
 <div class="modal-overlay" *ngIf="show" (click)="onCancel()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
+  <div class="modal-content" role="dialog" aria-modal="true" [attr.aria-label]="isEditMode ? 'עריכת לקוח' : 'הוספת לקוח חדש'" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h2>{{ isEditMode ? 'עריכת לקוח' : 'הוספת לקוח חדש' }}</h2>
-      <button class="btn-close" (click)="onCancel()" type="button">&times;</button>
+      <button class="btn-close" (click)="onCancel()" type="button" aria-label="סגירה">&times;</button>
     </div>
 
     <form [formGroup]="clientForm" (ngSubmit)="onSubmit()">

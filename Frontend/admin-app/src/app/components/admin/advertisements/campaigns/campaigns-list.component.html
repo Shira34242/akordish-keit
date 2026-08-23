@@ -14,7 +14,7 @@
         class="tab"
         [class.active]="activeTab === 'campaigns'"
         (click)="switchTab('campaigns')">
-        קמפיינים פעילים
+        קמפיינים
       </button>
       <button
         class="tab"
@@ -28,6 +28,7 @@
         (click)="switchTab('clients')">
         לקוחות
       </button>
+      <button class="tab" (click)="switchTab('links')">קישורי שיתוף</button>
     </div>
   </div>
 
@@ -74,12 +75,33 @@
       <div class="grid-card-badges">
         <span class="badge" [ngClass]="getStatusClass(campaign.status)">{{ getStatusText(campaign.status) }}</span>
       </div>
+      <div class="grid-card-details">
+        <span><strong>שטח:</strong> {{ campaign.adSpotName }}</span>
+        <span><strong>תקופה:</strong> {{ formatDate(campaign.startDate) }}–{{ formatDate(campaign.endDate) }}</span>
+        <span><strong>ביצועים:</strong> {{ campaign.viewCount | number }} צפיות · {{ campaign.clickCount | number }} קליקים · {{ campaign.clickThroughRate | number:'1.2-2' }}% CTR</span>
+      </div>
       <div class="grid-card-actions">
         <button class="btn-action" (click)="editCampaign(campaign)" title="עריכה"><span class="material-icons">edit</span></button>
         <button class="btn-action btn-delete" (click)="deleteCampaign(campaign)" title="מחיקה"><span class="material-icons">delete</span></button>
       </div>
     </div>
   </div>
+
+  <div *ngIf="!loading && filteredCampaigns.length === 0 && viewMode === 'grid'" class="empty-grid-state">
+    <span>לא נמצאו קמפיינים</span>
+    <button type="button" class="btn-new-campaign" (click)="createNewCampaign()">יצירת קמפיין</button>
+  </div>
+
+  <app-pagination
+    *ngIf="!loading && viewMode === 'grid'"
+    [totalCount]="totalCount"
+    [pageNumber]="pageNumber"
+    [pageSize]="pageSize"
+    [totalPages]="totalPages"
+    [hasPreviousPage]="hasPreviousPage"
+    [hasNextPage]="hasNextPage"
+    (pageChange)="onPageChange($event)">
+  </app-pagination>
 
   <!-- Table -->
   <div class="table-container" *ngIf="viewMode === 'list'">

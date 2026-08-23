@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, HostListener, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -26,11 +26,14 @@ export class ClientsListComponent implements OnInit {
   filteredClients: Client[] = [];
   loading = false;
   saving = false;
-  viewMode: 'list' | 'grid' = (localStorage.getItem('admin-clients-view') as 'list' | 'grid') || 'list';
+  viewMode: 'list' | 'grid' = window.innerWidth <= 768
+    ? 'grid'
+    : (localStorage.getItem('admin-clients-view') as 'list' | 'grid') || 'list';
   setView(mode: 'list' | 'grid') { this.viewMode = mode; localStorage.setItem('admin-clients-view', mode); }
   searchTerm = '';
+  private searchTimer?: ReturnType<typeof setTimeout>;
   sortBy = 'created_desc';
-  activeTab: 'campaigns' | 'spots' | 'clients' = 'clients';
+  activeTab: 'campaigns' | 'spots' | 'clients' | 'links' = 'clients';
 
   sortOptions = [
     { value: 'created_desc', label: 'חדש לישן' },
@@ -56,7 +59,7 @@ export class ClientsListComponent implements OnInit {
 
   loadClients() {
     this.loading = true;
-    this.clientService.getClients(this.pageNumber, this.pageSize, this.sortBy).subscribe({
+    this.clientService.getClients(this.pageNumber, this.pageSize, this.sortBy, this.searchTerm).subscribe({
       next: (data: PagedResult<Client>) => {
         this.clients = data.items;
         this.filteredClients = data.items;
@@ -79,17 +82,16 @@ export class ClientsListComponent implements OnInit {
   }
 
   onSearch() {
-    if (!this.searchTerm.trim()) {
-      this.filteredClients = this.clients;
-      return;
-    }
+    clearTimeout(this.searchTimer);
+    this.searchTimer = setTimeout(() => {
+      this.pageNumber = 1;
+      this.loadClients();
+    }, 300);
+  }
 
-    const term = this.searchTerm.toLowerCase();
-    this.filteredClients = this.clients.filter(client =>
-      client.businessName.toLowerCase().includes(term) ||
-      client.contactPerson.toLowerCase().includes(term) ||
-      client.email.toLowerCase().includes(term)
-    );
+  @HostListener('window:resize')
+  onResize(): void {
+    if (window.innerWidth <= 768) this.viewMode = 'grid';
   }
 
   onSortChange() {
@@ -163,12 +165,14 @@ export class ClientsListComponent implements OnInit {
     });
   }
 
-  switchTab(tab: 'campaigns' | 'spots' | 'clients') {
+  switchTab(tab: 'campaigns' | 'spots' | 'clients' | 'links') {
     this.activeTab = tab;
     if (tab === 'campaigns') {
       this.router.navigate(['/admin/advertising']);
     } else if (tab === 'spots') {
       this.router.navigate(['/admin/advertising/spots']);
+    } else if (tab === 'links') {
+      this.router.navigate(['/admin/advertising/links']);
     }
   }
 }

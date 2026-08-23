@@ -1024,6 +1024,12 @@
 }
 
 /* Login Button */
+.desktop-auth-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
 .btn-login {
     background: #ddff53;
     color: #000;
@@ -1034,24 +1040,24 @@
     font-weight: 700;
     font-size: var(--font-sm);
     cursor: pointer;
-    transition: background 0.2s;
+    transition: opacity 0.2s, transform 0.2s;
     white-space: nowrap;
     display: inline-flex;
     align-items: center;
 }
 
-.btn-login-action {
-    appearance: none;
-    background: transparent;
-    color: inherit;
-    border: 0;
-    padding: 0;
-    font: inherit;
-    cursor: pointer;
+.btn-login--secondary {
+    background: #F2F2F2;
 }
 
-.btn-login-separator {
-    margin-inline: var(--space-xs);
+.btn-login:hover {
+    opacity: 0.82;
+    transform: scale(1.02);
+}
+
+.btn-login:focus-visible {
+    outline: 2px solid #000;
+    outline-offset: 2px;
 }
 
 

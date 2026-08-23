@@ -155,16 +155,6 @@
   </div>
 
   <div class="profile-content">
-    @if (profileIncomplete) {
-      <div class="completion-banner" (click)="openProfileCompletion()">
-        <div class="completion-banner-text">
-          <p>{{ 'profile.completion_title' | translate }}</p>
-          <p>{{ 'profile.completion_sub' | translate }}</p>
-          <span class="completion-banner-cta">{{ 'profile.completion_cta' | translate }}</span>
-        </div>
-      </div>
-    }
-
     @if (myPages.length === 0) {
       <div class="manage-card manage-card--empty">
         <p class="manage-empty-text">{{ 'profile.no_page' | translate }}</p>

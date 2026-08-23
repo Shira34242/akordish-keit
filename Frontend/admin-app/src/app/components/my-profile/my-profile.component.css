@@ -846,40 +846,6 @@
 }
 
 /* ===========================
-   COMPLETION BANNER
-   =========================== */
-
-.completion-banner {
-  display: block;
-  background: #ddff53;
-  border-radius: 20px;
-  padding: 32px 40px;
-  text-align: center;
-  cursor: pointer;
-  transition: filter 0.2s;
-}
-
-.completion-banner:hover {
-  filter: brightness(0.95);
-}
-
-.completion-banner-text p {
-  margin: 0 0 8px;
-  font-size: 16px;
-  font-weight: 400;
-  color: #000000;
-  line-height: 1.5;
-}
-
-.completion-banner-cta {
-  display: inline-block;
-  margin-top: 4px;
-  font-size: 16px;
-  font-weight: 800;
-  color: #000000;
-}
-
-/* ===========================
    PROFILE MODAL
    =========================== */
 
@@ -1734,16 +1700,6 @@
   .known-chord-pill {
     min-height: 26px;
     font-size: var(--font-xs);
-  }
-
-  .completion-banner {
-    padding: var(--space-base) var(--space-lg);
-    border-radius: 16px;
-  }
-
-  .completion-banner-text p,
-  .completion-banner-cta {
-    font-size: var(--font-sm);
   }
 
   .saved-lists-row {

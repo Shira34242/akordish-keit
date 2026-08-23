@@ -49,8 +49,8 @@ export class ReportsListComponent implements OnInit {
     const term = this.searchTerm.trim().toLowerCase();
     const result = this.reports.filter(report => !term || [report.contentTitle, report.description, report.reporterUsername || ''].some(value => value.toLowerCase().includes(term)));
     return result.sort((a, b) => this.sortOrder === 'newest'
-      ? new Date(b.reportedAt).getTime() - new Date(a.reportedAt).getTime()
-      : new Date(a.reportedAt).getTime() - new Date(b.reportedAt).getTime());
+      ? this.getReportTimestamp(b.reportedAt) - this.getReportTimestamp(a.reportedAt)
+      : this.getReportTimestamp(a.reportedAt) - this.getReportTimestamp(b.reportedAt));
   }
 
   get allVisibleSelected(): boolean { return this.filteredReports.length > 0 && this.filteredReports.every(report => this.selectedIds.has(report.id)); }
@@ -155,7 +155,34 @@ export class ReportsListComponent implements OnInit {
     if (report.reportType === 'ChordRequest') return 'accent-cyan';
     return 'accent-pink';
   }
-  getReportAgeLabel(report: Report): string { const hours = Math.max(0, Math.floor((Date.now() - new Date(report.reportedAt).getTime()) / 36e5)); return hours < 1 ? 'עכשיו' : hours < 24 ? `לפני ${hours} שעות` : `לפני ${Math.floor(hours / 24)} ימים`; }
+  getReportDateLabel(report: Report): string {
+    const timestamp = this.getReportTimestamp(report.reportedAt);
+    const dateLabel = this.formatReportDate(report.reportedAt);
+    const elapsedMs = Date.now() - timestamp;
+
+    if (!timestamp || elapsedMs < 0 || elapsedMs >= 24 * 60 * 60 * 1000) return dateLabel;
+
+    const hours = Math.floor(elapsedMs / (60 * 60 * 1000));
+    const relativeLabel = hours < 1 ? 'לפני פחות משעה' : hours === 1 ? 'לפני שעה' : `לפני ${hours} שעות`;
+    return `${dateLabel} · ${relativeLabel}`;
+  }
+
+  formatReportDate(value?: Date | string): string {
+    const date = this.parseReportDate(value);
+    if (!date) return 'תאריך לא זמין';
+
+    const parts = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Asia/Jerusalem',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23'
+    }).formatToParts(date);
+    const part = (type: Intl.DateTimeFormatPartTypes): string => parts.find(item => item.type === type)?.value || '';
+    return `${part('day')}/${part('month')}/${part('year')} ${part('hour')}:${part('minute')}`;
+  }
   isNewContentReport(report: Report): boolean { return ['NewArtist', 'NewGenre', 'NewTag', 'NewPerson'].includes(report.reportType); }
   getQuickSuggestion(report: Report): string {
     const contextLines: string[] = [];
@@ -178,4 +205,16 @@ export class ReportsListComponent implements OnInit {
   trackByReportId(_: number, report: Report): number { return report.id; }
   trackByPage(_: number, page: number): number { return page; }
   private buildVisiblePages(): number[] { const pages: number[] = []; for (let page = Math.max(1, this.currentPage - 2); page <= Math.min(this.totalPages, this.currentPage + 2); page++) pages.push(page); return pages; }
+
+  private getReportTimestamp(value?: Date | string): number { return this.parseReportDate(value)?.getTime() || 0; }
+
+  private parseReportDate(value?: Date | string): Date | null {
+    if (!value) return null;
+    if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+
+    // SQL datetime values are UTC, but can arrive without a timezone suffix.
+    const normalizedValue = /(?:Z|[+-]\d{2}:\d{2})$/i.test(value) ? value : `${value}Z`;
+    const date = new Date(normalizedValue);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
 }

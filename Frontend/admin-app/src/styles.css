@@ -44,6 +44,9 @@
   --space-3xl:  3.5rem;    /* 56px — בין אזורי תוכן גדולים */
   --space-4xl:  4.5rem;    /* 72px — ריווח חיצוני גדול */
 
+  /* Shared square for the complete authentication and onboarding flow */
+  --auth-flow-size: min(36rem, calc(100vw - var(--space-base)), calc(100dvh - var(--space-base)));
+
   /* Scrollbar */
   --site-scrollbar-size: 9px;
   --site-scrollbar-track: transparent;

@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import {
   MarketingCampaignDashboard,
   MarketingCampaignService,
@@ -14,7 +15,7 @@ type TargetType = 'internal' | 'external';
 @Component({
   selector: 'app-marketing-links',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './marketing-links.component.html',
   styleUrls: ['./marketing-links.component.css']
 })

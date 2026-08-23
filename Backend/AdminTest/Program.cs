@@ -590,6 +590,9 @@ using (var scope = app.Services.CreateScope())
         new { Name = "באנר לפני קטלוג — אינדקס מוזיקה", TechnicalId = "professionals-pre-catalog", Dimensions = "970x200", Description = "לפני גריד כל בעלי המוזיקה" },
         new { Name = "באנר מורים — אינדקס מוזיקה",  TechnicalId = "professionals-teachers-mid", Dimensions = "970x200", Description = "בטאב מורים, אחרי מורים מומלצים" },
         new { Name = "באנר נעילה — דף שיר",          TechnicalId = "song-page-locked-banner",    Dimensions = "728x250", Description = "מוצג מתחת לכפתור ההתחברות כשתוכן השיר חסום" },
+        new { Name = "דף שיר — אחרי דירוג",          TechnicalId = "song_after_rating_before_more_content", Dimensions = "970x250", Description = "אחרי אזור הדירוג ולפני תוכן נוסף" },
+        new { Name = "דף שיר — תוכן נוסף — קוביה ראשונה", TechnicalId = "song_related_grid_slot_1", Dimensions = "1000x1000", Description = "מיקום ראשון בתוך רשת התוכן הנוסף בדף שיר" },
+        new { Name = "דף שיר — תוכן נוסף — קוביה חמישית", TechnicalId = "song_related_grid_slot_5", Dimensions = "1000x1000", Description = "מיקום חמישי בתוך רשת התוכן הנוסף בדף שיר" },
         new { Name = "באנר עליון — דף אמנים",        TechnicalId = "artists-list-top-banner",    Dimensions = "970x250", Description = "בין שורות האמנים המומלצים לרשת הכללית" },
         new { Name = "באנר תחתון — דף אמנים",        TechnicalId = "artists-list-bottom-banner", Dimensions = "970x90",  Description = "לפני pagination ברשת האמנים הכללית" },
     };

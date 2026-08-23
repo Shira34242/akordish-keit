@@ -25,11 +25,23 @@ namespace AkordishKeit.Controllers
         [HttpGet]
         public async Task<ActionResult<PagedResult<AdSpotDto>>> GetAdSpots(
             [FromQuery] int pageNumber = 1,
-            [FromQuery] int pageSize = 10)
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? searchTerm = null)
         {
             var now = DateTime.UtcNow;
 
-            var adSpotsQuery = _context.AdSpots
+            var sourceQuery = _context.AdSpots.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                var term = searchTerm.Trim();
+                sourceQuery = sourceQuery.Where(s =>
+                    s.Name.Contains(term) ||
+                    s.TechnicalId.Contains(term) ||
+                    (s.Description != null && s.Description.Contains(term)));
+            }
+
+            var adSpotsQuery = sourceQuery
                 .Select(spot => new AdSpotDto
                 {
                     Id = spot.Id,
@@ -44,7 +56,7 @@ namespace AkordishKeit.Controllers
                     TotalCampaigns = spot.Campaigns.Count,
                     ActiveCampaigns = spot.Campaigns.Count(c => c.Status == AdCampaignStatus.Active && c.StartDate <= now && c.EndDate >= now),
                     TotalRevenue = spot.Campaigns.Sum(c => c.Budget),
-                    Availability = spot.Campaigns.Any(c => c.Status == AdCampaignStatus.Active && c.StartDate <= now && c.EndDate >= now)
+                    Availability = spot.Campaigns.Count(c => c.Status == AdCampaignStatus.Active && c.StartDate <= now && c.EndDate >= now) >= 5
                         ? "Occupied"
                         : "Available",
                     NextAvailableDate = spot.Campaigns
@@ -82,7 +94,7 @@ namespace AkordishKeit.Controllers
                     TotalCampaigns = spot.Campaigns.Count,
                     ActiveCampaigns = spot.Campaigns.Count(c => c.Status == AdCampaignStatus.Active && c.StartDate <= now && c.EndDate >= now),
                     TotalRevenue = spot.Campaigns.Sum(c => c.Budget),
-                    Availability = spot.Campaigns.Any(c => c.Status == AdCampaignStatus.Active && c.StartDate <= now && c.EndDate >= now)
+                    Availability = spot.Campaigns.Count(c => c.Status == AdCampaignStatus.Active && c.StartDate <= now && c.EndDate >= now) >= 5
                         ? "Occupied"
                         : "Available",
                     NextAvailableDate = spot.Campaigns

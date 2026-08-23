@@ -100,4 +100,21 @@
 .empty-state td { padding: var(--space-3xl) var(--space-lg); text-align: center; }
 .empty-message { font-family: 'Open Sans', sans-serif; font-weight: 300; color: #000000; font-size: var(--font-base); }
 
-@media (max-width: 1200px) { .actions-bar { flex-direction: column; align-items: stretch; } }
+@media (max-width: 1200px) {
+  .actions-bar { flex-direction: column; align-items: stretch; }
+  .search-box { max-width: none; }
+}
+
+@media (max-width: 768px) {
+  .ad-spots-container { border-radius: 18px; }
+  .page-header { padding: var(--space-lg); }
+  .tabs-container { padding: 0 var(--space-base); overflow-x: auto; }
+  .tabs { min-width: max-content; }
+  .tab { padding: var(--space-md) var(--space-base); }
+  .actions-bar, .list-controls { padding-right: var(--space-base); padding-left: var(--space-base); }
+  .btn-new-spot { width: 100%; justify-content: center; }
+  .view-controls .view-btn:first-child { display: none; }
+  .data-grid { grid-template-columns: 1fr; padding: var(--space-base); }
+  .grid-card { min-width: 0; min-height: 0; }
+  .technical-id { overflow-wrap: anywhere; }
+}

@@ -30,6 +30,7 @@ export class AuthModalComponent implements OnDestroy {
   }
 
   isLogin = false; // true = login mode, false = register mode
+  readonly manualAuthEnabled = false;
   registerStep: 'choice' | 'manual' = 'choice';
   loading = false;
   errorMessage = '';
@@ -42,6 +43,7 @@ export class AuthModalComponent implements OnDestroy {
   password = '';
   termsApproved = false;
   marketingConsent = false;
+  showConsentValidation = false;
   googleTermsRequired = false;
   turnstileToken: string | null = null;
 
@@ -115,6 +117,7 @@ export class AuthModalComponent implements OnDestroy {
     this.password = '';
     this.termsApproved = false;
     this.marketingConsent = false;
+    this.showConsentValidation = false;
     this.googleTermsRequired = false;
     this.turnstileToken = null;
     this.showPassword = false;
@@ -152,6 +155,21 @@ export class AuthModalComponent implements OnDestroy {
 
   onTurnstileError(): void {
     this.errorMessage = 'לא הצלחנו לטעון את בדיקת האבטחה. נסו שוב.';
+  }
+
+  onGoogleRegistrationAttempt(): void {
+    if (this.loading || this.canSubmitRegistration) return;
+
+    if (!this.canRegister) {
+      this.errorMessage = '';
+      this.showConsentValidation = false;
+      requestAnimationFrame(() => {
+        this.showConsentValidation = true;
+      });
+      return;
+    }
+
+    this.errorMessage = 'יש להשלים את בדיקת האבטחה לפני ההרשמה.';
   }
 
   onPasswordChange() {

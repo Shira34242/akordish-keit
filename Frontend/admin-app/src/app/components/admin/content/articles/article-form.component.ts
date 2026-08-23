@@ -39,6 +39,13 @@ interface SelectedTag {
   name: string;
 }
 
+interface SuggestedTag {
+  id?: number;
+  name: string;
+  isNew: boolean;
+  score: number;
+}
+
 @Component({
   selector: 'app-article-form',
   standalone: true,
@@ -73,6 +80,10 @@ export class ArticleFormComponent implements OnInit {
   showTagDropdown = false;
   showNewTagInput = false;
   private tagSearch$ = new Subject<string>();
+  tagSuggestions: SuggestedTag[] = [];
+  creatingSuggestedTag = '';
+  private readonly tagSuggestion$ = new Subject<void>();
+  private readonly dismissedTagSuggestions = new Set<string>();
   isEditMode = false;
   articleId?: number;
   loading = false;
@@ -190,6 +201,7 @@ export class ArticleFormComponent implements OnInit {
     this.loadPopularTags();
     this.initProfileSearch();
     this.initTagSearch();
+    this.initTagSuggestions();
     this.initArtistSuggestions();
     this.initMentionSearch();
 
@@ -208,6 +220,8 @@ export class ArticleFormComponent implements OnInit {
         this.selectedTags = [];
         this.tagSearchQuery = '';
         this.showNewTagInput = false;
+        this.tagSuggestions = [];
+        this.dismissedTagSuggestions.clear();
         this.artistsExpanded = false;
         this.artistSuggestions = [];
         this.advancedOpen = false;
@@ -420,7 +434,10 @@ export class ArticleFormComponent implements OnInit {
 
   loadPopularTags(): void {
     this.systemTablesService.getItems('tags', 1, 200).subscribe({
-      next: (result) => { this.popularTags = result.items.map(t => ({ id: t.id, name: t.name })); },
+      next: (result) => {
+        this.popularTags = result.items.map(t => ({ id: t.id, name: t.name }));
+        this.queueTagSuggestionScan();
+      },
       error: (err) => console.error('Error loading popular tags', err)
     });
   }
@@ -448,6 +465,9 @@ export class ArticleFormComponent implements OnInit {
     if (this.isTagSelected(tag.id)) return;
     this.selectedTags.push(tag);
     this.article.tagIds = this.selectedTags.map(t => t.id);
+    this.tagSuggestions = this.tagSuggestions.filter(suggestion =>
+      suggestion.id !== tag.id && this.normalizeTagName(suggestion.name) !== this.normalizeTagName(tag.name)
+    );
     this.tagSearchQuery = '';
     this.tagSearchResults = [];
     this.showTagDropdown = false;
@@ -456,6 +476,40 @@ export class ArticleFormComponent implements OnInit {
   removeTag(tagId: number): void {
     this.selectedTags = this.selectedTags.filter(t => t.id !== tagId);
     this.article.tagIds = this.selectedTags.map(t => t.id);
+    this.queueTagSuggestionScan();
+  }
+
+  addSuggestedTag(suggestion: SuggestedTag): void {
+    if (suggestion.id) {
+      this.selectTag({ id: suggestion.id, name: suggestion.name });
+      return;
+    }
+
+    this.creatingSuggestedTag = suggestion.name;
+    this.systemTablesService.findOrCreateTag(suggestion.name).subscribe({
+      next: tag => {
+        const selected = { id: tag.id, name: tag.name };
+        this.selectTag(selected);
+        if (!this.popularTags.some(item => item.id === tag.id)) {
+          this.popularTags = [selected, ...this.popularTags];
+        }
+        this.creatingSuggestedTag = '';
+      },
+      error: () => {
+        this.creatingSuggestedTag = '';
+        this.siteAlerts.show('לא הצלחנו ליצור את התגית. אפשר לנסות שוב.');
+      }
+    });
+  }
+
+  dismissSuggestedTag(suggestion: SuggestedTag): void {
+    this.dismissedTagSuggestions.add(this.normalizeTagName(suggestion.name));
+    this.tagSuggestions = this.tagSuggestions.filter(item => item !== suggestion);
+  }
+
+  scanTagSuggestions(): void {
+    this.dismissedTagSuggestions.clear();
+    this.queueTagSuggestionScan();
   }
 
   addTagFromInput(): void {
@@ -563,6 +617,7 @@ export class ArticleFormComponent implements OnInit {
           this.profileSearchQuery = data.uploaderProfile.name;
         }
         this.loading = false;
+        this.queueTagSuggestionScan();
         this.queueArtistSuggestionScan();
       },
       error: (error) => {
@@ -585,6 +640,7 @@ export class ArticleFormComponent implements OnInit {
     }
 
     this.queueArtistSuggestionScan();
+    this.queueTagSuggestionScan();
   }
 
   generateSlug(text: string): string {
@@ -608,6 +664,7 @@ export class ArticleFormComponent implements OnInit {
       this.article.readTimeMinutes = Math.ceil(wordCount / wordsPerMinute);
     }
     this.queueArtistSuggestionScan();
+    this.queueTagSuggestionScan();
   }
 
   onRichArticleContentInput(): void {
@@ -926,6 +983,109 @@ export class ArticleFormComponent implements OnInit {
 
   private queueArtistSuggestionScan(): void {
     this.artistSuggestion$.next();
+  }
+
+  private initTagSuggestions(): void {
+    this.tagSuggestion$.pipe(debounceTime(450)).subscribe(() => {
+      this.tagSuggestions = this.buildTagSuggestions();
+    });
+  }
+
+  queueTagSuggestionScan(): void {
+    this.tagSuggestion$.next();
+  }
+
+  private buildTagSuggestions(): SuggestedTag[] {
+    const fields = [
+      { value: this.article.title, weight: 8 },
+      { value: this.article.subtitle, weight: 5 },
+      { value: this.article.shortDescription, weight: 4 },
+      { value: this.article.content, weight: 1 }
+    ].map(field => ({ ...field, value: this.cleanTagText(field.value || '') }))
+      .filter(field => field.value.length >= 3);
+
+    if (fields.length === 0) return [];
+
+    const selectedNames = new Set(this.selectedTags.map(tag => this.normalizeTagName(tag.name)));
+    const suggestions: SuggestedTag[] = this.popularTags
+      .map(tag => {
+        const name = this.normalizeTagName(tag.name);
+        const score = name.length < 2 ? 0 : fields.reduce(
+          (total, field) => total + (this.containsTagPhrase(field.value, name) ? field.weight : 0),
+          0
+        );
+        return { ...tag, isNew: false, score };
+      })
+      .filter(tag => tag.score > 0
+        && !selectedNames.has(this.normalizeTagName(tag.name))
+        && !this.dismissedTagSuggestions.has(this.normalizeTagName(tag.name)));
+
+    const existingNames = new Set(this.popularTags.map(tag => this.normalizeTagName(tag.name)));
+    const candidateScores = new Map<string, { name: string; score: number; appearances: number }>();
+
+    fields.forEach(field => {
+      const tokens = field.value.split(' ').filter(token => this.isUsefulTagToken(token));
+      const seenInField = new Set<string>();
+      tokens.forEach(token => {
+        const key = this.normalizeTagName(token);
+        const current = candidateScores.get(key) || { name: token, score: 0, appearances: 0 };
+        current.score += field.weight;
+        if (!seenInField.has(key)) current.appearances += 1;
+        candidateScores.set(key, current);
+        seenInField.add(key);
+      });
+    });
+
+    const sourceText = [this.article.title, this.article.subtitle, this.article.shortDescription, this.article.content].join(' ');
+    for (const match of sourceText.matchAll(/#([\p{L}\p{N}][\p{L}\p{N}_-]{1,39})/gu)) {
+      const name = match[1].replace(/_/g, ' ');
+      candidateScores.set(this.normalizeTagName(name), { name, score: 30, appearances: 2 });
+    }
+
+    const newSuggestions: SuggestedTag[] = [...candidateScores.values()]
+      .filter(candidate => candidate.appearances >= 2 || candidate.score >= 8)
+      .filter(candidate => {
+        const key = this.normalizeTagName(candidate.name);
+        return !existingNames.has(key) && !selectedNames.has(key) && !this.dismissedTagSuggestions.has(key);
+      })
+      .map(candidate => ({ name: candidate.name, isNew: true, score: candidate.score }));
+
+    return [...suggestions, ...newSuggestions]
+      .sort((a, b) => b.score - a.score || Number(a.isNew) - Number(b.isNew) || a.name.localeCompare(b.name, 'he'))
+      .slice(0, 4);
+  }
+
+  private cleanTagText(value: string): string {
+    return value
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&(?:nbsp|amp|quot|#39);/gi, ' ')
+      .normalize('NFKC')
+      .toLocaleLowerCase('he')
+      .replace(/[^\p{L}\p{N}#_-]+/gu, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  private normalizeTagName(value: string): string {
+    return this.cleanTagText(value).replace(/^#/, '');
+  }
+
+  private containsTagPhrase(text: string, phrase: string): boolean {
+    return (` ${text} `).includes(` ${phrase} `);
+  }
+
+  private isUsefulTagToken(token: string): boolean {
+    const normalized = token.replace(/^#/, '');
+    if (normalized.length < 3 || /^\d+$/.test(normalized)) return false;
+
+    return !new Set([
+      'אבל', 'אחרי', 'איך', 'אין', 'אלא', 'אלה', 'אם', 'אנחנו', 'אני', 'אצל', 'את', 'אתר', 'אתם',
+      'בגלל', 'בין', 'גם', 'דרך', 'הוא', 'היא', 'היה', 'היום', 'הכל', 'הם', 'הן', 'וזה', 'חדש', 'חדשה',
+      'חדשים', 'חדשות', 'יותר', 'יכול', 'כבר', 'כדי', 'כל', 'כמה', 'כמו', 'כאן', 'לא', 'להיות', 'למה',
+      'לפני', 'לפי', 'מאוד', 'מה', 'מי', 'מול', 'מוזיקה', 'מתוך', 'נוסף', 'עבור', 'עוד', 'על', 'עם',
+      'עצמו', 'עכשיו', 'של', 'שוב', 'שיהיה', 'תוכן', 'תוך', 'the', 'and', 'for', 'from', 'that', 'this',
+      'with', 'you', 'your', 'article', 'news', 'new'
+    ]).has(normalized);
   }
 
   private initMentionSearch(): void {

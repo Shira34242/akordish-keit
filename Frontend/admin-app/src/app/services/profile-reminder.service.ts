@@ -16,7 +16,7 @@ const MAX_DISMISSALS = 3;
 /**
  * שירות תזכורת רך — בודק האם להציג חלון "עוד כמה פרטים להשלמת החוויה באתר".
  * טופס אחד מאוחד לטלפון, עיר, כתובת, חודש+שנת לידה.
- * מופעל לאחר התחברות / ניווט בתוך האתר, וגם מדף הפרופיל.
+ * מופעל לאחר התחברות למשתמשים ותיקים שעדיין חסרים להם פרטים.
  */
 @Injectable({ providedIn: 'root' })
 export class ProfileReminderService {
@@ -41,13 +41,6 @@ export class ProfileReminderService {
     this.requestSubject.next({ kind, user });
   }
 
-  /** הצגה ישירה של טופס השלמת הפרופיל (ללא בדיקות תזמון) — קריאה מדף הפרופיל */
-  requestProfileCompletion(): void {
-    const user = this.authService.currentUserValue;
-    if (!user) return;
-    this.requestSubject.next({ kind: 'profile', user });
-  }
-
   /** סגירת המודל בלי לשמור (דחייה) — נספר ב-Backend נפרד דרך AuthService */
   clearRequest(): void {
     this.requestSubject.next(null);
@@ -67,7 +60,7 @@ export class ProfileReminderService {
     if (daysSinceRegister === null) return null;
     if (daysSinceLastReminder !== null && daysSinceLastReminder < COOLDOWN_DAYS) return null;
 
-    const missingAny = !user.phone || !user.cityId || !user.address || !user.birthDate;
+    const missingAny = !user.phone?.trim() || !user.cityId || !user.address?.trim() || !user.birthDate;
 
     if (missingAny && daysSinceRegister >= DAYS_BEFORE_FIRST_REMINDER) {
       return 'profile';

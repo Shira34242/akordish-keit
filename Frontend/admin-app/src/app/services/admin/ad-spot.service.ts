@@ -19,10 +19,14 @@ export class AdSpotService {
   /**
    * Get all ad spots with pagination
    */
-  getAdSpots(pageNumber: number = 1, pageSize: number = 10): Observable<PagedResult<AdSpot>> {
-    const params = new HttpParams()
+  getAdSpots(pageNumber: number = 1, pageSize: number = 10, searchTerm?: string): Observable<PagedResult<AdSpot>> {
+    let params = new HttpParams()
       .set('pageNumber', pageNumber.toString())
       .set('pageSize', pageSize.toString());
+
+    if (searchTerm?.trim()) {
+      params = params.set('searchTerm', searchTerm.trim());
+    }
 
     return this.http.get<PagedResult<AdSpot>>(this.apiUrl, { params });
   }

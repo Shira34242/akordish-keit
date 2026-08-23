@@ -30,7 +30,6 @@ import { EventCardData } from '../../utils/event.utils';
 import { Article, ArticleContentType, ArticleStatus } from '../../models/article.model';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { LanguageService } from '../../services/language.service';
-import { ProfileReminderService } from '../../services/profile-reminder.service';
 import { ReferralService, ReferralSummary } from '../../services/referral.service';
 import { RewardService, RewardWallet } from '../../services/reward.service';
 import { getArticleLink } from '../../utils/article-route.utils';
@@ -213,7 +212,6 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
     private subscriptionService: SubscriptionService,
     private router: Router,
     private quickAddAssistantService: QuickAddAssistantService,
-    private profileReminderService: ProfileReminderService,
     private referralService: ReferralService,
     private rewardService: RewardService,
     private ngZone: NgZone,
@@ -346,16 +344,8 @@ export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
     hero.style.setProperty('--profile-avatar-bottom', `${avatarBottom}px`);
   }
 
-  get profileIncomplete(): boolean {
-    return !this.user?.phone || !this.user?.cityId || !this.user?.address || !this.user?.birthDate;
-  }
-
   get canViewChordRequests(): boolean {
     return !!this.user && ((this.user.hasProfessionalProfile ?? false) || (this.user.contentTag ?? 0) >= 2 || this.authService.isAdminOrManager(this.user));
-  }
-
-  openProfileCompletion(): void {
-    this.profileReminderService.requestProfileCompletion();
   }
 
   toggleMarketingConsent(): void {

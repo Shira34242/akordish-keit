@@ -11,6 +11,13 @@
     </button>
   </header>
 
+  <nav class="workflow-tabs" aria-label="אזורי ניהול פרסום">
+    <a routerLink="/admin/advertising" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">קמפיינים</a>
+    <a routerLink="/admin/advertising/spots" routerLinkActive="active">שטחי פרסום</a>
+    <a routerLink="/admin/advertising/clients" routerLinkActive="active">לקוחות</a>
+    <a routerLink="/admin/advertising/links" routerLinkActive="active">קישורי שיתוף</a>
+  </nav>
+
   <div class="summary-grid" *ngIf="dashboard as data">
     <article class="summary-card">
       <span>כניסות / לחיצות</span>

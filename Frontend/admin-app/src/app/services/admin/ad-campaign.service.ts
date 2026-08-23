@@ -21,13 +21,21 @@ export class AdCampaignService {
   /**
    * Get all campaigns with optional status filter and pagination
    */
-  getCampaigns(pageNumber: number = 1, pageSize: number = 10, status?: AdCampaignStatus): Observable<PagedResult<AdCampaign>> {
+  getCampaigns(
+    pageNumber: number = 1,
+    pageSize: number = 10,
+    status?: AdCampaignStatus,
+    searchTerm?: string
+  ): Observable<PagedResult<AdCampaign>> {
     let params = new HttpParams()
       .set('pageNumber', pageNumber.toString())
       .set('pageSize', pageSize.toString());
 
     if (status) {
       params = params.set('status', status);
+    }
+    if (searchTerm?.trim()) {
+      params = params.set('searchTerm', searchTerm.trim());
     }
     return this.http.get<PagedResult<AdCampaign>>(this.apiUrl, { params });
   }

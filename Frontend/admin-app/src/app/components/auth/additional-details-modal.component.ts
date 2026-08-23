@@ -1,7 +1,8 @@
-import { Component, EventEmitter, Output, inject } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
+import { CitiesService, City } from '../../services/cities.service';
 import { SystemItem, SystemTablesService } from '../../services/system-tables.service';
 export { UserType } from './user-type.enum';
 import { UserType } from './user-type.enum';
@@ -25,17 +26,31 @@ interface InstrumentOption {
   styleUrls: ['./additional-details-modal.component.css']
 })
 export class AdditionalDetailsModalComponent {
+  @Input() previewMode = false;
+  @Input() seamlessEntry = false;
   @Output() close = new EventEmitter<void>();
   @Output() complete = new EventEmitter<OnboardingProfileChoice>();
 
   loading = false;
   errorMessage = '';
 
-  currentStep: 'name' | 'instrument' | 'userType' | 'publicPage' = 'name';
+  currentStep: 'instrument' | 'profileDetails' | 'userType' | 'publicPage' = 'instrument';
 
-  profileName = '';
   selectedInstrumentIds: number[] = [];
+  otherInstrumentSelected = false;
+  otherInstrumentEditing = false;
+  otherInstrumentName = '';
+  notPlaying = false;
   selectedLevel: 1 | 2 | 3 | null = null;
+  phone = '';
+  cityId: number | null = null;
+  citySearch = '';
+  address = '';
+  birthMonth: number | null = null;
+  birthYear: number | null = null;
+  cities: City[] = [];
+  citiesLoading = true;
+  showCityDropdown = false;
   selectedUserType: UserType | null = null;
   selectedServiceProviderCategoryId?: number;
   serviceProviderCategories: SystemItem[] = [];
@@ -48,18 +63,38 @@ export class AdditionalDetailsModalComponent {
     { id: 6, label: 'כינור' },
     { id: 9, label: 'יוקלילי' }
   ];
+  readonly months = [
+    { value: 1, label: 'ינואר' },
+    { value: 2, label: 'פברואר' },
+    { value: 3, label: 'מרץ' },
+    { value: 4, label: 'אפריל' },
+    { value: 5, label: 'מאי' },
+    { value: 6, label: 'יוני' },
+    { value: 7, label: 'יולי' },
+    { value: 8, label: 'אוגוסט' },
+    { value: 9, label: 'ספטמבר' },
+    { value: 10, label: 'אוקטובר' },
+    { value: 11, label: 'נובמבר' },
+    { value: 12, label: 'דצמבר' }
+  ];
+  readonly birthYears: number[];
 
   UserType = UserType;
   private readonly authService = inject(AuthService);
+  private readonly citiesService = inject(CitiesService);
   private readonly systemTablesService = inject(SystemTablesService);
 
   constructor() {
+    const currentYear = new Date().getFullYear();
+    this.birthYears = Array.from({ length: 96 }, (_, index) => currentYear - 5 - index);
+    this.prefillProfileDetails();
+    this.loadCities();
     this.loadServiceProviderCategories();
   }
 
   get progressPercent(): number {
-    if (this.currentStep === 'name') return 33;
-    if (this.currentStep === 'instrument') return 66;
+    if (this.currentStep === 'instrument') return 33;
+    if (this.currentStep === 'profileDetails') return 66;
     return 100;
   }
 
@@ -67,55 +102,123 @@ export class AdditionalDetailsModalComponent {
     return (this.selectedUserType ?? UserType.Regular) !== UserType.Regular;
   }
 
-  goNext(): void {
-    this.errorMessage = '';
-
-    if (this.currentStep === 'name') {
-      this.currentStep = 'instrument';
-      return;
-    }
-
-    if (this.currentStep === 'instrument') {
-      this.currentStep = 'userType';
-      return;
-    }
-
-    if (this.currentStep === 'userType') {
-      const userType = this.selectedUserType ?? UserType.Regular;
-      if (userType === UserType.Regular) {
-        this.finish(false);
-        return;
-      }
-
-      this.currentStep = 'publicPage';
-    }
-  }
-
-  skipStep(): void {
-    if (this.currentStep === 'name') {
-      this.profileName = '';
-      this.currentStep = 'instrument';
-      return;
-    }
-
-    if (this.currentStep === 'instrument') {
-      this.selectedInstrumentIds = [];
-      this.selectedLevel = null;
-      this.currentStep = 'userType';
-      return;
-    }
-
-    if (this.currentStep === 'userType') {
-      this.selectedUserType = UserType.Regular;
-      this.selectedServiceProviderCategoryId = undefined;
-      this.finish(false);
-    }
+  get canChooseLevel(): boolean {
+    return !this.notPlaying && !this.otherInstrumentEditing && (
+      this.selectedInstrumentIds.length > 0 ||
+      (this.otherInstrumentSelected && this.otherInstrumentName.trim().length >= 2)
+    );
   }
 
   toggleInstrument(id: number): void {
+    this.notPlaying = false;
     this.selectedInstrumentIds = this.isInstrumentSelected(id)
       ? this.selectedInstrumentIds.filter(existingId => existingId !== id)
       : [...this.selectedInstrumentIds, id];
+  }
+
+  toggleOtherInstrument(): void {
+    this.notPlaying = false;
+    if (this.otherInstrumentSelected) {
+      this.otherInstrumentSelected = false;
+      this.otherInstrumentName = '';
+      return;
+    }
+
+    this.otherInstrumentEditing = true;
+  }
+
+  confirmOtherInstrument(): void {
+    const instrumentName = this.otherInstrumentName.trim();
+    if (instrumentName.length < 2) return;
+
+    this.otherInstrumentName = instrumentName;
+    this.otherInstrumentSelected = true;
+    this.otherInstrumentEditing = false;
+  }
+
+  cancelOtherInstrument(): void {
+    this.otherInstrumentEditing = false;
+    this.otherInstrumentSelected = false;
+    this.otherInstrumentName = '';
+  }
+
+  selectNotPlaying(): void {
+    this.notPlaying = true;
+    this.selectedInstrumentIds = [];
+    this.otherInstrumentSelected = false;
+    this.otherInstrumentEditing = false;
+    this.otherInstrumentName = '';
+    this.selectedLevel = null;
+    this.currentStep = 'profileDetails';
+  }
+
+  selectLevel(level: 1 | 2 | 3): void {
+    this.notPlaying = false;
+    this.selectedLevel = level;
+    this.currentStep = 'profileDetails';
+  }
+
+  get filteredCities(): City[] {
+    const term = this.citySearch.trim();
+    if (!term) return this.cities.slice(0, 30);
+
+    return this.cities
+      .filter(city => city.name.includes(term) || (city.englishName ?? '').toLowerCase().includes(term.toLowerCase()))
+      .slice(0, 30);
+  }
+
+  get canContinueProfileDetails(): boolean {
+    return !this.loading && !!(
+      this.phone.trim()
+      && this.cityId
+      && this.address.trim()
+      && this.birthMonth
+      && this.birthYear
+    );
+  }
+
+  onCityInput(): void {
+    this.showCityDropdown = true;
+    const exactCity = this.cities.find(city => city.name === this.citySearch.trim());
+    this.cityId = exactCity?.id ?? null;
+  }
+
+  selectCity(city: City): void {
+    this.cityId = city.id;
+    this.citySearch = city.name;
+    this.showCityDropdown = false;
+  }
+
+  onCityBlur(): void {
+    setTimeout(() => this.showCityDropdown = false, 200);
+  }
+
+  saveProfileDetails(): void {
+    if (!this.canContinueProfileDetails) return;
+
+    this.errorMessage = '';
+    if (this.previewMode) {
+      this.currentStep = 'userType';
+      return;
+    }
+
+    this.loading = true;
+    this.authService.updateSoftProfile({
+      phone: this.phone.trim(),
+      cityId: this.cityId,
+      address: this.address.trim(),
+      birthMonth: this.birthMonth,
+      birthYear: this.birthYear
+    }).subscribe({
+      next: () => {
+        this.loading = false;
+        this.currentStep = 'userType';
+      },
+      error: (error: any) => {
+        this.loading = false;
+        this.errorMessage = error?.error?.message || 'לא הצלחנו לשמור את הפרטים. אפשר לנסות שוב.';
+      }
+    });
   }
 
   isInstrumentSelected(id: number): boolean {
@@ -125,6 +228,13 @@ export class AdditionalDetailsModalComponent {
   selectUserType(userType: UserType, categoryId?: number): void {
     this.selectedUserType = userType;
     this.selectedServiceProviderCategoryId = userType === UserType.ServiceProvider ? categoryId : undefined;
+
+    if (userType === UserType.Regular) {
+      this.finish(false);
+      return;
+    }
+
+    this.currentStep = 'publicPage';
   }
 
   isGeneralServiceSelected(): boolean {
@@ -145,11 +255,17 @@ export class AdditionalDetailsModalComponent {
 
   private finish(addPublicPage: boolean): void {
     this.errorMessage = '';
+
+    if (this.previewMode) {
+      this.close.emit();
+      return;
+    }
+
     this.loading = true;
 
     const payload = {
-      username: this.profileName.trim() || null,
       instrumentIds: this.selectedInstrumentIds,
+      otherInstrumentName: this.otherInstrumentSelected ? this.otherInstrumentName.trim() || null : null,
       instrumentLevel: this.selectedLevel,
       userType: this.selectedUserType ?? UserType.Regular
     };
@@ -200,6 +316,34 @@ export class AdditionalDetailsModalComponent {
         this.categoriesLoading = false;
       }
     });
+  }
+
+  private loadCities(): void {
+    this.citiesService.getCities().subscribe({
+      next: cities => {
+        this.cities = cities;
+        this.citiesLoading = false;
+        if (this.cityId) {
+          this.citySearch = this.cities.find(city => city.id === this.cityId)?.name ?? this.citySearch;
+        }
+      },
+      error: () => this.citiesLoading = false
+    });
+  }
+
+  private prefillProfileDetails(): void {
+    const user = this.authService.currentUserValue;
+    if (!user) return;
+
+    this.phone = user.phone ?? '';
+    this.cityId = user.cityId ?? null;
+    this.address = user.address ?? '';
+
+    const birthDateMatch = /^(\d{4})-(\d{2})/.exec(user.birthDate ?? '');
+    if (!birthDateMatch) return;
+
+    this.birthYear = Number(birthDateMatch[1]);
+    this.birthMonth = Number(birthDateMatch[2]);
   }
 
   private isServiceProviderCategory(item: SystemItem): boolean {

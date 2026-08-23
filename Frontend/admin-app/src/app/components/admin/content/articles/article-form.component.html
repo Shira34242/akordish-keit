@@ -192,6 +192,32 @@
             </button>
           </div>
 
+          <div class="tag-suggestions" *ngIf="tagSuggestions.length > 0">
+            <div class="tag-suggestions-header">
+              <span>הצעות מהתוכן · לחיצה מוסיפה</span>
+              <button type="button" class="btn-rescan-tags" (click)="scanTagSuggestions()">
+                <span class="material-icons">refresh</span>
+                רענון
+              </button>
+            </div>
+            <div class="tag-suggestion-list">
+              <div *ngFor="let suggestion of tagSuggestions" class="tag-suggestion-chip">
+                <button
+                  type="button"
+                  class="tag-suggestion-add"
+                  (click)="addSuggestedTag(suggestion)"
+                  [disabled]="creatingSuggestedTag === suggestion.name">
+                  <span class="material-icons">{{ creatingSuggestedTag === suggestion.name ? 'hourglass_top' : 'add' }}</span>
+                  <span>{{ suggestion.name }}</span>
+                  <small>{{ suggestion.isNew ? 'חדשה' : 'קיימת' }}</small>
+                </button>
+                <button type="button" class="tag-suggestion-dismiss" (click)="dismissSuggestedTag(suggestion)" title="הסתרת ההצעה">
+                  <span class="material-icons">close</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
           <div class="tag-input-wrapper" *ngIf="showNewTagInput">
             <div class="tag-input-row new-tag-row">
               <input
@@ -425,6 +451,7 @@
               class="form-input"
               [(ngModel)]="article.subtitle"
               name="subtitle"
+              (input)="queueTagSuggestionScan()"
               placeholder="כותרת משנה">
           </div>
         </div>
@@ -436,6 +463,7 @@
               class="form-textarea"
               [(ngModel)]="article.shortDescription"
               name="shortDescription"
+              (input)="queueTagSuggestionScan()"
               rows="3"
               placeholder="תיאור קצר שיוצג ברשימות..."
               maxlength="1000"></textarea>

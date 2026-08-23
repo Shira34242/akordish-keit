@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, HostListener, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -26,10 +26,13 @@ export class CampaignsListComponent implements OnInit {
   filteredCampaigns: AdCampaign[] = [];
   loading = false;
   saving = false;
-  viewMode: 'list' | 'grid' = (localStorage.getItem('admin-campaigns-view') as 'list' | 'grid') || 'list';
+  viewMode: 'list' | 'grid' = window.innerWidth <= 768
+    ? 'grid'
+    : (localStorage.getItem('admin-campaigns-view') as 'list' | 'grid') || 'list';
   setView(mode: 'list' | 'grid') { this.viewMode = mode; localStorage.setItem('admin-campaigns-view', mode); }
   searchTerm = '';
-  activeTab: 'campaigns' | 'spots' | 'clients' = 'campaigns';
+  private searchTimer?: ReturnType<typeof setTimeout>;
+  activeTab: 'campaigns' | 'spots' | 'clients' | 'links' = 'campaigns';
 
   // Pagination
   totalCount = 0;
@@ -48,7 +51,7 @@ export class CampaignsListComponent implements OnInit {
 
   loadCampaigns() {
     this.loading = true;
-    this.campaignService.getCampaigns(this.pageNumber, this.pageSize).subscribe({
+    this.campaignService.getCampaigns(this.pageNumber, this.pageSize, undefined, this.searchTerm).subscribe({
       next: (data: PagedResult<AdCampaign>) => {
         this.campaigns = data.items;
         this.filteredCampaigns = data.items;
@@ -71,17 +74,16 @@ export class CampaignsListComponent implements OnInit {
   }
 
   onSearch() {
-    if (!this.searchTerm.trim()) {
-      this.filteredCampaigns = this.campaigns;
-      return;
-    }
+    clearTimeout(this.searchTimer);
+    this.searchTimer = setTimeout(() => {
+      this.pageNumber = 1;
+      this.loadCampaigns();
+    }, 300);
+  }
 
-    const term = this.searchTerm.toLowerCase();
-    this.filteredCampaigns = this.campaigns.filter(campaign =>
-      campaign.name.toLowerCase().includes(term) ||
-      campaign.clientName.toLowerCase().includes(term) ||
-      campaign.adSpotName.toLowerCase().includes(term)
-    );
+  @HostListener('window:resize')
+  onResize(): void {
+    if (window.innerWidth <= 768) this.viewMode = 'grid';
   }
 
   getStatusClass(status: string): string {
@@ -176,12 +178,14 @@ export class CampaignsListComponent implements OnInit {
     });
   }
 
-  switchTab(tab: 'campaigns' | 'spots' | 'clients') {
+  switchTab(tab: 'campaigns' | 'spots' | 'clients' | 'links') {
     this.activeTab = tab;
     if (tab === 'spots') {
       this.router.navigate(['/admin/advertising/spots']);
     } else if (tab === 'clients') {
       this.router.navigate(['/admin/advertising/clients']);
+    } else if (tab === 'links') {
+      this.router.navigate(['/admin/advertising/links']);
     }
   }
 }

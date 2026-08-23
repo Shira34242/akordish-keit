@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, Output, OnInit, OnChanges, SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import {
   AdCampaign,
   CreateAdCampaignRequest,
@@ -18,7 +19,7 @@ import { FileUploadInputComponent } from '../../../shared/file-upload-input/file
 @Component({
   selector: 'app-campaign-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FileUploadInputComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, FileUploadInputComponent],
   templateUrl: './campaign-form.component.html',
   styleUrls: ['./campaign-form.component.css']
 })
@@ -97,7 +98,7 @@ export class CampaignFormComponent implements OnInit, OnChanges {
       mobileMediaUrl: [this.campaign?.mobileMediaUrl || '', Validators.maxLength(500)],
       knownUrl: [this.campaign?.knownUrl || '', Validators.maxLength(500)],
       priority: [this.campaign?.priority || 1, [Validators.min(1), Validators.max(5)]],
-      status: [this.campaign?.status || 'Active'],
+      status: [this.campaign?.status || 'Draft'],
       startDate: [this.campaign?.startDate ? this.formatDateForInput(this.campaign.startDate) : defaultStartDate],
       endDate: [this.campaign?.endDate ? this.formatDateForInput(this.campaign.endDate) : defaultEndDate],
       budget: [this.campaign?.budget || 0, Validators.min(0)]

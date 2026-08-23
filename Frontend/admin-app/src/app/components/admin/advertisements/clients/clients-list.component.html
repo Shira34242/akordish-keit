@@ -14,7 +14,7 @@
         class="tab"
         [class.active]="activeTab === 'campaigns'"
         (click)="switchTab('campaigns')">
-        קמפיינים פעילים
+        קמפיינים
       </button>
       <button
         class="tab"
@@ -28,6 +28,7 @@
         (click)="switchTab('clients')">
         לקוחות
       </button>
+      <button class="tab" (click)="switchTab('links')">קישורי שיתוף</button>
     </div>
   </div>
 
@@ -81,7 +82,15 @@
       <div class="grid-card-name">{{ client.businessName }}</div>
       <div class="grid-card-sub">{{ client.contactPerson }}</div>
       <div class="grid-card-badges">
+        <span class="badge" [class.badge-secondary]="!client.isActive" [class.badge-info]="client.isActive">
+          {{ client.isActive ? 'פעיל' : 'לא פעיל' }}
+        </span>
         <span class="badge badge-info">{{ client.activeCampaigns }} פעילים</span>
+      </div>
+      <div class="grid-card-details">
+        <a [href]="'mailto:' + client.email">{{ client.email }}</a>
+        <a [href]="'tel:' + client.phone">{{ client.phone }}</a>
+        <span>{{ formatCurrency(client.totalBudget) }} · {{ client.totalCampaigns }} קמפיינים</span>
       </div>
       <div class="grid-card-actions">
         <button class="btn-action" (click)="editClient(client)" title="עריכה"><span class="material-icons">edit</span></button>
@@ -89,6 +98,22 @@
       </div>
     </div>
   </div>
+
+  <div *ngIf="!loading && filteredClients.length === 0 && viewMode === 'grid'" class="empty-grid-state">
+    <span>לא נמצאו לקוחות פרסום</span>
+    <button type="button" class="btn-new-client" (click)="createNewClient()">הוספת לקוח</button>
+  </div>
+
+  <app-pagination
+    *ngIf="!loading && viewMode === 'grid'"
+    [totalCount]="totalCount"
+    [pageNumber]="pageNumber"
+    [pageSize]="pageSize"
+    [totalPages]="totalPages"
+    [hasPreviousPage]="hasPreviousPage"
+    [hasNextPage]="hasNextPage"
+    (pageChange)="onPageChange($event)">
+  </app-pagination>
 
   <!-- Table -->
   <div class="table-container" *ngIf="viewMode === 'list'">

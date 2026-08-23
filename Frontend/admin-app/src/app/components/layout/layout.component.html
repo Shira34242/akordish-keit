@@ -63,10 +63,9 @@
                 <span class="notification-badge" *ngIf="unreadNotificationCount > 0">{{ unreadNotificationCount > 99 ? '99+' : unreadNotificationCount }}</span>
             </button>
             <ng-template #loginBtn>
-                <div class="btn-login header-desktop-only" role="group" aria-label="התחברות או הרשמה">
-                    <button type="button" class="btn-login-action" (click)="openAuthModal('login')">{{ 'auth.login_link' | translate }}</button>
-                    <span class="btn-login-separator" aria-hidden="true">/</span>
-                    <button type="button" class="btn-login-action" (click)="openAuthModal('register')">הרשמה</button>
+                <div class="desktop-auth-actions header-desktop-only" role="group" aria-label="התחברות או הרשמה">
+                    <button type="button" class="btn-login btn-login--secondary" (click)="openAuthModal('login')">{{ 'auth.login_link' | translate }}</button>
+                    <button type="button" class="btn-login" (click)="openAuthModal('register')">הרשמה</button>
                 </div>
             </ng-template>
             <button class="btn-lang-toggle header-desktop-only" (click)="langService.toggle()"   *ngIf="false">
@@ -417,6 +416,8 @@
 @defer (when showAdditionalDetailsModal) {
 <app-additional-details-modal
     *ngIf="showAdditionalDetailsModal"
+    [previewMode]="onboardingPreviewMode"
+    [seamlessEntry]="onboardingSeamlessEntry"
     (close)="closeAdditionalDetailsModal()"
     (complete)="onProfileComplete($event)">
 </app-additional-details-modal>

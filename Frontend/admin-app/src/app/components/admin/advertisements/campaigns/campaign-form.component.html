@@ -1,8 +1,8 @@
 <div class="modal-overlay" *ngIf="show" (click)="onCancel()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
+  <div class="modal-content" role="dialog" aria-modal="true" [attr.aria-label]="isEditMode ? 'עריכת קמפיין' : 'יצירת קמפיין חדש'" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h2>{{ isEditMode ? 'עריכת קמפיין' : 'יצירת קמפיין חדש' }}</h2>
-      <button class="btn-close" (click)="onCancel()" type="button">&times;</button>
+      <button class="btn-close" (click)="onCancel()" type="button" aria-label="סגירה">&times;</button>
     </div>
 
     <form [formGroup]="campaignForm" (ngSubmit)="onSubmit()">
@@ -54,6 +54,19 @@
             </select>
             <div class="error-message" *ngIf="f['adSpotId'].invalid && f['adSpotId'].touched">
               <span *ngIf="f['adSpotId'].errors?.['required']">שדה חובה</span>
+            </div>
+            <div class="spot-quick-access" *ngIf="selectedAdSpot as spot">
+              <div>
+                <strong>{{ spot.dimensions || 'ללא מידות מחשב' }}</strong>
+                <span *ngIf="spot.mobileDimensions">מובייל: {{ spot.mobileDimensions }}</span>
+              </div>
+              <a
+                [routerLink]="['/admin/advertising/spots']"
+                [queryParams]="{ edit: spot.id }"
+                target="_blank"
+                rel="noopener">
+                עריכת השטח בלשונית חדשה
+              </a>
             </div>
           </div>
         </div>
@@ -118,7 +131,7 @@
         <!-- Priority & Status -->
         <div class="form-row">
           <div class="form-group">
-            <label for="priority">עדיפות (1-5)</label>
+            <label for="priority">סדר הצגה / עדיפות (1 ראשון)</label>
             <input
               type="number"
               id="priority"
@@ -128,9 +141,10 @@
               min="1"
               max="5"
             />
-            <div class="hint-text" *ngIf="takenPriorities.length > 0" style="font-size: 0.85rem; color: #6c757d; margin-top: 0.25rem;">
+            <div class="hint-text" *ngIf="takenPriorities.length > 0">
               עדיפויות תפוסות: {{ takenPriorities.join(', ') }} | עדיפויות פנויות: {{ availablePriorities.join(', ') || 'אין' }}
             </div>
+            <div class="hint-text">במצב ערימה, המספר קובע את הסדר מלמעלה למטה.</div>
             <div class="error-message" *ngIf="f['priority'].invalid && f['priority'].touched">
               <span *ngIf="f['priority'].errors?.['min']">עדיפות חייבת להיות לפחות 1</span>
             </div>
@@ -193,8 +207,8 @@
             <span class="error-icon">⚠️</span>
             <span>{{ availabilityError }}</span>
           </div>
-          <div class="availability-info" *ngIf="availabilityMessage && !availabilityError && !checkingAvailability" style="padding: 0.75rem; background: #e3f2fd; border: 1px solid #90caf9; border-radius: 6px; margin-top: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-            <span style="font-size: 1.2rem;">ℹ️</span>
+          <div class="availability-info" *ngIf="availabilityMessage && !availabilityError && !checkingAvailability">
+            <span class="material-icons" aria-hidden="true">info</span>
             <span>{{ availabilityMessage }}</span>
           </div>
           <div class="availability-success" *ngIf="!availabilityError && !availabilityMessage && !checkingAvailability && (f['adSpotId'].value && f['startDate'].value && f['endDate'].value && f['priority'].value)">

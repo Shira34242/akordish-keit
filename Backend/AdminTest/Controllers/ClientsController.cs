@@ -26,9 +26,22 @@ namespace AkordishKeit.Controllers
         public async Task<ActionResult<PagedResult<ClientDto>>> GetClients(
             [FromQuery] int pageNumber = 1,
             [FromQuery] int pageSize = 10,
-            [FromQuery] string? sortBy = null)
+            [FromQuery] string? sortBy = null,
+            [FromQuery] string? searchTerm = null)
         {
-            var clientsQuery = _context.Clients
+            var sourceQuery = _context.Clients.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                var term = searchTerm.Trim();
+                sourceQuery = sourceQuery.Where(c =>
+                    c.BusinessName.Contains(term) ||
+                    c.ContactPerson.Contains(term) ||
+                    c.Email.Contains(term) ||
+                    c.Phone.Contains(term));
+            }
+
+            var clientsQuery = sourceQuery
                 .Select(c => new ClientDto
                 {
                     Id = c.Id,

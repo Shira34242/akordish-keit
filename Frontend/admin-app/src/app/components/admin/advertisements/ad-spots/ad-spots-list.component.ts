@@ -1,7 +1,7 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, HostListener, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AdSpotService } from '../../../../services/admin/ad-spot.service';
 import { AdSpot, CreateAdSpotRequest, UpdateAdSpotRequest } from '../../../../models/admin/advertisement.model';
 import { PagedResult } from '../../../../models/pagination.model';
@@ -21,14 +21,19 @@ export class AdSpotsListComponent implements OnInit {
   private readonly siteAlerts = inject(SiteAlertService);
   private readonly adSpotService = inject(AdSpotService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   adSpots: AdSpot[] = [];
   filteredAdSpots: AdSpot[] = [];
   loading = false;
   saving = false;
   searchTerm = '';
-  activeTab: 'campaigns' | 'spots' | 'clients' = 'spots';
-  viewMode: 'list' | 'grid' = (localStorage.getItem('admin-ad-spots-view') as 'list' | 'grid') || 'list';
+  private searchTimer?: ReturnType<typeof setTimeout>;
+  private pendingEditId?: number;
+  activeTab: 'campaigns' | 'spots' | 'clients' | 'links' = 'spots';
+  viewMode: 'list' | 'grid' = window.innerWidth <= 768
+    ? 'grid'
+    : (localStorage.getItem('admin-ad-spots-view') as 'list' | 'grid') || 'list';
 
   // Pagination
   totalCount = 0;
@@ -42,12 +47,14 @@ export class AdSpotsListComponent implements OnInit {
   selectedAdSpot?: AdSpot;
 
   ngOnInit() {
+    const requestedId = Number(this.route.snapshot.queryParamMap.get('edit'));
+    this.pendingEditId = Number.isFinite(requestedId) && requestedId > 0 ? requestedId : undefined;
     this.loadAdSpots();
   }
 
   loadAdSpots() {
     this.loading = true;
-    this.adSpotService.getAdSpots(this.pageNumber, this.pageSize).subscribe({
+    this.adSpotService.getAdSpots(this.pageNumber, this.pageSize, this.searchTerm).subscribe({
       next: (data: PagedResult<AdSpot>) => {
         this.adSpots = data.items;
         this.filteredAdSpots = data.items;
@@ -56,6 +63,7 @@ export class AdSpotsListComponent implements OnInit {
         this.hasPreviousPage = data.hasPreviousPage;
         this.hasNextPage = data.hasNextPage;
         this.loading = false;
+        this.openRequestedSpot();
       },
       error: (error) => {
         console.error('Error loading ad spots:', error);
@@ -70,16 +78,16 @@ export class AdSpotsListComponent implements OnInit {
   }
 
   onSearch() {
-    if (!this.searchTerm.trim()) {
-      this.filteredAdSpots = this.adSpots;
-      return;
-    }
+    clearTimeout(this.searchTimer);
+    this.searchTimer = setTimeout(() => {
+      this.pageNumber = 1;
+      this.loadAdSpots();
+    }, 300);
+  }
 
-    const term = this.searchTerm.toLowerCase();
-    this.filteredAdSpots = this.adSpots.filter(spot =>
-      spot.name.toLowerCase().includes(term) ||
-      spot.technicalId.toLowerCase().includes(term)
-    );
+  @HostListener('window:resize')
+  onResize(): void {
+    if (window.innerWidth <= 768) this.viewMode = 'grid';
   }
 
   setView(mode: 'list' | 'grid') {
@@ -105,6 +113,16 @@ export class AdSpotsListComponent implements OnInit {
     return textMap[availability] || availability;
   }
 
+  getCapacityClass(spot: AdSpot): string {
+    if (spot.activeCampaigns >= 5) return 'unavailable';
+    if (spot.activeCampaigns > 0) return 'partial';
+    return 'available';
+  }
+
+  getCapacityText(spot: AdSpot): string {
+    return `${Math.min(spot.activeCampaigns, 5)} מתוך 5`;
+  }
+
   formatCurrency(amount: number): string {
     return `₪${amount.toLocaleString('he-IL')}`;
   }
@@ -122,6 +140,23 @@ export class AdSpotsListComponent implements OnInit {
   editSpot(spot: AdSpot) {
     this.selectedAdSpot = spot;
     this.showAdSpotForm = true;
+  }
+
+  private openRequestedSpot(): void {
+    const requestedId = this.pendingEditId;
+    if (!requestedId) return;
+    this.pendingEditId = undefined;
+
+    const loadedSpot = this.adSpots.find(spot => spot.id === requestedId);
+    if (loadedSpot) {
+      this.editSpot(loadedSpot);
+      return;
+    }
+
+    this.adSpotService.getAdSpot(requestedId).subscribe({
+      next: spot => this.editSpot(spot),
+      error: () => this.siteAlerts.show('לא ניתן לפתוח את שטח הפרסום המבוקש.')
+    });
   }
 
   onSaveAdSpot(spotData: CreateAdSpotRequest | UpdateAdSpotRequest) {
@@ -176,12 +211,14 @@ export class AdSpotsListComponent implements OnInit {
     });
   }
 
-  switchTab(tab: 'campaigns' | 'spots' | 'clients') {
+  switchTab(tab: 'campaigns' | 'spots' | 'clients' | 'links') {
     this.activeTab = tab;
     if (tab === 'campaigns') {
       this.router.navigate(['/admin/advertising']);
     } else if (tab === 'clients') {
       this.router.navigate(['/admin/advertising/clients']);
+    } else if (tab === 'links') {
+      this.router.navigate(['/admin/advertising/links']);
     }
   }
 }

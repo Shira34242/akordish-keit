@@ -552,7 +552,7 @@ export const routes: Routes = [
             {
                 path: 'advertising/spots',
                 loadComponent: () => import('./components/admin/advertisements/ad-spots/ad-spots-list.component').then(m => m.AdSpotsListComponent),
-                title: 'ניהול פרסום - שדות פרסום - אקורדישקייט'
+                title: 'ניהול פרסום - שטחי פרסום - אקורדישקייט'
             },
             {
                 path: 'advertising/links',

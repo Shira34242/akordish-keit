@@ -27,6 +27,7 @@ namespace AkordishKeit.Controllers
         [Authorize(Roles = "Admin,Manager")]
         public async Task<ActionResult<PagedResult<AdCampaignDto>>> GetAdCampaigns(
             [FromQuery] string? status = null,
+            [FromQuery] string? searchTerm = null,
             [FromQuery] int pageNumber = 1,
             [FromQuery] int pageSize = 10)
         {
@@ -37,6 +38,15 @@ namespace AkordishKeit.Controllers
             if (!string.IsNullOrEmpty(status) && Enum.TryParse<AdCampaignStatus>(status, true, out var statusEnum))
             {
                 query = query.Where(c => c.Status == statusEnum);
+            }
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                var term = searchTerm.Trim();
+                query = query.Where(c =>
+                    c.Name.Contains(term) ||
+                    (c.Client != null && c.Client.BusinessName.Contains(term)) ||
+                    (c.AdSpot != null && (c.AdSpot.Name.Contains(term) || c.AdSpot.TechnicalId.Contains(term))));
             }
 
             var campaignsQuery = query
