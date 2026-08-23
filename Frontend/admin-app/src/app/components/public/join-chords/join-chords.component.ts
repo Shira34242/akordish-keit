@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { GoogleSigninButtonModule, SocialAuthService } from '@abacritt/angularx-social-login';
 import { Subscription } from 'rxjs';
@@ -7,6 +7,7 @@ import { AuthService, User } from '../../../services/auth.service';
 import { GoogleOneTapService } from '../../../services/google-one-tap.service';
 import { AddSongModalComponent } from '../../add-song-modal/add-song-modal.component';
 import { LegalPageContent, PAGES } from '../legal-page/legal-page.component';
+import { TurnstileComponent } from '../../shared/turnstile/turnstile.component';
 
 type JoinChordsLegalKey = 'terms' | 'privacy';
 
@@ -17,17 +18,20 @@ type JoinChordsLegalKey = 'terms' | 'privacy';
     CommonModule,
     FormsModule,
     GoogleSigninButtonModule,
+    TurnstileComponent,
     AddSongModalComponent
   ],
   templateUrl: './join-chords.component.html',
   styleUrls: ['../join-index/join-index.component.css', './join-chords.component.css']
 })
 export class JoinChordsComponent implements OnInit, OnDestroy {
+  @ViewChild(TurnstileComponent) turnstile?: TurnstileComponent;
   user: User | null = null;
   loadingGoogle = false;
   googleError = '';
   termsApproved = false;
   marketingConsent = false;
+  turnstileToken: string | null = null;
   activeLegalKey: JoinChordsLegalKey | null = null;
   emailCopied = false;
   linkCopied = false;
@@ -64,6 +68,11 @@ export class JoinChordsComponent implements OnInit, OnDestroy {
   switchAccount(): void {
     this.authService.logout();
     this.socialAuthService.signOut().catch(() => {});
+    this.turnstile?.reset();
+  }
+
+  onTurnstileToken(token: string | null): void {
+    this.turnstileToken = token;
   }
 
   get activeLegalPage(): LegalPageContent | null {
@@ -131,7 +140,7 @@ export class JoinChordsComponent implements OnInit, OnDestroy {
     this.googleError = '';
     GoogleOneTapService.setProcessing(true);
 
-    this.authService.googleLogin(idToken, true, true).subscribe({
+    this.authService.googleLogin(idToken, true, true, this.turnstileToken ?? undefined).subscribe({
       next: () => {
         this.loadingGoogle = false;
         GoogleOneTapService.setProcessing(false);
@@ -139,9 +148,12 @@ export class JoinChordsComponent implements OnInit, OnDestroy {
       error: (error) => {
         this.loadingGoogle = false;
         GoogleOneTapService.setProcessing(false);
+        this.turnstile?.reset();
 
-        if (this.isGoogleTermsRequiredError(error)) {
-          this.googleError = 'כדי להשלים הרשמה עם Google יש לאשר את התקנון, מדיניות הפרטיות וקבלת הדיוור.';
+        if (this.isGoogleRegistrationRequiredError(error)) {
+          this.googleError = error?.error?.code === 'TURNSTILE_REQUIRED'
+            ? 'כדי להשלים הרשמה עם Google יש לעבור את בדיקת האבטחה.'
+            : 'כדי להשלים הרשמה עם Google יש לאשר את התקנון, מדיניות הפרטיות וקבלת הדיוור.';
           return;
         }
 
@@ -150,12 +162,13 @@ export class JoinChordsComponent implements OnInit, OnDestroy {
     });
   }
 
-  private isGoogleTermsRequiredError(error: any): boolean {
+  private isGoogleRegistrationRequiredError(error: any): boolean {
     const body = error?.error;
     const message = typeof body === 'string' ? body : body?.message;
 
     return body?.code === 'TERMS_REQUIRED'
       || body?.code === 'MARKETING_CONSENT_REQUIRED'
+      || body?.code === 'TURNSTILE_REQUIRED'
       || (typeof message === 'string' && message.includes('תקנון'));
   }
 

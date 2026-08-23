@@ -62,6 +62,11 @@ builder.Services.AddApplicationInsightsTelemetry();
 builder.Services.AddHttpClient();
 builder.Services.AddHttpClient<IYouTubeService, YouTubeService>();
 builder.Services.AddHttpClient<IExternalImageStorageService, ExternalImageStorageService>();
+builder.Services.AddHttpClient<ITurnstileService, TurnstileService>(client =>
+{
+    client.BaseAddress = new Uri("https://challenges.cloudflare.com/");
+    client.Timeout = TimeSpan.FromSeconds(8);
+});
 builder.Services.AddHttpContextAccessor();
 
 // Add Memory Cache (לשימוש ב-SystemSettingsService)

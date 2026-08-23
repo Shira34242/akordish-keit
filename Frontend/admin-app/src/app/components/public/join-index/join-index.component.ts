@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { GoogleSigninButtonModule, SocialAuthService } from '@abacritt/angularx-social-login';
@@ -12,6 +12,7 @@ import { SystemItem, SystemTablesService } from '../../../services/system-tables
 import { TeacherCreateComponent } from '../../teacher-create/teacher-create.component';
 import { ServiceProviderCreateComponent } from '../../service-provider-create/service-provider-create.component';
 import { LegalPageContent, PAGES } from '../legal-page/legal-page.component';
+import { TurnstileComponent } from '../../shared/turnstile/turnstile.component';
 
 type JoinIndexType = 'teacher' | 'service-provider';
 type JoinIndexLegalKey = 'terms' | 'privacy';
@@ -44,6 +45,7 @@ const FALLBACK_SERVICE_PROVIDER_CATEGORIES: SystemItem[] = [
     CommonModule,
     FormsModule,
     GoogleSigninButtonModule,
+    TurnstileComponent,
     TeacherCreateComponent,
     ServiceProviderCreateComponent
   ],
@@ -51,12 +53,14 @@ const FALLBACK_SERVICE_PROVIDER_CATEGORIES: SystemItem[] = [
   styleUrls: ['./join-index.component.css']
 })
 export class JoinIndexComponent implements OnInit, OnDestroy {
+  @ViewChild(TurnstileComponent) turnstile?: TurnstileComponent;
   user: User | null = null;
   selectedType: JoinIndexType | null = null;
   loadingGoogle = false;
   googleError = '';
   termsApproved = false;
   marketingConsent = false;
+  turnstileToken: string | null = null;
   activeLegalKey: JoinIndexLegalKey | null = null;
   linkCopied = false;
   serviceProviderCategories: SystemItem[] = [];
@@ -105,6 +109,11 @@ export class JoinIndexComponent implements OnInit, OnDestroy {
     this.selectedType = null;
     this.authService.logout();
     this.socialAuthService.signOut().catch(() => {});
+    this.turnstile?.reset();
+  }
+
+  onTurnstileToken(token: string | null): void {
+    this.turnstileToken = token;
   }
 
   start(type: JoinIndexType, categoryId?: number): void {
@@ -176,7 +185,7 @@ export class JoinIndexComponent implements OnInit, OnDestroy {
     this.googleError = '';
     GoogleOneTapService.setProcessing(true);
 
-    this.authService.googleLogin(idToken, true, true).subscribe({
+    this.authService.googleLogin(idToken, true, true, this.turnstileToken ?? undefined).subscribe({
       next: () => {
         this.loadingGoogle = false;
         GoogleOneTapService.setProcessing(false);
@@ -184,9 +193,12 @@ export class JoinIndexComponent implements OnInit, OnDestroy {
       error: (error) => {
         this.loadingGoogle = false;
         GoogleOneTapService.setProcessing(false);
+        this.turnstile?.reset();
 
-        if (this.isGoogleTermsRequiredError(error)) {
-          this.googleError = 'כדי להשלים הרשמה עם Google יש לאשר את התקנון, מדיניות הפרטיות וקבלת הדיוור.';
+        if (this.isGoogleRegistrationRequiredError(error)) {
+          this.googleError = error?.error?.code === 'TURNSTILE_REQUIRED'
+            ? 'כדי להשלים הרשמה עם Google יש לעבור את בדיקת האבטחה.'
+            : 'כדי להשלים הרשמה עם Google יש לאשר את התקנון, מדיניות הפרטיות וקבלת הדיוור.';
           return;
         }
 
@@ -195,12 +207,13 @@ export class JoinIndexComponent implements OnInit, OnDestroy {
     });
   }
 
-  private isGoogleTermsRequiredError(error: any): boolean {
+  private isGoogleRegistrationRequiredError(error: any): boolean {
     const body = error?.error;
     const message = typeof body === 'string' ? body : body?.message;
 
     return body?.code === 'TERMS_REQUIRED'
       || body?.code === 'MARKETING_CONSENT_REQUIRED'
+      || body?.code === 'TURNSTILE_REQUIRED'
       || (typeof message === 'string' && message.includes('תקנון'));
   }
 

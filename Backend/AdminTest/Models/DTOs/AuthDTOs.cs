@@ -15,6 +15,7 @@ namespace AkordishKeit.Models.DTOs
         public string? ReferralCode { get; set; }
         public string? CampaignCode { get; set; }
         public string? CampaignVisitorId { get; set; }
+        public string? TurnstileToken { get; set; }
     }
 
     public class RegisterRequest
@@ -37,6 +38,7 @@ namespace AkordishKeit.Models.DTOs
         public bool MarketingConsent { get; set; }
         public string? CampaignCode { get; set; }
         public string? CampaignVisitorId { get; set; }
+        public string? TurnstileToken { get; set; }
     }
 
     public class LoginRequest

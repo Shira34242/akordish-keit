@@ -82,6 +82,11 @@
           </label>
         </div>
 
+        <app-turnstile
+          action="registration"
+          (tokenChange)="onTurnstileToken($event)">
+        </app-turnstile>
+
         <div class="google-btn-stack">
           <button type="button" class="btn-google" [disabled]="loadingGoogle || !termsApproved || !marketingConsent">
             <span class="material-icons">account_circle</span>

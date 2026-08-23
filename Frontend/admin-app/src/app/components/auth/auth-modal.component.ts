@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnDestroy, Output, inject } from '@angular/core';
+import { Component, EventEmitter, Input, OnDestroy, Output, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -8,15 +8,17 @@ import { Subscription } from 'rxjs';
 import { GoogleOneTapService } from '../../services/google-one-tap.service';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { LanguageService } from '../../services/language.service';
+import { TurnstileComponent } from '../shared/turnstile/turnstile.component';
 
 @Component({
   selector: 'app-auth-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, GoogleSigninButtonModule, TranslatePipe, RouterLink],
+  imports: [CommonModule, FormsModule, GoogleSigninButtonModule, TranslatePipe, RouterLink, TurnstileComponent],
   templateUrl: './auth-modal.component.html',
   styleUrls: ['./auth-modal.component.css']
 })
 export class AuthModalComponent implements OnDestroy {
+  @ViewChild(TurnstileComponent) turnstile?: TurnstileComponent;
   @Output() close = new EventEmitter<void>();
   @Output() authSuccess = new EventEmitter<any>();
   @Output() forgotPassword = new EventEmitter<void>();
@@ -41,6 +43,7 @@ export class AuthModalComponent implements OnDestroy {
   termsApproved = false;
   marketingConsent = false;
   googleTermsRequired = false;
+  turnstileToken: string | null = null;
 
   // Password strength
   passwordStrength: 'weak' | 'medium' | 'strong' | null = null;
@@ -85,6 +88,7 @@ export class AuthModalComponent implements OnDestroy {
       return;
     }
 
+    this.turnstileToken = null;
     this.registerStep = 'manual';
   }
 
@@ -98,6 +102,7 @@ export class AuthModalComponent implements OnDestroy {
     this.showPassword = false;
     this.passwordStrength = null;
     this.passwordErrors = [];
+    this.turnstileToken = null;
   }
 
   togglePasswordVisibility() {
@@ -111,6 +116,7 @@ export class AuthModalComponent implements OnDestroy {
     this.termsApproved = false;
     this.marketingConsent = false;
     this.googleTermsRequired = false;
+    this.turnstileToken = null;
     this.showPassword = false;
     this.passwordStrength = null;
     this.passwordErrors = [];
@@ -131,6 +137,21 @@ export class AuthModalComponent implements OnDestroy {
 
   get canRegister(): boolean {
     return this.termsApproved && this.marketingConsent;
+  }
+
+  get canSubmitRegistration(): boolean {
+    return this.canRegister && !!this.turnstileToken;
+  }
+
+  onTurnstileToken(token: string | null): void {
+    this.turnstileToken = token;
+    if (token && this.errorMessage.includes('בדיקת האבטחה')) {
+      this.errorMessage = '';
+    }
+  }
+
+  onTurnstileError(): void {
+    this.errorMessage = 'לא הצלחנו לטעון את בדיקת האבטחה. נסו שוב.';
   }
 
   onPasswordChange() {
@@ -255,19 +276,26 @@ export class AuthModalComponent implements OnDestroy {
       return;
     }
 
+    if (!this.turnstileToken) {
+      this.errorMessage = 'יש להשלים את בדיקת האבטחה לפני ההרשמה.';
+      this.loading = false;
+      return;
+    }
+
     if (this.passwordErrors.length > 0) {
       this.errorMessage = this.langService.translate('auth.password_must_include') + this.passwordErrors.join(', ');
       this.loading = false;
       return;
     }
 
-    this.authService.register(this.username, this.email, this.password, this.termsApproved, this.marketingConsent).subscribe({
+    this.authService.register(this.username, this.email, this.password, this.termsApproved, this.marketingConsent, this.turnstileToken).subscribe({
       next: (response) => {
         this.loading = false;
         this.authSuccess.emit(response);
       },
       error: (error) => {
         this.loading = false;
+        this.turnstile?.reset();
         this.errorMessage = error.error?.message || this.langService.translate('auth.error_register');
       }
     });
@@ -282,6 +310,11 @@ export class AuthModalComponent implements OnDestroy {
       return;
     }
 
+    if (isRegistrationFlow && !this.turnstileToken) {
+      this.errorMessage = 'יש להשלים את בדיקת האבטחה לפני ההרשמה.';
+      return;
+    }
+
     if (!isRegistrationFlow && this.googleTermsRequired && !this.canRegister) {
       this.errorMessage = 'כדי להירשם יש לאשר את התקנון, מדיניות הפרטיות וקבלת הדיוור.';
       return;
@@ -289,7 +322,12 @@ export class AuthModalComponent implements OnDestroy {
 
     GoogleOneTapService.setProcessing(true);
     this.loading = true;
-    this.authService.googleLogin(idToken, isRegistrationConsentFlow && this.termsApproved, isRegistrationConsentFlow && this.marketingConsent).subscribe({
+    this.authService.googleLogin(
+      idToken,
+      isRegistrationConsentFlow && this.termsApproved,
+      isRegistrationConsentFlow && this.marketingConsent,
+      isRegistrationFlow ? this.turnstileToken ?? undefined : undefined
+    ).subscribe({
       next: (response) => {
         GoogleOneTapService.setProcessing(false);
         this.loading = false;
@@ -298,26 +336,31 @@ export class AuthModalComponent implements OnDestroy {
       error: (error) => {
         GoogleOneTapService.setProcessing(false);
         this.loading = false;
-        if (this.isGoogleTermsRequiredError(error)) {
+        if (this.isGoogleRegistrationRequiredError(error)) {
           this.isLogin = false;
           this.registerStep = 'choice';
           this.googleTermsRequired = true;
           this.termsApproved = false;
           this.marketingConsent = false;
-          this.errorMessage = 'כדי להשלים הרשמה עם Google יש לאשר את התקנון, מדיניות הפרטיות וקבלת הדיוור.';
+          this.turnstileToken = null;
+          this.errorMessage = error.error?.code === 'TURNSTILE_REQUIRED'
+            ? 'כדי להשלים הרשמה עם Google יש לעבור את בדיקת האבטחה.'
+            : 'כדי להשלים הרשמה עם Google יש לאשר את התקנון, מדיניות הפרטיות וקבלת הדיוור.';
           return;
         }
+        this.turnstile?.reset();
         this.errorMessage = error.error?.message || this.langService.translate('auth.error_google');
       }
     });
   }
 
-  private isGoogleTermsRequiredError(error: any): boolean {
+  private isGoogleRegistrationRequiredError(error: any): boolean {
     const body = error?.error;
     const message = typeof body === 'string' ? body : body?.message;
 
     return body?.code === 'TERMS_REQUIRED'
       || body?.code === 'MARKETING_CONSENT_REQUIRED'
+      || body?.code === 'TURNSTILE_REQUIRED'
       || (typeof message === 'string' && message.includes('תקנון'));
   }
 

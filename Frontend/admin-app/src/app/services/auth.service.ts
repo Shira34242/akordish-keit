@@ -110,10 +110,10 @@ export class AuthService {
         }
     }
 
-    register(username: string, email: string, password: string, termsApproved: boolean, marketingConsent = false): Observable<AuthResponse> {
+    register(username: string, email: string, password: string, termsApproved: boolean, marketingConsent = false, turnstileToken?: string): Observable<AuthResponse> {
         const attribution = this.marketingAttribution.getAttribution();
         return this.http.post<AuthResponse>(`${this.apiUrl}/register`, {
-            username, email, password, termsApproved, marketingConsent,
+            username, email, password, termsApproved, marketingConsent, turnstileToken,
             campaignCode: attribution?.campaignCode ?? null,
             campaignVisitorId: attribution?.visitorId ?? null
         }, {
@@ -134,12 +134,13 @@ export class AuthService {
         );
     }
 
-    googleLogin(idToken: string, termsApproved = false, marketingConsent = false): Observable<AuthResponse> {
+    googleLogin(idToken: string, termsApproved = false, marketingConsent = false, turnstileToken?: string): Observable<AuthResponse> {
         const attribution = this.marketingAttribution.getAttribution();
         return this.http.post<AuthResponse>(`${this.apiUrl}/google-login`, {
             idToken,
             termsApproved,
             marketingConsent,
+            turnstileToken,
             referralCode: this.getStoredReferralCode(),
             campaignCode: attribution?.campaignCode ?? null,
             campaignVisitorId: attribution?.visitorId ?? null

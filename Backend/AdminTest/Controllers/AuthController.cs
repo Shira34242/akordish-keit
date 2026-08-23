@@ -32,6 +32,7 @@ namespace AkordishKeit.Controllers
         private readonly IReferralService _referralService;
         private readonly IMarketingCampaignService _marketingCampaignService;
         private readonly IRewardService _rewardService;
+        private readonly ITurnstileService _turnstileService;
         private readonly ILogger<AuthController> _logger;
 
         private static readonly Dictionary<string, (string Code, DateTime Expiry)> _verificationCodes = new();
@@ -48,6 +49,7 @@ namespace AkordishKeit.Controllers
             IReferralService referralService,
             IMarketingCampaignService marketingCampaignService,
             IRewardService rewardService,
+            ITurnstileService turnstileService,
             ILogger<AuthController> logger)
         {
             _context = context;
@@ -59,6 +61,7 @@ namespace AkordishKeit.Controllers
             _referralService = referralService;
             _marketingCampaignService = marketingCampaignService;
             _rewardService = rewardService;
+            _turnstileService = turnstileService;
             _logger = logger;
         }
 
@@ -175,6 +178,16 @@ namespace AkordishKeit.Controllers
                     code = "MARKETING_CONSENT_REQUIRED",
                     message = "יש לאשר קבלת דיוור כדי להירשם"
                 });
+            }
+
+            if (isNewGoogleUser)
+            {
+                var turnstileValidation = await _turnstileService.ValidateAsync(
+                    request.TurnstileToken,
+                    "registration",
+                    HttpContext.RequestAborted);
+                if (!turnstileValidation.IsValid)
+                    return TurnstileFailureResponse(turnstileValidation);
             }
 
             bool needsImageUpload = user == null
@@ -501,6 +514,13 @@ namespace AkordishKeit.Controllers
                 return BadRequest(new { message = "יש לאשר קבלת דיוור כדי להירשם" });
             }
 
+            var turnstileValidation = await _turnstileService.ValidateAsync(
+                request.TurnstileToken,
+                "registration",
+                HttpContext.RequestAborted);
+            if (!turnstileValidation.IsValid)
+                return TurnstileFailureResponse(turnstileValidation);
+
             // 1. Check if username already exists
             if (await _context.Users.AnyAsync(u => u.Username == request.Username))
             {
@@ -554,6 +574,26 @@ namespace AkordishKeit.Controllers
 
             // 5. 🔐 שימוש באימות מאובטח עם Cookies - הרשמה חדשה, הצג שאלות onboarding
             return Ok(HandleSecureAuthentication(user, hasProfessionalProfile: false, isNewRegistration: true));
+        }
+
+        private ActionResult TurnstileFailureResponse(TurnstileValidationResult result)
+        {
+            if (result.Failure is TurnstileFailure.ConfigurationMissing or TurnstileFailure.ServiceUnavailable)
+            {
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, new
+                {
+                    code = "SECURITY_CHECK_UNAVAILABLE",
+                    message = "בדיקת האבטחה אינה זמינה כרגע. נסו שוב בעוד מספר רגעים."
+                });
+            }
+
+            return BadRequest(new
+            {
+                code = result.Failure == TurnstileFailure.MissingToken
+                    ? "TURNSTILE_REQUIRED"
+                    : "SECURITY_CHECK_FAILED",
+                message = "לא הצלחנו להשלים את בדיקת האבטחה. נסו שוב."
+            });
         }
 
         [HttpPost("login")]

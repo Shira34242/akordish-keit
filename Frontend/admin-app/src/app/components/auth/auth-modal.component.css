@@ -87,6 +87,10 @@
   margin-bottom: var(--space-lg);
 }
 
+app-turnstile {
+  margin-bottom: var(--space-base);
+}
+
 .form-group {
   margin-bottom: var(--space-base);
   display: flex;
