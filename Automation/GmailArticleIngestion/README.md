@@ -1,8 +1,11 @@
 # Gmail article ingestion
 
 The automation reads only Gmail threads carrying the `כתבות/ממתין לקליטה`
-label. It sends the latest message body and the first supported audio attachment
-to the backend. Word, PDF, image and video attachments are intentionally ignored.
+label. It sends the latest message body, article document text and the preferred
+audio file to the backend. A producer may supply these as email attachments or
+through a different public Google Drive folder link in every email. For Drive
+folders, the automation prefers a Google Doc whose name contains `קומוניקט` and
+an MP3 audio file; images and video files are ignored.
 
 ## Backend authentication
 

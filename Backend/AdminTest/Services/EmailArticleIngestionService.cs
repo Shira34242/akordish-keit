@@ -153,6 +153,10 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
                 request.Subject,
                 request.PlainBody,
                 request.DocumentText),
+            "control-drive-v1" => ParseControlDriveMessage(
+                request.Subject,
+                request.PlainBody,
+                request.DocumentText),
             _ => throw new InvalidOperationException($"Unsupported producer template: {producer.Template}")
         };
         var slug = BuildDeterministicSlug(parsed.Title, request.MessageId);
@@ -418,6 +422,89 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
 
         var firstLine = titleLines[0].TrimEnd().TrimEnd(':', '-', '–');
         return $"{firstLine}: {string.Join(" ", titleLines.Skip(1))}";
+    }
+
+    private static ParsedEmailArticle ParseControlDriveMessage(
+        string subject,
+        string plainBody,
+        string? documentText)
+    {
+        var youtubeMatch = YouTubeUrlRegex.Match(plainBody ?? string.Empty);
+        var youtubeUrl = youtubeMatch.Success
+            ? youtubeMatch.Value.TrimEnd('*', ')', '>', '.', ',')
+            : null;
+
+        var normalizedDocument = (documentText ?? string.Empty)
+            .Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Replace('\r', '\n')
+            .Trim();
+
+        var hasBlankParagraphSeparators = Regex.IsMatch(normalizedDocument, @"\n\s*\n");
+        var rawParagraphs = hasBlankParagraphSeparators
+            ? Regex.Split(normalizedDocument, @"\n\s*\n")
+            : normalizedDocument.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+
+        var paragraphs = rawParagraphs
+            .Select(paragraph => CleanText(Regex.Replace(paragraph, @"\s*\n\s*", " ")))
+            .Where(paragraph => !string.IsNullOrWhiteSpace(paragraph))
+            .ToList();
+
+        var titleIndex = paragraphs.FindIndex(paragraph =>
+            !IsDocumentHeaderMarker(new[] { paragraph }));
+        var title = titleIndex >= 0 ? paragraphs[titleIndex] : CleanText(subject);
+        if (string.IsNullOrWhiteSpace(title))
+            title = "כתבה ללא כותרת";
+
+        var articleParagraphs = paragraphs
+            .Skip(titleIndex >= 0 ? titleIndex + 1 : paragraphs.Count)
+            .ToList();
+        var creditsIndex = articleParagraphs.FindIndex(IsCreditsHeading);
+
+        List<string> creditParagraphs;
+        if (creditsIndex >= 0)
+        {
+            creditParagraphs = articleParagraphs.Skip(creditsIndex).ToList();
+            articleParagraphs = articleParagraphs.Take(creditsIndex).ToList();
+        }
+        else
+        {
+            creditParagraphs = articleParagraphs.Where(LooksLikeCredits).ToList();
+            articleParagraphs.RemoveAll(LooksLikeCredits);
+        }
+
+        var usedFallbackContent = articleParagraphs.Count == 0;
+        if (usedFallbackContent)
+            articleParagraphs.Add("תוכן מסמך הקומוניקט לא זוהה. יש להשלים את הכתבה לפני הפרסום.");
+
+        var contentHtml = string.Join("\n", articleParagraphs.Select(paragraph =>
+            $"<p>{WebUtility.HtmlEncode(paragraph)}</p>"));
+
+        var credits = string.Join(" | ", creditParagraphs)
+            .Trim();
+        if (credits.Length > 2000)
+            credits = credits[..2000].TrimEnd();
+
+        var description = articleParagraphs.FirstOrDefault() ?? string.Empty;
+        if (description.Length > 500)
+            description = description[..497] + "...";
+
+        var wordCount = articleParagraphs.Sum(paragraph =>
+            paragraph.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length);
+
+        return new ParsedEmailArticle(
+            title,
+            contentHtml,
+            description,
+            youtubeUrl,
+            string.IsNullOrWhiteSpace(credits) ? null : credits,
+            Math.Max(1, (int)Math.Ceiling(wordCount / 200d)),
+            usedFallbackContent);
+    }
+
+    private static bool IsCreditsHeading(string paragraph)
+    {
+        var normalized = CleanText(paragraph).TrimStart();
+        return normalized.StartsWith("קרדיטים", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool IsDocumentHeaderMarker(IReadOnlyList<string> lines)
