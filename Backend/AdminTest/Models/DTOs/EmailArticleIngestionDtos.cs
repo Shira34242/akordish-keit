@@ -20,6 +20,9 @@ public sealed class EmailArticleIngestionRequestDto
 
     public string? HtmlBody { get; set; }
 
+    [StringLength(100_000)]
+    public string? DocumentText { get; set; }
+
     public IFormFile? AudioFile { get; set; }
 }
 

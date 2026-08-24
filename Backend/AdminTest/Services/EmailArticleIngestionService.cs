@@ -138,9 +138,6 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
             throw new UnauthorizedAccessException("Sender is not approved for article ingestion");
         }
 
-        if (!string.Equals(producer.Template, "irpr-v1", StringComparison.OrdinalIgnoreCase))
-            throw new InvalidOperationException($"Unsupported producer template: {producer.Template}");
-
         var categoryName = producer.CategoryName.Trim();
         var category = await _context.ArticleCategories
             .AsNoTracking()
@@ -149,7 +146,15 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
         if (category == null)
             throw new InvalidOperationException($"Article category '{categoryName}' was not found");
 
-        var parsed = ParseIrprMessage(request.Subject, request.PlainBody);
+        var parsed = producer.Template.Trim().ToLowerInvariant() switch
+        {
+            "irpr-v1" => ParseIrprMessage(request.Subject, request.PlainBody),
+            "tomer-cohen-v1" => ParseTomerCohenMessage(
+                request.Subject,
+                request.PlainBody,
+                request.DocumentText),
+            _ => throw new InvalidOperationException($"Unsupported producer template: {producer.Template}")
+        };
         var slug = BuildDeterministicSlug(parsed.Title, request.MessageId);
 
         var existing = await _context.Articles
@@ -332,6 +337,86 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
             string.IsNullOrWhiteSpace(credits) ? null : credits,
             Math.Max(1, (int)Math.Ceiling(wordCount / 200d)),
             usedFallbackContent);
+    }
+
+    private static ParsedEmailArticle ParseTomerCohenMessage(
+        string subject,
+        string plainBody,
+        string? documentText)
+    {
+        var youtubeMatch = YouTubeUrlRegex.Match(plainBody ?? string.Empty);
+        var youtubeUrl = youtubeMatch.Success
+            ? youtubeMatch.Value.TrimEnd('*', ')', '>', '.', ',')
+            : null;
+
+        var normalizedDocument = (documentText ?? string.Empty)
+            .Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Replace('\r', '\n')
+            .Trim();
+
+        var blocks = Regex.Split(normalizedDocument, @"\n\s*\n")
+            .Select(block => block
+                .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+                .Select(CleanText)
+                .Where(line => !string.IsNullOrWhiteSpace(line))
+                .ToList())
+            .Where(lines => lines.Count > 0)
+            .ToList();
+
+        var title = blocks.Count > 0
+            ? BuildTomerCohenTitle(blocks[0])
+            : CleanText(subject);
+        if (string.IsNullOrWhiteSpace(title))
+            title = "כתבה ללא כותרת";
+
+        var contentParagraphs = blocks
+            .Skip(1)
+            .Select(lines => string.Join(" ", lines))
+            .Where(paragraph => !string.IsNullOrWhiteSpace(paragraph))
+            .ToList();
+
+        var creditParagraphs = contentParagraphs
+            .Where(LooksLikeCredits)
+            .ToList();
+        contentParagraphs.RemoveAll(LooksLikeCredits);
+
+        var usedFallbackContent = contentParagraphs.Count == 0;
+        if (usedFallbackContent)
+            contentParagraphs.Add("תוכן קובץ ה-Word לא זוהה. יש להשלים את הכתבה לפני הפרסום.");
+
+        var contentHtml = string.Join("\n", contentParagraphs.Select(paragraph =>
+            $"<p>{WebUtility.HtmlEncode(paragraph)}</p>"));
+
+        var credits = string.Join(" | ", creditParagraphs);
+        if (credits.Length > 2000)
+            credits = credits[..2000].TrimEnd();
+
+        var description = contentParagraphs.FirstOrDefault() ?? string.Empty;
+        if (description.Length > 500)
+            description = description[..497] + "...";
+
+        var wordCount = contentParagraphs.Sum(paragraph =>
+            paragraph.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length);
+
+        return new ParsedEmailArticle(
+            title,
+            contentHtml,
+            description,
+            youtubeUrl,
+            string.IsNullOrWhiteSpace(credits) ? null : credits,
+            Math.Max(1, (int)Math.Ceiling(wordCount / 200d)),
+            usedFallbackContent);
+    }
+
+    private static string BuildTomerCohenTitle(IReadOnlyList<string> titleLines)
+    {
+        if (titleLines.Count == 0)
+            return string.Empty;
+        if (titleLines.Count == 1)
+            return titleLines[0];
+
+        var firstLine = titleLines[0].TrimEnd().TrimEnd(':', '-', '–');
+        return $"{firstLine}: {string.Join(" ", titleLines.Skip(1))}";
     }
 
     private static bool LooksLikeCredits(string block) =>
