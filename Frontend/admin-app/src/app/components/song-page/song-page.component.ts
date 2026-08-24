@@ -1054,6 +1054,11 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
     handleShare() {
         if (!this.song) return;
 
+        // WhatsApp caches link previews aggressively. A stable preview version keeps
+        // old, incorrect thumbnails from surviving after the site's OG image changed.
+        const shareUrl = new URL(window.location.href);
+        shareUrl.searchParams.set('sharePreview', 'site-icon-v3');
+
         const artistName = this.song.artists && this.song.artists.length > 0
             ? this.song.artists.map((a: any) => a.name).join(', ')
             : (this.song.artistName || '');
@@ -1061,7 +1066,7 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
         const shareData = {
             title: `${this.song.title} - ${artistName}`,
             text: `${this.langService.translate('song.share_text_pre')} "${this.song.title}" ${this.langService.translate('song.share_text_mid')} ${artistName} ${this.langService.translate('song.share_text_suf')}`,
-            url: window.location.href,
+            url: shareUrl.toString(),
         };
 
         // If mobile - use native share dialog
@@ -1069,12 +1074,12 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
             navigator.share(shareData).catch((err) => console.error('Share failed:', err));
         } else {
             // If desktop - copy link and show notification
-            navigator.clipboard.writeText(window.location.href).then(() => {
+            navigator.clipboard.writeText(shareUrl.toString()).then(() => {
                 this.showCopyToast();
             }).catch(() => {
                 // Fallback for older browsers
                 const textarea = document.createElement('textarea');
-                textarea.value = window.location.href;
+                textarea.value = shareUrl.toString();
                 document.body.appendChild(textarea);
                 textarea.select();
                 document.execCommand('copy');

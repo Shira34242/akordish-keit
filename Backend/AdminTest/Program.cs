@@ -99,6 +99,13 @@ builder.Services.AddRateLimiter(options =>
         limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
         limiterOptions.QueueLimit = 0;
     });
+    options.AddFixedWindowLimiter("email-article-ingest", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = 20;
+        limiterOptions.Window = TimeSpan.FromMinutes(1);
+        limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        limiterOptions.QueueLimit = 0;
+    });
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });
 
@@ -106,6 +113,9 @@ builder.Services.AddRateLimiter(options =>
 builder.Services.AddScoped<ISystemSettingsService, SystemSettingsService>();
 builder.Services.AddScoped<IUserTagService, UserTagService>();
 builder.Services.AddScoped<IArticleService, ArticleService>();
+builder.Services.Configure<EmailArticleIngestionOptions>(
+    builder.Configuration.GetSection(EmailArticleIngestionOptions.SectionName));
+builder.Services.AddHttpClient<IEmailArticleIngestionService, EmailArticleIngestionService>();
 builder.Services.AddScoped<ISongService, SongService>();
 builder.Services.AddHttpClient<ISmartSongImportService, SmartSongImportService>();
 builder.Services.AddHttpClient<ISmartContentImportService, SmartContentImportService>();

@@ -523,12 +523,14 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
 
   // Share article
   shareArticle(): void {
-    const url = window.location.href;
+    if (!this.article) return;
+
+    const url = decodeURI(new URL(getArticlePath(this.article), window.location.origin).toString());
 
     if (navigator.share) {
       navigator.share({
-        title: this.article?.title || '',
-        text: this.article?.subtitle || '',
+        title: this.article.title,
+        text: this.article.subtitle || '',
         url: url
       }).catch(() => {});
     } else {
