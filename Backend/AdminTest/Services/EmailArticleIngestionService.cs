@@ -363,14 +363,15 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
             .Where(lines => lines.Count > 0)
             .ToList();
 
-        var title = blocks.Count > 0
-            ? BuildTomerCohenTitle(blocks[0])
+        var titleBlockIndex = blocks.FindIndex(lines => !IsDocumentHeaderMarker(lines));
+        var title = titleBlockIndex >= 0
+            ? BuildTomerCohenTitle(blocks[titleBlockIndex])
             : CleanText(subject);
         if (string.IsNullOrWhiteSpace(title))
             title = "כתבה ללא כותרת";
 
         var contentParagraphs = blocks
-            .Skip(1)
+            .Skip(titleBlockIndex >= 0 ? titleBlockIndex + 1 : blocks.Count)
             .Select(lines => string.Join(" ", lines))
             .Where(paragraph => !string.IsNullOrWhiteSpace(paragraph))
             .ToList();
@@ -417,6 +418,12 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
 
         var firstLine = titleLines[0].TrimEnd().TrimEnd(':', '-', '–');
         return $"{firstLine}: {string.Join(" ", titleLines.Skip(1))}";
+    }
+
+    private static bool IsDocumentHeaderMarker(IReadOnlyList<string> lines)
+    {
+        var marker = ComparableTitle(string.Join(" ", lines));
+        return marker is "בסד" or "בה" or "בעזהשית" or "בעזרתהשם";
     }
 
     private static bool LooksLikeCredits(string block) =>
