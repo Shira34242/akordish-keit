@@ -729,7 +729,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
 
   private loadRecentSongs(afterLoad?: () => void): void {
     const onDone = this.trackPendingLoad();
-    this.songService.getSongs(undefined, 1, 8).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+    this.songService.getSongs(undefined, 1, 8, undefined, undefined, undefined, 'recent').pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
       onDone();
       afterLoad?.();
     })).subscribe({
@@ -740,7 +740,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
 
   private loadPopularSongs(afterLoad?: () => void): void {
     const onDone = this.trackPendingLoad();
-    this.songService.getPopularSongs(8).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+    this.songService.getHomePopularSongs(8).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
       onDone();
       afterLoad?.();
     })).subscribe({

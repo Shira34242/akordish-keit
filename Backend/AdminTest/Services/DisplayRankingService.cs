@@ -57,6 +57,16 @@ public class DisplayRankingService : IDisplayRankingService
     {
         var now = DateTime.UtcNow;
         var bumpCutoff = now.AddHours(-24);
+        var normalizedSort = sortBy?.Trim().ToLowerInvariant();
+
+        if (normalizedSort == "recent")
+        {
+            return query
+                .OrderByDescending(s => s.UpdatedAt ?? s.CreatedAt)
+                .ThenByDescending(s => s.Id);
+        }
+
+        var weekAgo = now.AddDays(-7);
         var ordered = query
             .OrderByDescending(s => _context.ContentPromotions.Any(p =>
                 p.TargetType == ContentPromotionTargetType.Song
@@ -75,8 +85,15 @@ public class DisplayRankingService : IDisplayRankingService
             .ThenByDescending(s => s.BumpedAt.HasValue && s.BumpedAt.Value >= bumpCutoff)
             .ThenByDescending(s => s.BumpedAt);
 
-        return sortBy?.Trim().ToLowerInvariant() switch
+        return normalizedSort switch
         {
+            "home_popular" => ordered
+                .ThenByDescending(s => _context.SongViews.Count(view =>
+                    view.SongId == s.Id
+                    && view.ViewedAt >= weekAgo
+                    && view.ViewedAt <= now))
+                .ThenByDescending(s => s.ViewCount)
+                .ThenByDescending(s => s.UpdatedAt ?? s.CreatedAt),
             "date" => ordered.ThenByDescending(s => _context.ContentSubmissions
                     .Where(cs => cs.SongId == s.Id && !cs.IsDeleted && cs.Status == SubmissionStatus.Approved)
                     .Select(cs => (DateTime?)(cs.ReviewedAt ?? cs.SubmittedAt))

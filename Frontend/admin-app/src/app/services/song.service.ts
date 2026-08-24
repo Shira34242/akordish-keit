@@ -197,6 +197,13 @@ export class SongService {
             catchError(() => of([]))
         );
     }
+
+    getHomePopularSongs(limit: number = 5): Observable<any[]> {
+        return this.http.get<any>(`${this.apiUrl}?sortBy=home_popular&pageSize=${limit}`).pipe(
+            map((response: any) => response.songs || []),
+            catchError(() => of([]))
+        );
+    }
     getAllArtists(): Observable<any[]> {
         return this.http.get<any>(`${environment.apiBaseUrl}/api/Artists?pageSize=100&sortBy=songcount`).pipe(
             map((res: any) => Array.isArray(res) ? res : (res.items || []))
