@@ -286,7 +286,7 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
             if (block == "--" || block.StartsWith("-- ", StringComparison.Ordinal))
                 break;
 
-            if (Comparable(block) == Comparable(title))
+            if (IsDuplicateTitle(block, title))
                 continue;
 
             if (YouTubeUrlRegex.IsMatch(block)
@@ -337,6 +337,25 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
     private static bool LooksLikeCredits(string block) =>
         block.Contains('|') && block.Contains(':');
 
+    private static bool IsDuplicateTitle(string block, string title)
+    {
+        var normalizedBlock = ComparableTitle(block);
+        var normalizedTitle = ComparableTitle(title);
+
+        if (string.IsNullOrWhiteSpace(normalizedBlock) || string.IsNullOrWhiteSpace(normalizedTitle))
+            return false;
+
+        if (normalizedBlock == normalizedTitle)
+            return true;
+
+        var shorterLength = Math.Min(normalizedBlock.Length, normalizedTitle.Length);
+        var longerLength = Math.Max(normalizedBlock.Length, normalizedTitle.Length);
+        return shorterLength >= 12
+            && shorterLength >= longerLength * 0.8
+            && (normalizedBlock.Contains(normalizedTitle, StringComparison.Ordinal)
+                || normalizedTitle.Contains(normalizedBlock, StringComparison.Ordinal));
+    }
+
     private static string ExtractEmailAddress(string sender)
     {
         try
@@ -371,8 +390,8 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
         return Regex.Replace(cleaned, @"\s+", " ").Trim();
     }
 
-    private static string Comparable(string value) =>
-        Regex.Replace(CleanText(value), "[\\s\\\"'״“”‘’]+", string.Empty).ToLowerInvariant();
+    private static string ComparableTitle(string value) =>
+        Regex.Replace(CleanText(value), @"[^\p{L}\p{N}]+", string.Empty).ToLowerInvariant();
 
     private static string GetAudioContentType(string extension) => extension.ToLowerInvariant() switch
     {
