@@ -1049,6 +1049,22 @@ public class SongsController : ControllerBase
         song.HasFullContent = false;
     }
 
+    // POST: api/Songs/{id}/print
+    // Consume one daily print action for a signed-in user.
+    [Authorize]
+    [HttpPost("{id:int}/print")]
+    public async Task<ActionResult<DailyPrintLimitDto>> RegisterPrint(int id)
+    {
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue)
+        {
+            return Unauthorized();
+        }
+
+        var result = await _songService.TryConsumeDailyPrintAsync(id, userId.Value);
+        return result == null ? NotFound() : Ok(result);
+    }
+
     // ============================================
     // Helper: Get current user ID from token
     // ============================================

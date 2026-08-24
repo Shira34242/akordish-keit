@@ -36,21 +36,65 @@
 .search-content {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2xl);
-  padding: calc(56px + 8px) 8px 120px;
+  padding: 8px 8px var(--space-4xl);
   overflow-x: hidden;
+  isolation: isolate;
 }
 
-.search-hero {
-  direction: rtl;
-  min-height: 42vh;
+.search-top-scroll-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: #ffffff;
+  z-index: 897;
+  pointer-events: none;
+}
+
+.search-hero-bg {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  height: var(--search-hero-full-height, 60vh);
   border-radius: 28px;
   background: #ddff53;
-  padding: var(--space-2xl);
+  overflow: hidden;
+  z-index: 895;
+  will-change: height;
+}
+
+.search-hero-collapse-overlay {
+  position: absolute;
+  inset: -2px;
+  background: #F2F2F2;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateZ(0);
+}
+
+.search-hero-content-area {
+  position: relative;
+  z-index: 896;
+  direction: rtl;
+  height: var(--search-hero-full-height, 60vh);
+  padding: 56px var(--space-xl) var(--space-xl);
+  box-sizing: border-box;
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--space-xl);
+  align-items: center;
+  justify-content: center;
+}
+
+.search-hero__inner {
+  width: 100%;
+  max-width: 740px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-lg);
+  text-align: center;
 }
 
 .search-hero__copy {
@@ -84,7 +128,7 @@
 }
 
 .search-page-form {
-  width: min(100%, 30rem);
+  width: min(100%, 35rem);
   min-height: 54px;
   border-radius: 999px;
   background: #ffffff;
@@ -142,6 +186,10 @@
 }
 
 .search-results-groups {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-top: var(--space-2xl);
   display: flex;
   flex-direction: column;
   gap: var(--space-2xl);
@@ -154,7 +202,7 @@
 .search-section-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: var(--space-md);
   margin-bottom: var(--space-base);
 }
@@ -186,8 +234,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 34px;
-  height: 34px;
+  min-width: 26px;
+  height: 26px;
   border-radius: 999px;
   background: #F2F2F2;
   color: rgba(0, 0, 0, 0.45);
@@ -199,7 +247,7 @@
 
 .search-songs-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: var(--space-md);
 }
 
@@ -207,18 +255,9 @@
   min-width: 0;
 }
 
-.search-songs-grid app-song-card ::ng-deep .song-card {
-  aspect-ratio: 12 / 5;
-}
-
-.search-songs-grid app-song-card ::ng-deep .song-card-title {
-  font-size: var(--font-lg);
-  line-height: 1.15;
-}
-
 .search-news-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: var(--space-md);
 }
 
@@ -227,43 +266,32 @@
   min-width: 0;
 }
 
-.search-news-grid app-news-banner ::ng-deep .news-banner {
-  aspect-ratio: 1.35 / 1;
-  border-radius: 22px;
-}
-
-.search-news-grid app-news-banner ::ng-deep .banner-title {
-  font-size: var(--font-lg);
-  line-height: 1.15;
-}
-
 .search-artists-row,
 .search-people-row,
 .search-compact-row {
-  display: flex;
-  gap: var(--space-lg);
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding-bottom: var(--space-sm);
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-x: contain;
+  display: grid;
+  gap: var(--space-md);
 }
 
-.search-artists-row::-webkit-scrollbar,
-.search-people-row::-webkit-scrollbar,
-.search-compact-row::-webkit-scrollbar {
-  display: none;
+.search-artists-row {
+  grid-template-columns: repeat(auto-fill, minmax(174px, 1fr));
 }
 
 .search-artists-row app-artist-circle {
-  flex: 0 0 auto;
+  min-width: 0;
+  justify-self: center;
+}
+
+.search-people-row {
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+}
+
+.search-compact-row {
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
 }
 
 .search-person-card {
-  flex: 0 0 11.5rem;
-  width: 11.5rem;
+  width: 100%;
   min-width: 0;
   border: none;
   border-radius: 1.6rem;
@@ -330,7 +358,7 @@
 }
 
 .search-compact-card {
-  flex: 0 0 18rem;
+  width: 100%;
   border: none;
   border-radius: 18px;
   background: #F2F2F2;
@@ -467,8 +495,11 @@
 }
 
 .no-results {
+  width: 100%;
+  max-width: 42rem;
+  margin: var(--space-2xl) auto 0;
   text-align: center;
-  padding: var(--space-3xl) var(--space-lg);
+  padding: var(--space-2xl) var(--space-lg);
   border-radius: 24px;
   background: #F2F2F2;
   color: rgba(0, 0, 0, 0.45);
@@ -545,18 +576,19 @@
 
 @media (max-width: 640px) {
   .search-content {
-    padding-top: calc(50px + 8px);
-    gap: var(--space-lg);
+    padding-top: 8px;
   }
 
-  .search-hero {
-    min-height: 12rem;
+  .search-hero-bg {
     border-radius: 20px;
-    padding: var(--space-xl);
-    align-items: stretch;
-    flex-direction: column;
-    justify-content: flex-end;
-    gap: var(--space-lg);
+  }
+
+  .search-hero-content-area {
+    padding: 50px var(--space-xl) var(--space-lg);
+  }
+
+  .search-hero__inner {
+    gap: var(--space-base);
   }
 
   .search-hero h1 {
@@ -588,9 +620,16 @@
     gap: var(--space-md);
   }
 
+  .search-artists-row,
+  .search-people-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .search-compact-row {
+    grid-template-columns: 1fr;
+  }
+
   .search-person-card {
-    flex-basis: 9.5rem;
-    width: 9.5rem;
     border-radius: 18px;
     padding: var(--space-sm);
   }
@@ -600,7 +639,6 @@
   }
 
   .search-compact-card {
-    flex-basis: 15rem;
     border-radius: 16px;
   }
 

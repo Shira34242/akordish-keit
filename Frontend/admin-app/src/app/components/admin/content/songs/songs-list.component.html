@@ -128,11 +128,8 @@
       <button class="filter-btn bulk-btn" (click)="bulkDeleteSelected()" [disabled]="bulkActionLoading">
         <span class="material-icons">delete</span> מחיקה
       </button>
-      <button class="filter-btn bulk-btn bump-btn" (click)="openBumpModal()" [disabled]="bulkActionLoading">
-        <span class="material-icons">trending_up</span> הקפצה
-      </button>
       <button class="filter-btn bulk-btn" (click)="openPromotionModal()" [disabled]="bulkActionLoading || !hasSelection">
-        <span class="material-icons">workspace_premium</span> קידום
+        <span class="material-icons">campaign</span> ניהול חשיפה
       </button>
     </div>
   </div>
@@ -602,19 +599,11 @@
   </div>
 </div>
 
-<app-bump-modal
-  *ngIf="bumpModalOpen"
-  entityType="Song"
-  [ids]="selectedSongIdsArray"
-  (close)="bumpModalOpen = false"
-  (bumped)="onBumped()">
-</app-bump-modal>
-
 <app-content-promotion-modal
   *ngIf="promotionModalOpen"
   [ids]="selectedSongIdsArray"
   [targetType]="PromotionTargetType.Song"
-  title="קידום שירים"
+  title="ניהול חשיפת שירים"
   (close)="promotionModalOpen = false"
   (promoted)="onPromoted()">
 </app-content-promotion-modal>

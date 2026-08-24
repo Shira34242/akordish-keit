@@ -5,32 +5,40 @@
   </div>
 
   <div *ngIf="!isLoading && isUniversalSearch" class="search-content">
-    <section class="search-hero">
-      <div class="search-hero__copy">
-        <span class="search-hero__eyebrow">חיפוש באתר</span>
-        <h1>מה מצאנו בשבילך</h1>
-        <p *ngIf="hasUniversalResults">
-          {{ universalResults?.totalCount }} תוצאות עבור “{{ searchTerm }}”
-        </p>
-        <p *ngIf="!hasUniversalResults">
-          לא מצאנו תוצאות עבור “{{ searchTerm }}”
-        </p>
-      </div>
+    <div class="search-top-scroll-mask"></div>
 
-      <form class="search-page-form" (ngSubmit)="submitSearchPage()">
-        <span class="material-icons" aria-hidden="true">search</span>
-        <input
-          type="text"
-          name="searchDraft"
-          [(ngModel)]="searchDraft"
-          autocomplete="off"
-          aria-label="חיפוש באתר">
-        <button type="submit">חיפוש</button>
-      </form>
+    <div class="search-hero-bg" #searchHeroBg aria-hidden="true">
+      <div class="search-hero-collapse-overlay"></div>
+    </div>
+
+    <section class="search-hero-content-area">
+      <div class="search-hero__inner">
+        <div class="search-hero__copy">
+          <span class="search-hero__eyebrow">חיפוש באתר</span>
+          <h1>מה מצאנו בשבילך</h1>
+          <p *ngIf="hasUniversalResults">
+            {{ universalResults?.totalCount }} תוצאות עבור “{{ searchTerm }}”
+          </p>
+          <p *ngIf="!hasUniversalResults">
+            לא מצאנו תוצאות עבור “{{ searchTerm }}”
+          </p>
+        </div>
+
+        <form class="search-page-form" (ngSubmit)="submitSearchPage()">
+          <span class="material-icons" aria-hidden="true">search</span>
+          <input
+            type="text"
+            name="searchDraft"
+            [(ngModel)]="searchDraft"
+            autocomplete="off"
+            aria-label="חיפוש באתר">
+          <button type="submit">חיפוש</button>
+        </form>
+      </div>
     </section>
 
     <div class="search-results-groups" *ngIf="hasUniversalResults">
-      <section class="search-results-section" *ngIf="universalResults?.songs?.length">
+        <section class="search-results-section" *ngIf="universalResults?.songs?.length">
         <div class="search-section-header">
           <span class="section-tag section-tag--accent">אקורדים לשירים</span>
           <span class="total-badge">{{ universalResults?.songs?.length }}</span>
@@ -41,9 +49,9 @@
             [song]="toSongResult(item)">
           </app-song-card>
         </div>
-      </section>
+        </section>
 
-      <section class="search-results-section" *ngIf="universalResults?.articles?.length">
+        <section class="search-results-section" *ngIf="universalResults?.articles?.length">
         <div class="search-section-header">
           <span class="section-tag section-tag--accent">חדשות וכתבות</span>
           <span class="total-badge">{{ universalResults?.articles?.length }}</span>
@@ -56,9 +64,9 @@
             (click)="$event.preventDefault(); navigateToSearchItem(item)">
           </app-news-banner>
         </div>
-      </section>
+        </section>
 
-      <section class="search-results-section" *ngIf="universalResults?.artists?.length">
+        <section class="search-results-section" *ngIf="universalResults?.artists?.length">
         <div class="search-section-header">
           <span class="section-tag section-tag--accent">אמנים</span>
           <span class="total-badge">{{ universalResults?.artists?.length }}</span>
@@ -70,9 +78,9 @@
             [showSongCount]="false">
           </app-artist-circle>
         </div>
-      </section>
+        </section>
 
-      <section class="search-results-section" *ngIf="universalResults?.teachers?.length || universalResults?.professionals?.length">
+        <section class="search-results-section" *ngIf="universalResults?.teachers?.length || universalResults?.professionals?.length">
         <div class="search-section-header">
           <span class="section-tag section-tag--accent">מורים ונותני שירות</span>
           <span class="total-badge">{{ (universalResults?.teachers?.length || 0) + (universalResults?.professionals?.length || 0) }}</span>
@@ -101,9 +109,9 @@
             <span class="search-person-card__sub">{{ item.subtitle || 'נותן שירות' }}</span>
           </button>
         </div>
-      </section>
+        </section>
 
-      <section class="search-results-section" *ngFor="let group of otherSearchGroups">
+        <section class="search-results-section" *ngFor="let group of otherSearchGroups">
         <div class="search-section-header">
           <span class="section-tag section-tag--secondary">{{ group.label }}</span>
           <span class="total-badge">{{ group.items.length }}</span>
@@ -121,7 +129,7 @@
             </span>
           </button>
         </div>
-      </section>
+        </section>
     </div>
 
     <div *ngIf="!hasUniversalResults" class="no-results">

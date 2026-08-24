@@ -96,11 +96,8 @@
       <button class="btn bulk-btn" (click)="bulkDuplicateSelected()">
         <span class="material-icons">content_copy</span> שכפול
       </button>
-      <button class="btn bulk-btn" (click)="openBumpModal()">
-        <span class="material-icons">trending_up</span> הקפצה
-      </button>
       <button class="btn bulk-btn" (click)="openPromotionModal()" [disabled]="!hasSelection">
-        <span class="material-icons">workspace_premium</span> קידום
+        <span class="material-icons">campaign</span> ניהול חשיפה
       </button>
       <button class="btn bulk-btn btn-danger" (click)="bulkDeleteSelected()">
         <span class="material-icons">delete</span> מחיקה
@@ -242,19 +239,11 @@
   </div>
 </div>
 
-<app-bump-modal
-  *ngIf="bumpModalOpen"
-  entityType="ServiceProvider"
-  [ids]="selectedIdsArray"
-  (close)="bumpModalOpen = false"
-  (bumped)="onBumped()">
-</app-bump-modal>
-
 <app-content-promotion-modal
   *ngIf="promotionModalOpen"
   [targetType]="PromotionTargetType.ServiceProvider"
   [ids]="selectedIdsArray"
-  title="קידום בעלי מקצוע"
+  title="ניהול חשיפת בעלי מקצוע"
   (close)="promotionModalOpen = false"
   (promoted)="onPromoted()">
 </app-content-promotion-modal>

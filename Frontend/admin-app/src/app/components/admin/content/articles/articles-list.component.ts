@@ -14,11 +14,9 @@ import { UserService } from '../../../../services/user.service';
 import { Article, ArticleCategory, ArticleContentType, ArticleStatus } from '../../../../models/article.model';
 import { PagedResult } from '../../../../models/pagination.model';
 import { SiteAlertService } from '../../../../services/site-alert.service';
-import { FeaturedContentManagementComponent } from '../featured-content/featured-content-management.component';
 import { NewsPageSectionsMangementComponent } from '../news-page-sections/news-page-sections-management.component';
 import { ArtistListDto } from '../../../../models/artist.model';
 import { UserWithProfileDto } from '../../../../models/user.model';
-import { BumpModalComponent } from '../../../shared/bump-modal/bump-modal.component';
 import { ContentPromotionModalComponent } from '../../../shared/content-promotion-modal/content-promotion-modal.component';
 import { ContentPromotionTargetType } from '../../../../services/content-promotion.service';
 import { NotificationService } from '../../../../services/notification.service';
@@ -28,7 +26,7 @@ import { getArticleLink, getArticlePath } from '../../../../utils/article-route.
 @Component({
   selector: 'app-articles-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, FeaturedContentManagementComponent, NewsPageSectionsMangementComponent, BumpModalComponent, ContentPromotionModalComponent],
+  imports: [CommonModule, FormsModule, NewsPageSectionsMangementComponent, ContentPromotionModalComponent],
   templateUrl: './articles-list.component.html',
   styleUrls: ['./articles-list.component.css']
 })
@@ -54,7 +52,6 @@ export class ArticlesListComponent implements OnInit, OnDestroy, AfterViewInit {
   publishingArticleIds = new Set<number>();
   sendingApprovalNotificationIds = new Set<number>();
   selectedArticleIds = new Set<number>();
-  bumpModalOpen = false;
   promotionModalOpen = false;
   readonly PromotionTargetType = ContentPromotionTargetType;
   categoryModalOpen = false;
@@ -76,7 +73,7 @@ export class ArticlesListComponent implements OnInit, OnDestroy, AfterViewInit {
   bulkActionLoading = false;
   viewMode: 'list' | 'grid' = (localStorage.getItem('admin-articles-view-v2') as 'list' | 'grid') || 'grid';
   setView(mode: 'list' | 'grid') { this.viewMode = mode; localStorage.setItem('admin-articles-view-v2', mode); }
-  activeTab: 'all' | 'news' | 'blog' | 'featured' | 'sections' | 'cleanup' = 'all';
+  activeTab: 'all' | 'news' | 'blog' | 'sections' | 'cleanup' = 'all';
   cleanupSettings: ArticleNewsCleanupSettingsDto = {
     autoDeleteEnabled: false,
     retentionDays: 365,
@@ -264,7 +261,7 @@ export class ArticlesListComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  switchTab(tab: 'all' | 'news' | 'blog' | 'featured' | 'sections' | 'cleanup'): void {
+  switchTab(tab: 'all' | 'news' | 'blog' | 'sections' | 'cleanup'): void {
     this.activeTab = tab;
     this.currentPage = 1;
     this.clearSelection();
@@ -292,7 +289,7 @@ export class ArticlesListComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   get isArticleListTab(): boolean {
-    return this.activeTab !== 'featured' && this.activeTab !== 'sections' && this.activeTab !== 'cleanup';
+    return this.activeTab !== 'sections' && this.activeTab !== 'cleanup';
   }
 
   onSearch(): void {
@@ -917,18 +914,8 @@ export class ArticlesListComponent implements OnInit, OnDestroy, AfterViewInit {
     return classes[status] || '';
   }
 
-  openBumpModal(): void {
-    this.bumpModalOpen = true;
-  }
-
   openPromotionModal(): void {
     this.promotionModalOpen = true;
-  }
-
-  onBumped(): void {
-    this.bumpModalOpen = false;
-    this.clearSelection();
-    this.loadArticles();
   }
 
   onPromoted(): void {

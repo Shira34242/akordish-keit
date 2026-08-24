@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, DestroyRef, NgZone } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, DestroyRef, NgZone, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -42,6 +42,22 @@ export class ArticlesListComponent implements OnInit, OnDestroy {
   private readonly scrollRestoration = inject(ScrollRestorationService);
   private readonly routeReuseEvents = inject(RouteReuseEventsService);
   private readonly contentRefreshNotice = inject(ContentRefreshNoticeService);
+  private readonly hostRef = inject(ElementRef<HTMLElement>);
+
+  private searchHeroBgElement?: HTMLDivElement;
+  private searchHeroFullHeight = 0;
+  private searchHeroRafPending = false;
+
+  @ViewChild('searchHeroBg')
+  private set searchHeroBg(ref: ElementRef<HTMLDivElement> | undefined) {
+    this.searchHeroBgElement = ref?.nativeElement;
+    if (!ref) {
+      this.searchHeroFullHeight = 0;
+      return;
+    }
+
+    requestAnimationFrame(() => this.initSearchHeroHeight());
+  }
 
   articles: Article[] = [];
   universalResults: SearchResults | null = null;
@@ -175,6 +191,56 @@ export class ArticlesListComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.mobileMql?.removeEventListener('change', this.mobileMqlHandler);
+  }
+
+  @HostListener('window:scroll')
+  onSearchHeroScroll(): void {
+    if (!this.searchHeroBgElement || this.searchHeroRafPending) return;
+
+    this.searchHeroRafPending = true;
+    requestAnimationFrame(() => {
+      this.shrinkSearchHero();
+      this.searchHeroRafPending = false;
+    });
+  }
+
+  @HostListener('window:resize')
+  onSearchHeroResize(): void {
+    if (this.searchHeroBgElement) this.initSearchHeroHeight();
+  }
+
+  private initSearchHeroHeight(): void {
+    const hero = this.searchHeroBgElement;
+    if (!hero) return;
+
+    this.searchHeroFullHeight = Math.round(window.innerHeight * 0.6);
+    this.hostRef.nativeElement.style.setProperty('--search-hero-full-height', `${this.searchHeroFullHeight}px`);
+    this.shrinkSearchHero();
+  }
+
+  private shrinkSearchHero(): void {
+    const hero = this.searchHeroBgElement;
+    if (!hero || this.searchHeroFullHeight === 0) return;
+
+    const minHeight = window.innerWidth <= 480 ? 46 : window.innerWidth <= 768 ? 50 : 56;
+    const newHeight = Math.max(minHeight, this.searchHeroFullHeight - window.scrollY);
+    hero.style.height = `${newHeight}px`;
+
+    const overlay = hero.querySelector('.search-hero-collapse-overlay') as HTMLElement | null;
+    if (!overlay) return;
+
+    const collapseRange = this.searchHeroFullHeight - minHeight;
+    const collapseProgress = collapseRange > 0
+      ? Math.min(1, (this.searchHeroFullHeight - newHeight) / collapseRange)
+      : 0;
+    overlay.style.opacity = String(collapseProgress);
+
+    const heroContent = this.hostRef.nativeElement.querySelector('.search-hero__inner') as HTMLElement | null;
+    if (heroContent) {
+      const contentOpacity = Math.max(0, 1 - collapseProgress * 1.5);
+      heroContent.style.opacity = String(contentOpacity);
+      heroContent.style.pointerEvents = contentOpacity < 0.1 ? 'none' : '';
+    }
   }
 
   private invalidateCache(): void {

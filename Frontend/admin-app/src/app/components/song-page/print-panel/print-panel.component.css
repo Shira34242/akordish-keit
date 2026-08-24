@@ -301,6 +301,7 @@
     color: #000;
 }
 .btn-print:hover { opacity: 0.85; }
+.btn-print:disabled { opacity: 0.45; cursor: default; }
 
 .btn-pdf {
     background: #000;
@@ -308,6 +309,14 @@
 }
 .btn-pdf:hover { background: #404040; }
 .btn-pdf:disabled { opacity: 0.45; cursor: default; }
+
+.print-limit-message {
+    margin: var(--space-xs) 0 0;
+    color: #404040;
+    font-size: var(--font-xs);
+    line-height: var(--lh-small);
+    text-align: center;
+}
 
 /* ===== Spinner ===== */
 .spinner-sm {

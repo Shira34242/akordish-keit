@@ -6,6 +6,7 @@ import {
   ContentPromotionService,
   ContentPromotionTargetType
 } from '../../../services/content-promotion.service';
+import { BumpService } from '../../../services/bump.service';
 
 @Component({
   selector: 'app-content-promotion-modal',
@@ -18,37 +19,34 @@ import {
 export class ContentPromotionModalComponent {
   @Input() targetType!: ContentPromotionTargetType;
   @Input() ids: number[] = [];
-  @Input() title = 'קידום תוכן';
+  @Input() title = 'ניהול חשיפה';
+  @Input() allowBump = true;
   @Output() close = new EventEmitter<void>();
   @Output() promoted = new EventEmitter<void>();
 
-  readonly Placement = ContentPromotionPlacement;
   loading = false;
-  placement: ContentPromotionPlacement = ContentPromotionPlacement.Index;
-  priority = 100;
+  exposureType: 'bump' | 'promotion' = 'promotion';
   durationDays = 30;
-  showOnHome = false;
   note = '';
 
-  durationOptions = [
-    { label: 'שבוע', value: 7 },
-    { label: 'שבועיים', value: 14 },
-    { label: 'חודש', value: 30 },
-    { label: 'שלושה חודשים', value: 90 },
-    { label: 'ללא תאריך סיום', value: 0 }
-  ];
-
-  placementOptions = [
-    { label: 'סדר כללי', value: ContentPromotionPlacement.General },
-    { label: 'דף הבית', value: ContentPromotionPlacement.Home },
-    { label: 'אינדקס / רשימה', value: ContentPromotionPlacement.Index },
-    { label: 'מומלצים', value: ContentPromotionPlacement.Featured }
-  ];
+  readonly durationShortcuts = [7, 14, 30, 90];
 
   constructor(
     private promotionService: ContentPromotionService,
+    private bumpService: BumpService,
     private cdr: ChangeDetectorRef
   ) {}
+
+  get bumpEntityType(): string | null {
+    switch (this.targetType) {
+      case ContentPromotionTargetType.Article: return 'Article';
+      case ContentPromotionTargetType.Artist: return 'Artist';
+      case ContentPromotionTargetType.ServiceProvider: return 'ServiceProvider';
+      case ContentPromotionTargetType.Teacher: return 'Teacher';
+      case ContentPromotionTargetType.Song: return 'Song';
+      default: return null;
+    }
+  }
 
   get itemLabel(): string {
     switch (this.targetType) {
@@ -66,22 +64,32 @@ export class ContentPromotionModalComponent {
   save(): void {
     if (!this.ids.length) return;
 
+    if (this.exposureType === 'bump' && this.allowBump && this.bumpEntityType) {
+      this.saveBump(this.bumpEntityType);
+      return;
+    }
+
+    const durationDays = Math.floor(Number(this.durationDays));
+    if (!Number.isFinite(durationDays) || durationDays < 1 || durationDays > 3650) {
+      alert('יש להזין משך קידום בין יום אחד ל־3,650 ימים');
+      return;
+    }
+
+    this.durationDays = durationDays;
     const now = new Date();
-    const endsAt = this.durationDays > 0
-      ? new Date(now.getTime() + this.durationDays * 24 * 60 * 60 * 1000).toISOString()
-      : null;
+    const endsAt = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000).toISOString();
 
     this.loading = true;
     this.cdr.markForCheck();
     this.promotionService.bulkUpsert({
       targetType: this.targetType,
       targetIds: this.ids,
-      placement: this.placement,
-      priority: this.priority,
+      placement: ContentPromotionPlacement.General,
+      priority: 100,
       startsAt: now.toISOString(),
       endsAt,
       isActive: true,
-      showOnHome: this.showOnHome || this.placement === ContentPromotionPlacement.Home,
+      showOnHome: false,
       note: this.note.trim() || null
     }).subscribe({
       next: () => {
@@ -92,6 +100,24 @@ export class ContentPromotionModalComponent {
       error: (error) => {
         console.error('Error saving content promotion:', error);
         alert(error?.error?.message || 'שגיאה בשמירת הקידום');
+        this.loading = false;
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  private saveBump(entityType: string): void {
+    this.loading = true;
+    this.cdr.markForCheck();
+    this.bumpService.bump({ entityType, ids: this.ids }).subscribe({
+      next: () => {
+        this.loading = false;
+        this.promoted.emit();
+        this.cdr.markForCheck();
+      },
+      error: (error) => {
+        console.error('Error bumping content:', error);
+        alert(error?.error?.message || 'שגיאה בהקפצת התוכן');
         this.loading = false;
         this.cdr.markForCheck();
       }

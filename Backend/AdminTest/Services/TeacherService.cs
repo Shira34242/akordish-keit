@@ -89,16 +89,15 @@ public class TeacherService : ITeacherService
             if (isFeatured.Value)
             {
                 var now = DateTime.UtcNow;
-                query = query.Where(t => t.ServiceProvider.IsFeatured || _context.ContentPromotions.Any(p =>
+                var bumpCutoff = now.AddHours(-24);
+                query = query.Where(t => t.ServiceProvider.IsFeatured
+                    || (t.ServiceProvider.BumpedAt.HasValue && t.ServiceProvider.BumpedAt.Value >= bumpCutoff)
+                    || _context.ContentPromotions.Any(p =>
                     p.TargetType == ContentPromotionTargetType.Teacher
                     && p.TargetId == t.Id
                     && p.IsActive
                     && (!p.StartsAt.HasValue || p.StartsAt.Value <= now)
-                    && (!p.EndsAt.HasValue || p.EndsAt.Value >= now)
-                    && (p.Placement == ContentPromotionPlacement.Home
-                        || p.Placement == ContentPromotionPlacement.Featured
-                        || p.Placement == ContentPromotionPlacement.General
-                        || p.ShowOnHome)));
+                    && (!p.EndsAt.HasValue || p.EndsAt.Value >= now)));
             }
             else
             {

@@ -11,7 +11,6 @@ import { ArtistService } from '../../../../services/artist.service';
 import { UserService } from '../../../../services/user.service';
 import { ArtistListDto } from '../../../../models/artist.model';
 import { UserWithProfileDto } from '../../../../models/user.model';
-import { BumpModalComponent } from '../../../shared/bump-modal/bump-modal.component';
 import { ContentPromotionModalComponent } from '../../../shared/content-promotion-modal/content-promotion-modal.component';
 import { ContentPromotionTargetType } from '../../../../services/content-promotion.service';
 import { NotificationService } from '../../../../services/notification.service';
@@ -20,7 +19,7 @@ import { NotificationCategory, NotificationType } from '../../../../models/notif
 @Component({
   selector: 'app-songs-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, BumpModalComponent, ContentPromotionModalComponent],
+  imports: [CommonModule, FormsModule, ContentPromotionModalComponent],
   templateUrl: './songs-list.component.html',
   styleUrls: ['./songs-list.component.css']
 })
@@ -58,7 +57,6 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
   bulkActionLoading = false;
   sendingApprovalNotificationIds = new Set<number>();
   selectedSongIds = new Set<number>();
-  bumpModalOpen = false;
   promotionModalOpen = false;
   readonly PromotionTargetType = ContentPromotionTargetType;
   artistModalOpen = false;
@@ -1073,18 +1071,8 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
     return 'משתמש';
   }
 
-  openBumpModal(): void {
-    this.bumpModalOpen = true;
-  }
-
   openPromotionModal(): void {
     this.promotionModalOpen = true;
-  }
-
-  onBumped(): void {
-    this.bumpModalOpen = false;
-    this.clearSelection();
-    this.loadSongs();
   }
 
   onPromoted(): void {

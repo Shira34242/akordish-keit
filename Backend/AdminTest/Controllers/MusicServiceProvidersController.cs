@@ -62,8 +62,9 @@ public class MusicServiceProvidersController : ControllerBase
     public async Task<ActionResult<List<HomeShowcaseProfileDto>>> GetHomeShowcase()
     {
         const int showcaseSize = 12;
-        const int featuredLimit = 6;
         var now = DateTime.UtcNow;
+        var freshRecommendationCutoff = now.AddDays(-7);
+        var bumpCutoff = now.AddHours(-24);
 
         var rankedProfiles = _context.ServiceProviders
             .AsNoTracking()
@@ -73,43 +74,39 @@ public class MusicServiceProvidersController : ControllerBase
                 sp.Id,
                 sp.IsFeatured,
                 sp.CreatedAt,
+                sp.BumpedAt,
                 sp.DisplayName,
                 RankingScore = sp.User != null ? sp.User.RankingScore : 0,
-                PromotionPriority = _context.ContentPromotions
+                IsPromoted = _context.ContentPromotions.Any(p => p.TargetId == sp.Id
+                    && ((sp.IsTeacher && p.TargetType == ContentPromotionTargetType.Teacher)
+                        || (!sp.IsTeacher && p.TargetType == ContentPromotionTargetType.ServiceProvider))
+                    && p.IsActive
+                    && (!p.StartsAt.HasValue || p.StartsAt.Value <= now)
+                    && (!p.EndsAt.HasValue || p.EndsAt.Value >= now)),
+                PromotionStartedAt = _context.ContentPromotions
                     .Where(p => p.TargetId == sp.Id
                         && ((sp.IsTeacher && p.TargetType == ContentPromotionTargetType.Teacher)
                             || (!sp.IsTeacher && p.TargetType == ContentPromotionTargetType.ServiceProvider))
                         && p.IsActive
                         && (!p.StartsAt.HasValue || p.StartsAt.Value <= now)
-                        && (!p.EndsAt.HasValue || p.EndsAt.Value >= now)
-                        && (p.Placement == ContentPromotionPlacement.Home
-                            || p.Placement == ContentPromotionPlacement.General
-                            || p.ShowOnHome))
-                    .Select(p => (int?)p.Priority)
-                    .Max() ?? -1
+                        && (!p.EndsAt.HasValue || p.EndsAt.Value >= now))
+                    .Select(p => (DateTime?)(p.StartsAt ?? p.UpdatedAt ?? p.CreatedAt))
+                    .Max()
             });
 
-        var featuredIds = await rankedProfiles
-            .Where(profile => profile.IsFeatured)
-            .OrderByDescending(profile => profile.PromotionPriority)
+        var orderedIds = await rankedProfiles
+            .OrderByDescending(profile => profile.IsFeatured && profile.CreatedAt >= freshRecommendationCutoff)
+            .ThenByDescending(profile => profile.IsPromoted)
+            .ThenByDescending(profile => profile.PromotionStartedAt)
+            .ThenByDescending(profile => profile.BumpedAt.HasValue && profile.BumpedAt.Value >= bumpCutoff)
+            .ThenByDescending(profile => profile.BumpedAt)
+            .ThenByDescending(profile => profile.IsFeatured)
             .ThenByDescending(profile => profile.RankingScore)
-            .ThenBy(profile => profile.CreatedAt)
+            .ThenByDescending(profile => profile.CreatedAt)
             .ThenBy(profile => profile.DisplayName)
-            .Take(featuredLimit)
+            .Take(showcaseSize)
             .Select(profile => profile.Id)
             .ToListAsync();
-
-        var remainingIds = await rankedProfiles
-            .Where(profile => !profile.IsFeatured)
-            .OrderByDescending(profile => profile.PromotionPriority)
-            .ThenByDescending(profile => profile.RankingScore)
-            .ThenBy(profile => profile.CreatedAt)
-            .ThenBy(profile => profile.DisplayName)
-            .Take(showcaseSize - featuredIds.Count)
-            .Select(profile => profile.Id)
-            .ToListAsync();
-
-        var orderedIds = featuredIds.Concat(remainingIds).ToList();
         var profiles = await _context.ServiceProviders
             .AsNoTracking()
             .Include(sp => sp.Categories)

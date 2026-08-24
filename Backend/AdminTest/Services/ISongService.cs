@@ -134,6 +134,12 @@ public interface ISongService
     Task<DailyLimitStatusDto> GetDailyLimitStatusAsync(int? userId, string? ipAddress);
 
     /// <summary>
+    /// Consume one of the signed-in user's daily song print actions.
+    /// Returns null when the user or song does not exist.
+    /// </summary>
+    Task<DailyPrintLimitDto?> TryConsumeDailyPrintAsync(int songId, int userId);
+
+    /// <summary>
     /// שמירת דירוג שיר (upsert — מחליף אם כבר קיים)
     /// </summary>
     Task<SongRatingResponseDto> RateSongAsync(int songId, int userId, int rating);

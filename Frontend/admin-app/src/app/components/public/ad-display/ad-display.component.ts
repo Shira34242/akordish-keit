@@ -33,24 +33,26 @@ interface AdSpotResponse {
     @if (campaigns.length) {
       <div class="media-stack">
         @for (campaign of displayedCampaigns; track campaign.id) {
-          <div class="media-wrapper" [style.aspect-ratio]="aspectRatio" [style.max-width]="maxWidth">
+          <div class="media-entry" [style.max-width]="maxWidth">
             <span class="ad-label">מקודם</span>
-            <a [attr.href]="campaign.knownUrl || null" target="_blank" rel="noopener sponsored" (click)="handleAdClick($event, campaign)" class="media-link" [class.media-link--disabled]="!campaign.knownUrl">
-              @if (getMediaType(getActiveMediaUrl(campaign)) === 'image') {
-                <img
-                  [src]="getActiveMediaUrl(campaign) | cfImage:imagePreset"
-                  [srcset]="getActiveMediaUrl(campaign) | cfSrcset:srcsetWidths"
-                  [sizes]="imageSizes"
-                  [alt]="campaign.name"
-                  class="media-asset"
-                  loading="lazy"
-                  decoding="async"
-                  (load)="trackView(campaign, $event)" />
-              } @else if (getMediaType(getActiveMediaUrl(campaign)) === 'video') {
-                <video [src]="getActiveMediaUrl(campaign)" class="media-asset"
-                  autoplay loop muted playsinline preload="metadata" (loadeddata)="trackView(campaign, $event)"></video>
-              }
-            </a>
+            <div class="media-wrapper" [style.aspect-ratio]="aspectRatio">
+              <a [attr.href]="campaign.knownUrl || null" target="_blank" rel="noopener sponsored" (click)="handleAdClick($event, campaign)" class="media-link" [class.media-link--disabled]="!campaign.knownUrl">
+                @if (getMediaType(getActiveMediaUrl(campaign)) === 'image') {
+                  <img
+                    [src]="getActiveMediaUrl(campaign) | cfImage:imagePreset"
+                    [srcset]="getActiveMediaUrl(campaign) | cfSrcset:srcsetWidths"
+                    [sizes]="imageSizes"
+                    [alt]="campaign.name"
+                    class="media-asset"
+                    loading="lazy"
+                    decoding="async"
+                    (load)="trackView(campaign, $event)" />
+                } @else if (getMediaType(getActiveMediaUrl(campaign)) === 'video') {
+                  <video [src]="getActiveMediaUrl(campaign)" class="media-asset"
+                    autoplay loop muted playsinline preload="metadata" (loadeddata)="trackView(campaign, $event)"></video>
+                }
+              </a>
+            </div>
           </div>
         }
       </div>
@@ -74,23 +76,35 @@ interface AdSpotResponse {
       display: block;
       position: relative;
       overflow: hidden;
+    }
+
+    .media-entry {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs, 4px);
+      width: 100%;
       margin: 0 auto;
     }
 
     .ad-label {
-      position: absolute;
-      top: var(--space-sm, 6px);
-      right: var(--space-sm, 6px);
-      z-index: 1;
-      padding: 2px var(--space-sm, 6px);
-      border-radius: 999px;
-      background: rgba(0,0,0,0.48);
-      color: #ffffff;
+      display: inline-flex;
+      align-items: center;
+      align-self: flex-end;
+      gap: var(--space-xs, 4px);
+      margin-inline-end: var(--space-sm, 6px);
+      color: rgba(0,0,0,0.48);
       font-family: 'Open Sans', sans-serif;
       font-size: var(--font-xs, 12px);
       font-weight: 300;
       line-height: 1.5;
       pointer-events: none;
+    }
+
+    .ad-label::before {
+      content: '';
+      width: var(--space-lg, 20px);
+      height: 1px;
+      background: rgba(0,0,0,0.18);
     }
 
     .media-link {

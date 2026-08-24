@@ -122,16 +122,15 @@ public class MusicServiceProviderService : IMusicServiceProviderService
             if (isFeatured.Value)
             {
                 var now = DateTime.UtcNow;
-                query = query.Where(sp => sp.IsFeatured || _context.ContentPromotions.Any(p =>
+                var bumpCutoff = now.AddHours(-24);
+                query = query.Where(sp => sp.IsFeatured
+                    || (sp.BumpedAt.HasValue && sp.BumpedAt.Value >= bumpCutoff)
+                    || _context.ContentPromotions.Any(p =>
                     p.TargetType == ContentPromotionTargetType.ServiceProvider
                     && p.TargetId == sp.Id
                     && p.IsActive
                     && (!p.StartsAt.HasValue || p.StartsAt.Value <= now)
-                    && (!p.EndsAt.HasValue || p.EndsAt.Value >= now)
-                    && (p.Placement == ContentPromotionPlacement.Home
-                        || p.Placement == ContentPromotionPlacement.Featured
-                        || p.Placement == ContentPromotionPlacement.General
-                        || p.ShowOnHome)));
+                    && (!p.EndsAt.HasValue || p.EndsAt.Value >= now)));
             }
             else
             {

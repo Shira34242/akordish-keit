@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { LanguageService } from '../../../services/language.service';
+import { SongService } from '../../../services/song.service';
+import { firstValueFrom } from 'rxjs';
 import {
     transposeChord,
     simplifyChord,
@@ -52,6 +54,8 @@ export class PrintPanelComponent implements OnInit {
     showDiagrams: boolean = false;
     diagramInstrument: 'guitar' | 'piano' | 'ukulele' = 'guitar';
     isExporting: boolean = false;
+    isPrinting: boolean = false;
+    printMessage: string = '';
     previewZoom: number = 1;
 
     private preferFlat: boolean = false;
@@ -73,7 +77,10 @@ export class PrintPanelComponent implements OnInit {
 
     private readonly langService = inject(LanguageService);
 
-    constructor(private sanitizer: DomSanitizer) {}
+    constructor(
+        private sanitizer: DomSanitizer,
+        private songService: SongService
+    ) {}
 
     ngOnInit() {
         this.transposeStep = this.initialTransposeStep;
@@ -529,6 +536,9 @@ ${diagramsHtml}
     // ===== הדפסה — תמונה בלבד =====
 
     async print() {
+        if (this.isPrinting || !this.song?.id) return;
+        this.isPrinting = true;
+        this.printMessage = '';
         const overlay = this.createOverlay(this.langService.translate('print.preparing_print'));
         document.body.appendChild(overlay);
         const container = this.buildPrintContainer();
@@ -537,6 +547,12 @@ ${diagramsHtml}
             const sliceImages = await this.captureAndSlice(container, 2);
             const w = window.open('', '_blank', 'height=900,width=900');
             if (!w) return;
+            const limitResult = await firstValueFrom(this.songService.registerPrint(this.song.id));
+            if (!limitResult.allowed) {
+                w.close();
+                this.printMessage = 'הגעת למגבלת ההדפסות היומית';
+                return;
+            }
             const imgTags = sliceImages.map(src =>
                 `<img src="${src}" style="width:100%;display:block;page-break-after:always">`
             ).join('');
@@ -550,9 +566,11 @@ body{background:#fff}@media print{@page{size:A4;margin:0}img{width:100%;page-bre
             setTimeout(() => { w.print(); }, 500);
         } catch (e) {
             console.error('Print failed:', e);
+            this.printMessage = 'לא ניתן להדפיס כרגע';
         } finally {
             document.body.removeChild(container);
             document.body.removeChild(overlay);
+            this.isPrinting = false;
         }
     }
 

@@ -36,7 +36,7 @@ public class ContentPromotionService : IContentPromotionService
             .ThenBy(p => p.TargetType)
             .ThenBy(p => p.TargetId)
             .ThenBy(p => p.Placement)
-            .ThenByDescending(p => p.Priority)
+            .ThenByDescending(p => p.StartsAt ?? p.UpdatedAt ?? p.CreatedAt)
             .ToListAsync();
 
         return promotions.Select(MapToDto).ToList();
@@ -59,7 +59,7 @@ public class ContentPromotionService : IContentPromotionService
         }
 
         var promotions = await query
-            .OrderByDescending(p => p.Priority)
+            .OrderByDescending(p => p.StartsAt ?? p.UpdatedAt ?? p.CreatedAt)
             .ThenBy(p => p.EndsAt ?? DateTime.MaxValue)
             .ThenBy(p => p.TargetId)
             .ToListAsync();

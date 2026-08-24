@@ -15,11 +15,16 @@ public class ContentPromotionsController : ControllerBase
 {
     private readonly IContentPromotionService _promotionService;
     private readonly IMemoryCache _cache;
+    private readonly ContentExposureCacheVersion _exposureCacheVersion;
 
-    public ContentPromotionsController(IContentPromotionService promotionService, IMemoryCache cache)
+    public ContentPromotionsController(
+        IContentPromotionService promotionService,
+        IMemoryCache cache,
+        ContentExposureCacheVersion exposureCacheVersion)
     {
         _promotionService = promotionService;
         _cache = cache;
+        _exposureCacheVersion = exposureCacheVersion;
     }
 
     [HttpGet]
@@ -37,6 +42,7 @@ public class ContentPromotionsController : ControllerBase
         try
         {
             var promotion = await _promotionService.UpsertPromotionAsync(dto, GetAdminName());
+            InvalidateExposureCaches(dto.TargetType);
             InvalidatePodcastPromotionCaches(dto.TargetType);
             return promotion;
         }
@@ -52,6 +58,7 @@ public class ContentPromotionsController : ControllerBase
         try
         {
             var promotions = await _promotionService.BulkUpsertPromotionAsync(dto, GetAdminName());
+            InvalidateExposureCaches(dto.TargetType);
             InvalidatePodcastPromotionCaches(dto.TargetType);
             return promotions;
         }
@@ -69,8 +76,17 @@ public class ContentPromotionsController : ControllerBase
     {
         var changed = await _promotionService.DeactivatePromotionAsync(targetType, targetId, placement, GetAdminName());
         if (changed)
+        {
+            InvalidateExposureCaches(targetType);
             InvalidatePodcastPromotionCaches(targetType);
+        }
         return changed ? NoContent() : NotFound();
+    }
+
+    private void InvalidateExposureCaches(ContentPromotionTargetType targetType)
+    {
+        if (targetType == ContentPromotionTargetType.Article)
+            _exposureCacheVersion.InvalidateArticles();
     }
 
     private void InvalidatePodcastPromotionCaches(ContentPromotionTargetType targetType)

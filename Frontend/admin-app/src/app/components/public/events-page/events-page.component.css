@@ -23,6 +23,11 @@
   cursor: grabbing;
 }
 
+.events-page:focus-visible {
+  outline: 2px solid #ddff53;
+  outline-offset: -4px;
+}
+
 /* ============================================
    HEADER + FILTERS
 ============================================ */
@@ -133,6 +138,64 @@
 
 .carousel--repositioning .carousel-item {
   transition: none;
+}
+
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 300;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  color: #000000;
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition: background 0.18s ease, transform 0.18s ease;
+}
+
+.carousel-arrow:hover,
+.carousel-arrow:focus-visible {
+  background: #ddff53;
+  transform: translateY(-50%) scale(1.08);
+}
+
+.carousel-arrow--previous {
+  right: var(--space-lg);
+}
+
+.carousel-arrow--next {
+  left: var(--space-lg);
+}
+
+.interaction-hint {
+  position: absolute;
+  bottom: var(--space-4xl);
+  left: 50%;
+  z-index: 280;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin: 0;
+  padding: var(--space-sm) var(--space-base);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.58);
+  color: #ffffff;
+  font-family: 'Open Sans', sans-serif;
+  font-size: var(--font-xs);
+  font-weight: 700;
+  pointer-events: none;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.interaction-hint .material-icons {
+  font-size: 18px;
 }
 
 /* ============================================
@@ -344,6 +407,14 @@
 
   .event-filter-bar {
     bottom: 18px;
+  }
+
+  .carousel-arrow {
+    display: none;
+  }
+
+  .interaction-hint {
+    bottom: calc(var(--space-3xl) + var(--space-md));
   }
 }
 

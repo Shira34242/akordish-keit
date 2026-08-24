@@ -175,28 +175,38 @@ public class ArtistsController : ControllerBase
         try
         {
             var now = DateTime.UtcNow;
+            var freshRecommendationCutoff = now.AddDays(-7);
+            var bumpCutoff = now.AddHours(-24);
             var artists = await _context.Artists
                 .Where(a => !a.IsDeleted && a.Status == ArtistStatus.Active)
-                .Where(a => a.IsFeatured || a.IsPremium || a.LastBoostDate.HasValue || _context.ContentPromotions.Any(p =>
+                .Where(a => a.IsFeatured || a.IsPremium || a.LastBoostDate.HasValue
+                    || (a.BumpedAt.HasValue && a.BumpedAt.Value >= bumpCutoff)
+                    || _context.ContentPromotions.Any(p =>
                     p.TargetType == ContentPromotionTargetType.Artist
                     && p.TargetId == a.Id
                     && p.IsActive
                     && (!p.StartsAt.HasValue || p.StartsAt.Value <= now)
-                    && (!p.EndsAt.HasValue || p.EndsAt.Value >= now)
-                    && (p.Placement == ContentPromotionPlacement.Home || p.Placement == ContentPromotionPlacement.Featured || p.Placement == ContentPromotionPlacement.General || p.ShowOnHome)))
-                .OrderByDescending(a => _context.ContentPromotions
+                    && (!p.EndsAt.HasValue || p.EndsAt.Value >= now)))
+                .OrderByDescending(a => a.IsFeatured && a.CreatedAt >= freshRecommendationCutoff)
+                .ThenByDescending(a => _context.ContentPromotions.Any(p =>
+                    p.TargetType == ContentPromotionTargetType.Artist
+                    && p.TargetId == a.Id
+                    && p.IsActive
+                    && (!p.StartsAt.HasValue || p.StartsAt.Value <= now)
+                    && (!p.EndsAt.HasValue || p.EndsAt.Value >= now)))
+                .ThenByDescending(a => _context.ContentPromotions
                     .Where(p => p.TargetType == ContentPromotionTargetType.Artist
                         && p.TargetId == a.Id
                         && p.IsActive
                         && (!p.StartsAt.HasValue || p.StartsAt.Value <= now)
-                        && (!p.EndsAt.HasValue || p.EndsAt.Value >= now)
-                        && (p.Placement == ContentPromotionPlacement.Home || p.Placement == ContentPromotionPlacement.Featured || p.Placement == ContentPromotionPlacement.General || p.ShowOnHome))
-                    .Select(p => (int?)p.Priority)
-                    .Max() ?? -1)
+                        && (!p.EndsAt.HasValue || p.EndsAt.Value >= now))
+                    .Select(p => (DateTime?)(p.StartsAt ?? p.UpdatedAt ?? p.CreatedAt))
+                    .Max())
+                .ThenByDescending(a => a.BumpedAt.HasValue && a.BumpedAt.Value >= bumpCutoff)
+                .ThenByDescending(a => a.BumpedAt)
                 .ThenByDescending(a => a.IsFeatured)
                 .ThenByDescending(a => a.IsPremium)
                 .ThenByDescending(a => a.LastBoostDate)
-                .ThenBy(a => a.DisplayOrder)
                 .ThenBy(a => a.Name)
                 .Take(count)
                 .Select(a => new ArtistListDto

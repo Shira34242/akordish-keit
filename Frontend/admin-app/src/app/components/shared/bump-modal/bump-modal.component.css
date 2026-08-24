@@ -76,6 +76,14 @@
   margin: 0;
 }
 
+.bump-note {
+  margin: var(--space-base) 0 0;
+  color: rgba(0, 0, 0, 0.6);
+  font-size: var(--font-sm);
+  line-height: var(--lh-small);
+  text-align: center;
+}
+
 .bump-btn {
   display: flex;
   align-items: center;

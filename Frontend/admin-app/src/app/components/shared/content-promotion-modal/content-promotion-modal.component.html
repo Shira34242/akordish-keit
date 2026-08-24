@@ -11,31 +11,52 @@
     </div>
 
     <div class="promotion-body">
-      <label class="field">
-        <span>איפה לקדם</span>
-        <select [(ngModel)]="placement">
-          <option *ngFor="let option of placementOptions" [ngValue]="option.value">{{ option.label }}</option>
-        </select>
+      <div class="exposure-types" *ngIf="allowBump && bumpEntityType">
+        <button
+          type="button"
+          class="exposure-type"
+          [class.active]="exposureType === 'bump'"
+          (click)="exposureType = 'bump'">
+          <span class="material-icons">trending_up</span>
+          <strong>הקפצה</strong>
+          <small>קדימות מיידית ל־24 שעות</small>
+        </button>
+        <button
+          type="button"
+          class="exposure-type"
+          [class.active]="exposureType === 'promotion'"
+          (click)="exposureType = 'promotion'">
+          <span class="material-icons">workspace_premium</span>
+          <strong>קידום</strong>
+          <small>קדימות קבועה לתקופה שנבחרה</small>
+        </button>
+      </div>
+
+      <p class="exposure-note" *ngIf="exposureType === 'bump'">
+        ההקפצה מתחילה עכשיו ופגה אוטומטית לאחר 24 שעות.
+      </p>
+
+      <label class="field" *ngIf="exposureType === 'promotion'">
+        <span>משך הקידום בימים</span>
+        <input
+          type="number"
+          min="1"
+          max="3650"
+          step="1"
+          inputmode="numeric"
+          [(ngModel)]="durationDays">
+        <div class="duration-shortcuts" aria-label="בחירת משך קידום מהירה">
+          <button
+            *ngFor="let days of durationShortcuts"
+            type="button"
+            [class.active]="durationDays === days"
+            (click)="durationDays = days">
+            {{ days }} ימים
+          </button>
+        </div>
       </label>
 
-      <label class="field">
-        <span>משך הקידום</span>
-        <select [(ngModel)]="durationDays">
-          <option *ngFor="let option of durationOptions" [ngValue]="option.value">{{ option.label }}</option>
-        </select>
-      </label>
-
-      <label class="field">
-        <span>עדיפות</span>
-        <input type="number" min="0" max="10000" step="10" [(ngModel)]="priority">
-      </label>
-
-      <label class="check-row">
-        <input type="checkbox" [(ngModel)]="showOnHome">
-        <span>להכניס גם לשיקולי דף הבית</span>
-      </label>
-
-      <label class="field">
+      <label class="field" *ngIf="exposureType === 'promotion'">
         <span>הערה פנימית</span>
         <textarea rows="3" [(ngModel)]="note"></textarea>
       </label>
@@ -44,8 +65,8 @@
     <div class="promotion-actions">
       <button type="button" class="secondary-btn" (click)="close.emit()" [disabled]="loading">ביטול</button>
       <button type="button" class="primary-btn" (click)="save()" [disabled]="loading">
-        <span class="material-icons">{{ loading ? 'hourglass_empty' : 'workspace_premium' }}</span>
-        שמור קידום
+        <span class="material-icons">{{ loading ? 'hourglass_empty' : (exposureType === 'bump' ? 'trending_up' : 'workspace_premium') }}</span>
+        {{ exposureType === 'bump' ? 'הקפץ ל־24 שעות' : 'הפעל קידום' }}
       </button>
     </div>
   </div>

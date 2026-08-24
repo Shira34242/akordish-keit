@@ -320,16 +320,20 @@ public class ArticleService : IArticleService
             .Include(a => a.UploaderUser)
                 .ThenInclude(u => u!.ServiceProviderProfiles)
             .AsSplitQuery()
-            .OrderByDescending(a => _context.ContentPromotions
+            .OrderByDescending(a => _context.ContentPromotions.Any(p =>
+                p.TargetType == ContentPromotionTargetType.Article
+                && p.TargetId == a.Id
+                && p.IsActive
+                && (!p.StartsAt.HasValue || p.StartsAt.Value <= DateTime.UtcNow)
+                && (!p.EndsAt.HasValue || p.EndsAt.Value >= DateTime.UtcNow)))
+            .ThenByDescending(a => _context.ContentPromotions
                 .Where(p => p.TargetType == ContentPromotionTargetType.Article
                     && p.TargetId == a.Id
                     && p.IsActive
                     && (!p.StartsAt.HasValue || p.StartsAt.Value <= DateTime.UtcNow)
-                    && (!p.EndsAt.HasValue || p.EndsAt.Value >= DateTime.UtcNow)
-                    && (p.Placement == ContentPromotionPlacement.Featured || p.Placement == ContentPromotionPlacement.General))
-                .Select(p => (int?)p.Priority)
-                .Max() ?? -1)
-            .ThenBy(a => a.DisplayOrder)
+                    && (!p.EndsAt.HasValue || p.EndsAt.Value >= DateTime.UtcNow))
+                .Select(p => (DateTime?)(p.StartsAt ?? p.UpdatedAt ?? p.CreatedAt))
+                .Max())
             .ThenByDescending(a => a.PublishDate)
             .Take(limit)
             .ToListAsync();
@@ -347,19 +351,7 @@ public class ArticleService : IArticleService
                 && a.PublishDate <= now
                 && a.ArticleCategories.Any(ac => ac.Category.Section == ArticleCategorySection.News));
 
-        var featured = await newsQuery
-            .Where(a => a.IsFeatured)
-            .OrderByDescending(a => _context.ContentPromotions
-                .Where(p => p.TargetType == ContentPromotionTargetType.Article
-                    && p.TargetId == a.Id
-                    && p.IsActive
-                    && (!p.StartsAt.HasValue || p.StartsAt.Value <= DateTime.UtcNow)
-                    && (!p.EndsAt.HasValue || p.EndsAt.Value >= DateTime.UtcNow)
-                    && (p.Placement == ContentPromotionPlacement.Home || p.Placement == ContentPromotionPlacement.General || p.ShowOnHome))
-                .Select(p => (int?)p.Priority)
-                .Max() ?? -1)
-            .ThenBy(a => a.DisplayOrder)
-            .ThenByDescending(a => a.PublishDate)
+        var featured = await ApplyHomeNewsExposureOrdering(newsQuery, now)
             .Take(Math.Clamp(featuredLimit, 1, 10))
             .Select(a => new ArticleBannerDto
             {
@@ -376,18 +368,9 @@ public class ArticleService : IArticleService
             .ToListAsync();
 
         var featuredIds = featured.Select(a => a.Id).ToList();
-        var regular = await newsQuery
-            .Where(a => !featuredIds.Contains(a.Id))
-            .OrderByDescending(a => _context.ContentPromotions
-                .Where(p => p.TargetType == ContentPromotionTargetType.Article
-                    && p.TargetId == a.Id
-                    && p.IsActive
-                    && (!p.StartsAt.HasValue || p.StartsAt.Value <= DateTime.UtcNow)
-                    && (!p.EndsAt.HasValue || p.EndsAt.Value >= DateTime.UtcNow)
-                    && (p.Placement == ContentPromotionPlacement.Home || p.Placement == ContentPromotionPlacement.General || p.ShowOnHome))
-                .Select(p => (int?)p.Priority)
-                .Max() ?? -1)
-            .ThenByDescending(a => a.BumpedAt ?? a.CreatedAt)
+        var regular = await ApplyHomeNewsExposureOrdering(
+                newsQuery.Where(a => !featuredIds.Contains(a.Id)),
+                now)
             .Take(Math.Clamp(regularLimit, 1, 20))
             .Select(a => new ArticleBannerDto
             {
@@ -412,17 +395,8 @@ public class ArticleService : IArticleService
 
     public async Task<List<ArticleBannerDto>> GetHomeContentBannersAsync(int limit = 12)
     {
-        return await GetPublishedBannerQuery(ArticleCategorySection.Content)
-            .OrderByDescending(a => _context.ContentPromotions
-                .Where(p => p.TargetType == ContentPromotionTargetType.Article
-                    && p.TargetId == a.Id
-                    && p.IsActive
-                    && (!p.StartsAt.HasValue || p.StartsAt.Value <= DateTime.UtcNow)
-                    && (!p.EndsAt.HasValue || p.EndsAt.Value >= DateTime.UtcNow)
-                    && (p.Placement == ContentPromotionPlacement.Home || p.Placement == ContentPromotionPlacement.General || p.ShowOnHome))
-                .Select(p => (int?)p.Priority)
-                .Max() ?? -1)
-            .ThenByDescending(a => a.BumpedAt ?? a.CreatedAt)
+        var now = DateTime.UtcNow;
+        return await ApplyStandardExposureOrdering(GetPublishedBannerQuery(ArticleCategorySection.Content), now)
             .Take(Math.Clamp(limit, 1, 20))
             .Select(a => new ArticleBannerDto
             {
@@ -457,22 +431,14 @@ public class ArticleService : IArticleService
             return new HomeCategoryBannersDto();
         }
 
-        var banners = await _context.Articles
+        var bannersQuery = _context.Articles
             .AsNoTracking()
             .Where(a => !a.IsDeleted
                 && a.Status == (int)ArticleStatus.Published
                 && a.PublishDate <= DateTime.UtcNow
-                && a.ArticleCategories.Any(ac => ac.CategoryId == categoryId))
-            .OrderByDescending(a => _context.ContentPromotions
-                .Where(p => p.TargetType == ContentPromotionTargetType.Article
-                    && p.TargetId == a.Id
-                    && p.IsActive
-                    && (!p.StartsAt.HasValue || p.StartsAt.Value <= DateTime.UtcNow)
-                    && (!p.EndsAt.HasValue || p.EndsAt.Value >= DateTime.UtcNow)
-                    && (p.Placement == ContentPromotionPlacement.Home || p.Placement == ContentPromotionPlacement.General || p.ShowOnHome))
-                .Select(p => (int?)p.Priority)
-                .Max() ?? -1)
-            .ThenByDescending(a => a.BumpedAt ?? a.CreatedAt)
+                && a.ArticleCategories.Any(ac => ac.CategoryId == categoryId));
+
+        var banners = await ApplyStandardExposureOrdering(bannersQuery, DateTime.UtcNow)
             .Take(Math.Clamp(limit, 1, 20))
             .Select(a => new ArticleBannerDto
             {
@@ -531,39 +497,51 @@ public class ArticleService : IArticleService
                         DisplayOrder = a.DisplayOrder,
                         PublishDate = a.PublishDate
                     },
+                    IsPromoted = _context.ContentPromotions.Any(p =>
+                        p.TargetType == ContentPromotionTargetType.Article
+                        && p.TargetId == a.Id
+                        && p.IsActive
+                        && (!p.StartsAt.HasValue || p.StartsAt.Value <= now)
+                        && (!p.EndsAt.HasValue || p.EndsAt.Value >= now)),
+                    PromotionStartedAt = _context.ContentPromotions
+                        .Where(p => p.TargetType == ContentPromotionTargetType.Article
+                            && p.TargetId == a.Id
+                            && p.IsActive
+                            && (!p.StartsAt.HasValue || p.StartsAt.Value <= now)
+                            && (!p.EndsAt.HasValue || p.EndsAt.Value >= now))
+                        .Select(p => (DateTime?)(p.StartsAt ?? p.UpdatedAt ?? p.CreatedAt))
+                        .Max(),
+                    IsBumped = a.BumpedAt.HasValue && a.BumpedAt.Value >= now.AddHours(-24),
+                    a.BumpedAt,
                     WeeklyViews = views.Count(),
                     TotalViews = a.ViewCount
                 })
             .ToListAsync();
 
-        var latestArticles = candidates
-            .OrderByDescending(a => a.Article.PublishDate)
-            .ThenByDescending(a => a.Article.Id)
-            .Take(4)
-            .ToList();
-        var latestArticleIds = latestArticles
-            .Select(a => a.Article.Id)
-            .ToHashSet();
-
         var viralArticles = candidates
-            .Where(a => !latestArticleIds.Contains(a.Article.Id))
             .Select(a => new
             {
                 a.Article,
+                a.IsPromoted,
+                a.PromotionStartedAt,
+                a.IsBumped,
+                a.BumpedAt,
                 Score =
                     (a.Article.IsFeatured ? 1000 : 0)
                     + (a.WeeklyViews * 20)
                     + Math.Min(a.TotalViews, 1000)
                     + (((a.Article.Id * 1103515245L + dailySeed * 12345L) & 0x7fffffff) % 700)
             })
-            .OrderByDescending(a => a.Score)
+            .OrderByDescending(a => a.IsPromoted)
+            .ThenByDescending(a => a.PromotionStartedAt)
+            .ThenByDescending(a => a.IsBumped)
+            .ThenByDescending(a => a.BumpedAt)
+            .ThenByDescending(a => a.Score)
             .ThenByDescending(a => a.Article.PublishDate)
             .ThenByDescending(a => a.Article.Id)
             .Select(a => a.Article);
 
-        return latestArticles
-            .Select(a => a.Article)
-            .Concat(viralArticles)
+        return viralArticles
             .Skip(skip)
             .Take(take)
             .ToList();
@@ -587,8 +565,7 @@ public class ArticleService : IArticleService
         pageNumber = Math.Max(1, pageNumber);
         pageSize = Math.Clamp(pageSize, 1, 40);
         var totalCount = await query.CountAsync();
-        var items = await query
-            .OrderByDescending(a => a.BumpedAt ?? a.CreatedAt)
+        var items = await ApplyMusicNewsExposureOrdering(query, DateTime.UtcNow)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
             .Select(a => new ArticleBannerDto
@@ -613,6 +590,65 @@ public class ArticleService : IArticleService
             PageSize = pageSize
         };
     }
+
+    private IOrderedQueryable<Article> ApplyHomeNewsExposureOrdering(IQueryable<Article> query, DateTime now)
+    {
+        var freshRecommendationCutoff = now.AddDays(-7);
+        var bumpCutoff = now.AddHours(-24);
+
+        return query
+            .OrderByDescending(a => a.IsFeatured && a.PublishDate >= freshRecommendationCutoff)
+            .ThenByDescending(a => _context.ContentPromotions.Any(p =>
+                p.TargetType == ContentPromotionTargetType.Article
+                && p.TargetId == a.Id
+                && p.IsActive
+                && (!p.StartsAt.HasValue || p.StartsAt.Value <= now)
+                && (!p.EndsAt.HasValue || p.EndsAt.Value >= now)))
+            .ThenByDescending(a => _context.ContentPromotions
+                .Where(p => p.TargetType == ContentPromotionTargetType.Article
+                    && p.TargetId == a.Id
+                    && p.IsActive
+                    && (!p.StartsAt.HasValue || p.StartsAt.Value <= now)
+                    && (!p.EndsAt.HasValue || p.EndsAt.Value >= now))
+                .Select(p => (DateTime?)(p.StartsAt ?? p.UpdatedAt ?? p.CreatedAt))
+                .Max())
+            .ThenByDescending(a => a.BumpedAt.HasValue && a.BumpedAt.Value >= bumpCutoff)
+            .ThenByDescending(a => a.BumpedAt)
+            .ThenByDescending(a => a.IsFeatured)
+            .ThenByDescending(a => a.PublishDate)
+            .ThenByDescending(a => a.Id);
+    }
+
+    private IOrderedQueryable<Article> ApplyMusicNewsExposureOrdering(IQueryable<Article> query, DateTime now)
+    {
+        var bumpCutoff = now.AddHours(-24);
+        return query
+            .OrderByDescending(a => _context.ContentPromotions.Any(p =>
+                p.TargetType == ContentPromotionTargetType.Article
+                && p.TargetId == a.Id
+                && p.IsActive
+                && (!p.StartsAt.HasValue || p.StartsAt.Value <= now)
+                && (!p.EndsAt.HasValue || p.EndsAt.Value >= now)))
+            .ThenByDescending(a => _context.ContentPromotions
+                .Where(p => p.TargetType == ContentPromotionTargetType.Article
+                    && p.TargetId == a.Id
+                    && p.IsActive
+                    && (!p.StartsAt.HasValue || p.StartsAt.Value <= now)
+                    && (!p.EndsAt.HasValue || p.EndsAt.Value >= now))
+                .Select(p => (DateTime?)(p.StartsAt ?? p.UpdatedAt ?? p.CreatedAt))
+                .Max())
+            .ThenByDescending(a => a.BumpedAt.HasValue && a.BumpedAt.Value >= bumpCutoff)
+            .ThenByDescending(a => a.BumpedAt)
+            .ThenByDescending(a => a.IsFeatured)
+            .ThenByDescending(a => a.PublishDate)
+            .ThenByDescending(a => a.Id);
+    }
+
+    private IOrderedQueryable<Article> ApplyStandardExposureOrdering(IQueryable<Article> query, DateTime now)
+    {
+        return ApplyMusicNewsExposureOrdering(query, now);
+    }
+
 
     private IQueryable<Article> GetPublishedBannerQuery(ArticleCategorySection section)
     {

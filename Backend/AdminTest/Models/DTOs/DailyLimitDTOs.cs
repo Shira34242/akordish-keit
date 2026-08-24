@@ -8,3 +8,11 @@ public class DailyLimitStatusDto
     public int RemainingViews { get; set; }
     public string? TagHebrew { get; set; }
 }
+
+public class DailyPrintLimitDto
+{
+    public bool Allowed { get; set; }
+    public int Used { get; set; }
+    public int Limit { get; set; }
+    public int Remaining { get; set; }
+}

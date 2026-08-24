@@ -1,6 +1,7 @@
 using AkordishKeit.Data;
 using AkordishKeit.Models.DTOs;
 using AkordishKeit.Models.Entities;
+using AkordishKeit.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -14,12 +15,15 @@ public class BumpController : ControllerBase
 {
     private readonly AkordishKeitDbContext _context;
     private readonly ILogger<BumpController> _logger;
+    private readonly ContentExposureCacheVersion _exposureCacheVersion;
 
     public BumpController(
         AkordishKeitDbContext context,
+        ContentExposureCacheVersion exposureCacheVersion,
         ILogger<BumpController> logger)
     {
         _context = context;
+        _exposureCacheVersion = exposureCacheVersion;
         _logger = logger;
     }
 
@@ -32,48 +36,29 @@ public class BumpController : ControllerBase
         if (string.IsNullOrWhiteSpace(request.EntityType))
             return BadRequest("חסר סוג ישות");
 
+        var ids = request.Ids.Where(id => id > 0).Distinct().ToList();
+        if (ids.Count == 0)
+            return BadRequest(new { message = "לא נבחרו פריטים תקינים להקפצה" });
+
+        var supportedTypes = new[] { "Song", "Article", "Playlist", "ServiceProvider", "Teacher", "Artist" };
+        if (!supportedTypes.Contains(request.EntityType))
+            return BadRequest(new { message = "סוג התוכן אינו תומך כרגע בהקפצה" });
+
         var now = DateTime.UtcNow;
+        var changed = await BumpEntitiesAsync(request.EntityType, ids, now);
+        if (changed != ids.Count)
+            return BadRequest(new { message = "אחד או יותר מהפריטים לא נמצאו. לא בוצעה הקפצה חלקית." });
 
-        if (request.Schedule != null && request.Schedule.Times > 0)
-        {
-            foreach (var id in request.Ids)
-            {
-                // Bump now (first occurrence)
-                await BumpEntityAsync(request.EntityType, id, now);
-
-                // Create schedule for remaining times
-                var schedule = new BumpSchedule
-                {
-                    EntityType = request.EntityType,
-                    EntityId = id,
-                    TotalTimes = request.Schedule.Times,
-                    RemainingTimes = request.Schedule.Times - 1, // first bump done now
-                    IntervalHours = request.Schedule.IntervalHours,
-                    NextBumpAt = now.AddHours(request.Schedule.IntervalHours),
-                    CreatedAt = now
-                };
-
-                if (schedule.RemainingTimes > 0)
-                    _context.BumpSchedules.Add(schedule);
-            }
-        }
-        else
-        {
-            foreach (var id in request.Ids)
-            {
-                await BumpEntityAsync(request.EntityType, id, now);
-            }
-        }
-
-        await _context.SaveChangesAsync();
+        if (request.EntityType == "Article")
+            _exposureCacheVersion.InvalidateArticles();
 
         _logger.LogInformation(
             "Bumped {Count} {EntityType} entities (IDs: {Ids})",
-            request.Ids.Count,
+            ids.Count,
             request.EntityType,
-            string.Join(",", request.Ids));
+            string.Join(",", ids));
 
-        return Ok(new { bumpedCount = request.Ids.Count });
+        return Ok(new { bumpedCount = ids.Count, expiresAt = now.AddHours(24) });
     }
 
     [HttpGet("active-schedules")]
@@ -96,45 +81,49 @@ public class BumpController : ControllerBase
         return Ok(schedules);
     }
 
-    private async Task BumpEntityAsync(string entityType, int entityId, DateTime bumpedAt)
+    private async Task<int> BumpEntitiesAsync(string entityType, List<int> entityIds, DateTime bumpedAt)
     {
-        switch (entityType)
+        var existingCount = entityType switch
         {
-            case "Song":
-                await _context.Songs
-                    .Where(e => e.Id == entityId)
+            "Song" => await _context.Songs.CountAsync(e => entityIds.Contains(e.Id) && !e.IsDeleted),
+            "Article" => await _context.Articles.CountAsync(e => entityIds.Contains(e.Id) && !e.IsDeleted),
+            "Playlist" => await _context.Playlists.CountAsync(e => entityIds.Contains(e.Id)),
+            "ServiceProvider" or "Teacher" => await _context.ServiceProviders.CountAsync(e => entityIds.Contains(e.Id) && !e.IsDeleted),
+            "Artist" => await _context.Artists.CountAsync(e => entityIds.Contains(e.Id) && !e.IsDeleted),
+            _ => throw new InvalidOperationException($"Unknown bump entity type: {entityType}")
+        };
+
+        if (existingCount != entityIds.Count)
+            return 0;
+
+        return entityType switch
+        {
+            "Song" => await _context.Songs
+                    .Where(e => entityIds.Contains(e.Id) && !e.IsDeleted)
                     .ExecuteUpdateAsync(s => s
                         .SetProperty(e => e.BumpedAt, bumpedAt)
-                        .SetProperty(e => e.BumpCount, e => e.BumpCount + 1));
-                break;
-            case "Article":
-                await _context.Articles
-                    .Where(e => e.Id == entityId)
+                        .SetProperty(e => e.BumpCount, e => e.BumpCount + 1)),
+            "Article" => await _context.Articles
+                    .Where(e => entityIds.Contains(e.Id) && !e.IsDeleted)
                     .ExecuteUpdateAsync(s => s
                         .SetProperty(e => e.BumpedAt, bumpedAt)
-                        .SetProperty(e => e.BumpCount, e => e.BumpCount + 1));
-                break;
-            case "Playlist":
-                await _context.Playlists
-                    .Where(e => e.Id == entityId)
+                        .SetProperty(e => e.BumpCount, e => e.BumpCount + 1)),
+            "Playlist" => await _context.Playlists
+                    .Where(e => entityIds.Contains(e.Id))
                     .ExecuteUpdateAsync(s => s
                         .SetProperty(e => e.BumpedAt, bumpedAt)
-                        .SetProperty(e => e.BumpCount, e => e.BumpCount + 1));
-                break;
-            case "ServiceProvider":
-                await _context.ServiceProviders
-                    .Where(e => e.Id == entityId)
+                        .SetProperty(e => e.BumpCount, e => e.BumpCount + 1)),
+            "ServiceProvider" or "Teacher" => await _context.ServiceProviders
+                    .Where(e => entityIds.Contains(e.Id) && !e.IsDeleted)
                     .ExecuteUpdateAsync(s => s
                         .SetProperty(e => e.BumpedAt, bumpedAt)
-                        .SetProperty(e => e.BumpCount, e => e.BumpCount + 1));
-                break;
-            case "Artist":
-                await _context.Artists
-                    .Where(e => e.Id == entityId)
+                        .SetProperty(e => e.BumpCount, e => e.BumpCount + 1)),
+            "Artist" => await _context.Artists
+                    .Where(e => entityIds.Contains(e.Id) && !e.IsDeleted)
                     .ExecuteUpdateAsync(s => s
                         .SetProperty(e => e.BumpedAt, bumpedAt)
-                        .SetProperty(e => e.BumpCount, e => e.BumpCount + 1));
-                break;
-        }
+                        .SetProperty(e => e.BumpCount, e => e.BumpCount + 1)),
+            _ => throw new InvalidOperationException($"Unknown bump entity type: {entityType}")
+        };
     }
 }

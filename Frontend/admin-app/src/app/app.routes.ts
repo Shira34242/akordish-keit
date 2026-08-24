@@ -427,8 +427,8 @@ export const routes: Routes = [
                     },
                     {
                         path: 'featured',
-                        loadComponent: () => import('./components/admin/content/featured-content/featured-content-management.component').then(m => m.FeaturedContentManagementComponent),
-                        title: 'ניהול תוכן מרכזי - אקורדישקייט'
+                        redirectTo: 'articles',
+                        pathMatch: 'full'
                     },
                     {
                         path: 'news-sections',

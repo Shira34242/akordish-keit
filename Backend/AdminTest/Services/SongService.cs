@@ -5,6 +5,7 @@ using AkordishKeit.Models.Enum;
 using AkordishKeit.Models.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using System.Data;
 using System.Text.RegularExpressions;
 
 namespace AkordishKeit.Services;
@@ -18,6 +19,9 @@ public class SongService : ISongService
     private readonly IMemoryCache _cache;
     private readonly IDisplayRankingService _rankingService;
     private const int DuplicateScanThreshold = 70;
+    private const int DailyPrintLimit = 4;
+    private const string SongPrintButtonType = "song_print";
+    private static readonly TimeZoneInfo IsraelTimeZone = ResolveIsraelTimeZone();
     // Temporary switch: keep collecting daily view statistics without enforcing the limit.
     private static readonly bool DailyViewLimitEnabled = false;
 
@@ -2465,6 +2469,84 @@ public class SongService : ISongService
             RemainingViews = remaining,
             TagHebrew = tagHebrew
         };
+    }
+
+    public async Task<DailyPrintLimitDto?> TryConsumeDailyPrintAsync(int songId, int userId)
+    {
+        if (!await _context.Songs.AnyAsync(song => song.Id == songId)
+            || !await _context.Users.AnyAsync(user => user.Id == userId))
+        {
+            return null;
+        }
+
+        var israelNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, IsraelTimeZone);
+        var today = DateOnly.FromDateTime(israelNow);
+        var startLocal = today.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified);
+        var endLocal = today.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified);
+        var startUtc = TimeZoneInfo.ConvertTimeToUtc(startLocal, IsraelTimeZone);
+        var endUtc = TimeZoneInfo.ConvertTimeToUtc(endLocal, IsraelTimeZone);
+
+        await using var transaction = await _context.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted);
+        var lockResource = $"daily-song-print:{userId}";
+        await _context.Database.ExecuteSqlInterpolatedAsync($@"
+            DECLARE @lockResult int;
+            EXEC @lockResult = sp_getapplock
+                @Resource = {lockResource},
+                @LockMode = 'Exclusive',
+                @LockOwner = 'Transaction',
+                @LockTimeout = 5000;
+            IF @lockResult < 0
+                THROW 51000, 'Could not acquire daily print lock.', 1;");
+
+        var used = await _context.ButtonClicks.CountAsync(click =>
+            click.ButtonType == SongPrintButtonType
+            && click.ItemId == userId
+            && click.UserId == userId
+            && click.ClickedAt >= startUtc
+            && click.ClickedAt < endUtc);
+
+        if (used >= DailyPrintLimit)
+        {
+            return new DailyPrintLimitDto
+            {
+                Allowed = false,
+                Used = used,
+                Limit = DailyPrintLimit,
+                Remaining = 0
+            };
+        }
+
+        _context.ButtonClicks.Add(new ButtonClick
+        {
+            ButtonType = SongPrintButtonType,
+            ItemId = userId,
+            ItemLabel = $"song:{songId}",
+            UserId = userId,
+            ClickedAt = DateTime.UtcNow
+        });
+        await _context.SaveChangesAsync();
+        await transaction.CommitAsync();
+        used++;
+
+        return new DailyPrintLimitDto
+        {
+            Allowed = true,
+            Used = used,
+            Limit = DailyPrintLimit,
+            Remaining = DailyPrintLimit - used
+        };
+    }
+
+    private static TimeZoneInfo ResolveIsraelTimeZone()
+    {
+        try
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById("Israel Standard Time");
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById("Asia/Jerusalem");
+        }
     }
 
     private async Task CheckDailyLimitAsync(int? userId, string? ipAddress)

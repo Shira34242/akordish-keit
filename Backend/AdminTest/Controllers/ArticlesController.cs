@@ -21,6 +21,7 @@ public class ArticlesController : ControllerBase
     private readonly IUserTagService _userTagService;
     private readonly INotificationService _notificationService;
     private readonly IMemoryCache _cache;
+    private readonly ContentExposureCacheVersion _exposureCacheVersion;
     private readonly ILogger<ArticlesController> _logger;
 
     public ArticlesController(
@@ -30,6 +31,7 @@ public class ArticlesController : ControllerBase
         IUserTagService userTagService,
         INotificationService notificationService,
         IMemoryCache cache,
+        ContentExposureCacheVersion exposureCacheVersion,
         ILogger<ArticlesController> logger)
     {
         _context = context;
@@ -38,6 +40,7 @@ public class ArticlesController : ControllerBase
         _userTagService = userTagService;
         _notificationService = notificationService;
         _cache = cache;
+        _exposureCacheVersion = exposureCacheVersion;
         _logger = logger;
     }
 
@@ -115,7 +118,7 @@ public class ArticlesController : ControllerBase
     [HttpGet("home-news-banners")]
     public async Task<ActionResult<HomeNewsBannersDto>> GetHomeNewsBanners()
     {
-        const string cacheKey = "home_news_banners_v1";
+        var cacheKey = $"home_news_banners_v2_{_exposureCacheVersion.ArticleVersion}";
         var banners = await _cache.GetOrCreateAsync(cacheKey, async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
@@ -130,7 +133,7 @@ public class ArticlesController : ControllerBase
     public async Task<ActionResult<List<ArticleBannerDto>>> GetHomeContentBanners([FromQuery] int limit = 12)
     {
         var normalizedLimit = Math.Clamp(limit, 1, 20);
-        var cacheKey = $"home_content_banners_v2_{normalizedLimit}";
+        var cacheKey = $"home_content_banners_v3_{_exposureCacheVersion.ArticleVersion}_{normalizedLimit}";
         var banners = await _cache.GetOrCreateAsync(cacheKey, async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
@@ -157,7 +160,7 @@ public class ArticlesController : ControllerBase
     {
         var normalizedLimit = Math.Clamp(limit, 1, 10);
         var normalizedOffset = Math.Clamp(offset, 0, 200);
-        var cacheKey = $"home_viral_banners_v4_{normalizedLimit}_{normalizedOffset}";
+        var cacheKey = $"home_viral_banners_v5_{_exposureCacheVersion.ArticleVersion}_{normalizedLimit}_{normalizedOffset}";
         var banners = await _cache.GetOrCreateAsync(cacheKey, async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
@@ -736,10 +739,7 @@ public class ArticlesController : ControllerBase
 
     private void InvalidatePublicArticleCaches()
     {
-        _cache.Remove("home_news_banners_v1");
-        _cache.Remove("home_content_banners_v1");
-        _cache.Remove("home_viral_banners_v1");
-        _cache.Remove("home_viral_banners_v2");
+        _exposureCacheVersion.InvalidateArticles();
         _cache.Set("public_article_cache_version", Guid.NewGuid().ToString("N"));
     }
 

@@ -481,16 +481,6 @@
               placeholder="שם הכותב">
           </div>
 
-          <div class="form-group" *ngIf="article.isFeatured">
-            <label class="form-label">סדר תצוגה</label>
-            <input
-              type="number"
-              class="form-input"
-              [(ngModel)]="article.displayOrder"
-              name="displayOrder"
-              min="0"
-              placeholder="0">
-          </div>
         </div>
 
         <div class="form-row">

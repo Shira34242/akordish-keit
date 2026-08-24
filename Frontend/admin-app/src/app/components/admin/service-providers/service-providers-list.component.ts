@@ -12,7 +12,6 @@ import { PagedResult } from '../../../models/user.model';
 import { CitiesService, City } from '../../../services/cities.service';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
 import { SiteAlertService } from '../../../services/site-alert.service';
-import { BumpModalComponent } from '../../shared/bump-modal/bump-modal.component';
 import { ContentPromotionModalComponent } from '../../shared/content-promotion-modal/content-promotion-modal.component';
 import { ContentPromotionTargetType } from '../../../services/content-promotion.service';
 import { AdminUsersLayoutActionsService } from '../users/users-layout/users-layout-actions.service';
@@ -22,7 +21,7 @@ import { environment } from '../../../../environments/environment';
 @Component({
   selector: 'app-service-providers-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, ImgFallbackDirective, BumpModalComponent, ContentPromotionModalComponent, ServiceProviderFormComponent],
+  imports: [CommonModule, FormsModule, ImgFallbackDirective, ContentPromotionModalComponent, ServiceProviderFormComponent],
   templateUrl: './service-providers-list.component.html',
   styleUrls: ['./service-providers-list.component.css']
 })
@@ -82,7 +81,6 @@ export class ServiceProvidersListComponent implements OnInit, OnDestroy, AfterVi
   // Batch selection
   selectionMode = false;
   selectedIds = new Set<number>();
-  bumpModalOpen = false;
   promotionModalOpen = false;
   readonly PromotionTargetType = ContentPromotionTargetType;
   agencies: AgencyListDto[] = [];
@@ -431,18 +429,8 @@ export class ServiceProvidersListComponent implements OnInit, OnDestroy, AfterVi
     return Array.from(this.selectedIds);
   }
 
-  openBumpModal(): void {
-    this.bumpModalOpen = true;
-  }
-
   openPromotionModal(): void {
     this.promotionModalOpen = true;
-  }
-
-  onBumped(): void {
-    this.bumpModalOpen = false;
-    this.selectedIds.clear();
-    this.loadProviders();
   }
 
   onPromoted(): void {

@@ -68,8 +68,6 @@
 
         <div class="embedded-flow" *ngIf="currentMode === 'song'">
           <div class="smart-form song-submission-form">
-            <p class="song-submission-note">{{ 'quick_add.song_raw_note' | translate }}</p>
-
             <label class="smart-label" for="song-submission-title">{{ 'quick_add.song_title' | translate }}</label>
             <input
               id="song-submission-title"
@@ -114,7 +112,6 @@
               spellcheck="false"
               [placeholder]="'quick_add.song_raw_placeholder' | translate"></textarea>
 
-            <small class="song-submission-helper">{{ 'quick_add.song_raw_helper' | translate }}</small>
             <div class="form-error" *ngIf="formError">{{ formError }}</div>
 
             <div class="smart-actions">

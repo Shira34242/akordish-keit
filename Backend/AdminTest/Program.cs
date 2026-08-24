@@ -124,6 +124,7 @@ builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IBoostService, BoostService>();
 builder.Services.AddScoped<IContentPromotionService, ContentPromotionService>();
 builder.Services.AddScoped<IDisplayRankingService, DisplayRankingService>();
+builder.Services.AddSingleton<ContentExposureCacheVersion>();
 builder.Services.AddScoped<IReferralService, ReferralService>();
 builder.Services.AddScoped<IMarketingCampaignService, MarketingCampaignService>();
 builder.Services.AddScoped<IRewardService, RewardService>();
@@ -153,7 +154,6 @@ builder.Services.AddSingleton<IAzureBlobService, AzureBlobService>();
 
 // Add Background Services
 builder.Services.AddHostedService<CleanupService>();
-builder.Services.AddHostedService<BumpSchedulerService>();
 builder.Services.AddHostedService<AkordishKeit.Services.EmailPipeline.EmailTransientSendJobWorker>();
 
 // Add DbContext

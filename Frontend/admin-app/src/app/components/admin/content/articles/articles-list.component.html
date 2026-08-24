@@ -25,9 +25,6 @@
       <button class="tab" [class.active]="activeTab === 'blog'" (click)="switchTab('blog')">
         בלוג
       </button>
-      <button class="tab" [class.active]="activeTab === 'featured'" (click)="switchTab('featured')">
-        מרכזי
-      </button>
       <button class="tab" [class.active]="activeTab === 'cleanup'" (click)="switchTab('cleanup')">
         ניקוי חדשות
       </button>
@@ -36,9 +33,6 @@
       </button>
     </div>
   </div>
-
-  <!-- Featured Content (tab: מרכזי) -->
-  <app-featured-content-management *ngIf="activeTab === 'featured'"></app-featured-content-management>
 
   <!-- Page category settings -->
   <app-news-page-sections-management *ngIf="activeTab === 'sections'"></app-news-page-sections-management>
@@ -205,11 +199,8 @@
       <button class="filter-btn bulk-btn btn-danger" (click)="bulkDeleteSelected()" [disabled]="bulkActionLoading">
         <span class="material-icons">delete</span> מחיקה
       </button>
-      <button class="filter-btn bulk-btn bump-btn" (click)="openBumpModal()" [disabled]="bulkActionLoading">
-        <span class="material-icons">trending_up</span> הקפצה
-      </button>
       <button class="filter-btn bulk-btn" (click)="openPromotionModal()" [disabled]="bulkActionLoading || !hasSelection">
-        <span class="material-icons">workspace_premium</span> קידום
+        <span class="material-icons">campaign</span> ניהול חשיפה
       </button>
     </div>
   </div>
@@ -634,19 +625,11 @@
   </div>
 </div>
 
-<app-bump-modal
-  *ngIf="bumpModalOpen"
-  entityType="Article"
-  [ids]="selectedArticleIdsArray"
-  (close)="bumpModalOpen = false"
-  (bumped)="onBumped()">
-</app-bump-modal>
-
 <app-content-promotion-modal
   *ngIf="promotionModalOpen"
   [targetType]="PromotionTargetType.Article"
   [ids]="selectedArticleIdsArray"
-  title="קידום כתבות"
+  title="ניהול חשיפת כתבות"
   (close)="promotionModalOpen = false"
   (promoted)="onPromoted()">
 </app-content-promotion-modal>

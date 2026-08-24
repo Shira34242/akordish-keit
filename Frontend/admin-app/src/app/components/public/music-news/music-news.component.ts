@@ -3,10 +3,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { NewsBannerComponent } from '../../shared/news-banner/news-banner.component';
-import { FeaturedContentService } from '../../../services/admin/featured-content.service';
 import { ArticleService } from '../../../services/admin/article.service';
 import { NewsPageSectionService } from '../../../services/news-page-section.service';
-import { FeaturedContentBanner } from '../../../models/featured-content.model';
 import { ArticleBanner, ArticleContentType } from '../../../models/article.model';
 import { TranslatePipe } from '../../../pipes/translate.pipe';
 import { ScrollRestorationService } from '../../../services/scroll-restoration.service';
@@ -24,7 +22,6 @@ import { catchError, filter, of, take } from 'rxjs';
 export class MusicNewsComponent implements OnInit, OnDestroy {
   @ViewChild('sentinel', { static: false }) sentinelRef!: ElementRef;
 
-  private readonly featuredContentService = inject(FeaturedContentService);
   private readonly articleService = inject(ArticleService);
   private readonly newsPageSectionService = inject(NewsPageSectionService);
   private readonly destroyRef = inject(DestroyRef);
@@ -41,7 +38,7 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
 
   readonly managedSlots = Array.from({ length: 5 }, (_, index) => index);
 
-  featuredArticles: FeaturedContentBanner[] = [];
+  featuredArticles: ArticleBanner[] = [];
   newsArticles: ArticleBanner[] = [];
   isLoading = true;
   isLoadingMore = false;
@@ -69,14 +66,10 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
       });
     });
 
-    Promise.all([
-      this.loadFeaturedContent(),
-      this.loadVisibleCategorySettings().then(() => this.loadNewsArticles())
-    ])
+    this.loadVisibleCategorySettings()
+      .then(() => this.loadNewsArticles())
       .then(() => this.loadRestoredPages())
       .then(() => {
-        const featuredIds = new Set(this.featuredArticles.map(item => item.article.id));
-        this.newsArticles = this.newsArticles.filter(article => !featuredIds.has(article.id));
         this.invalidateCache();
         this.isLoading = false;
 
@@ -137,23 +130,6 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
     return article.id;
   }
 
-  private loadFeaturedContent(): Promise<void> {
-    return new Promise((resolve) => {
-      this.featuredContentService.getActiveFeaturedContentBanners()
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe({
-          next: (content) => {
-            this.featuredArticles = content.sort((a, b) => a.displayOrder - b.displayOrder);
-            resolve();
-          },
-          error: () => {
-            this.loadFailed = true;
-            resolve();
-          }
-        });
-    });
-  }
-
   private loadNewsArticles(): Promise<void> {
     if (!this.hasMore || this.isLoadingMore) {
       return Promise.resolve();
@@ -171,9 +147,19 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: (result) => {
-            const featuredIds = new Set(this.featuredArticles.map(item => item.article.id));
-            const newItems = result.items.filter(article => !featuredIds.has(article.id));
-            this.newsArticles = [...this.newsArticles, ...newItems];
+            if (this.currentPage === 1) {
+              this.featuredArticles = result.items.slice(0, this.managedSlots.length);
+              this.newsArticles = result.items.slice(this.managedSlots.length);
+            } else {
+              const existingIds = new Set([
+                ...this.featuredArticles.map(article => article.id),
+                ...this.newsArticles.map(article => article.id)
+              ]);
+              this.newsArticles = [
+                ...this.newsArticles,
+                ...result.items.filter(article => !existingIds.has(article.id))
+              ];
+            }
             this.hasMore = result.hasNextPage;
             this.currentPage++;
             this.scrollRestoration.saveViewState('music-news', { nextPage: this.currentPage });
@@ -200,14 +186,13 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
   }
 
   private checkForNewContent(): void {
-    const currentFirstId = this.newsArticles[0]?.id;
+    const currentFirstId = this.featuredArticles[0]?.id ?? this.newsArticles[0]?.id;
     if (!currentFirstId) return;
 
     this.articleService.getPublishedArticleBanners(
       ArticleContentType.News, 1, this.pageSize, this.visibleCategoryIds
     ).pipe(take(1), catchError(() => of(null))).subscribe(result => {
-      const featuredIds = new Set(this.featuredArticles.map(item => item.article.id));
-      const newestId = result?.items?.find(item => !featuredIds.has(item.id))?.id;
+      const newestId = result?.items?.[0]?.id;
       if (newestId && newestId !== currentFirstId) {
         this.contentRefreshNotice.show();
       }
@@ -232,7 +217,7 @@ export class MusicNewsComponent implements OnInit, OnDestroy {
   }
 
   getFeaturedArticle(index: number): ArticleBanner | null {
-    return this.featuredArticles[index]?.article ?? null;
+    return this.featuredArticles[index] ?? null;
   }
 
   getManagedArticle(index: number): ArticleBanner | null {

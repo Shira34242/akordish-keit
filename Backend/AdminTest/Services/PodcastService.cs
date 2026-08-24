@@ -143,18 +143,20 @@ namespace AkordishKeit.Services
                         .Where(e => !e.IsDeleted && e.IsActive)
                         .Sum(e => e.ViewCount)
                 })
-                .OrderByDescending(p => _context.ContentPromotions
+                .OrderByDescending(p => _context.ContentPromotions.Any(cp =>
+                    cp.TargetType == ContentPromotionTargetType.Podcast
+                    && cp.TargetId == p.Podcast.Id
+                    && cp.IsActive
+                    && (!cp.StartsAt.HasValue || cp.StartsAt.Value <= now)
+                    && (!cp.EndsAt.HasValue || cp.EndsAt.Value >= now)))
+                .ThenByDescending(p => _context.ContentPromotions
                     .Where(cp => cp.TargetType == ContentPromotionTargetType.Podcast
                         && cp.TargetId == p.Podcast.Id
                         && cp.IsActive
                         && (!cp.StartsAt.HasValue || cp.StartsAt.Value <= now)
-                        && (!cp.EndsAt.HasValue || cp.EndsAt.Value >= now)
-                        && (cp.Placement == ContentPromotionPlacement.Home
-                            || cp.Placement == ContentPromotionPlacement.Featured
-                            || cp.Placement == ContentPromotionPlacement.General
-                            || cp.ShowOnHome))
-                    .Select(cp => (int?)cp.Priority)
-                    .Max() ?? -1)
+                        && (!cp.EndsAt.HasValue || cp.EndsAt.Value >= now))
+                    .Select(cp => (DateTime?)(cp.StartsAt ?? cp.UpdatedAt ?? cp.CreatedAt))
+                    .Max())
                 .ThenByDescending(p => p.MonthlyViews)
                 .ThenByDescending(p => p.TotalViews)
                 .ThenBy(p => p.Podcast.DisplayOrder)
@@ -216,18 +218,20 @@ namespace AkordishKeit.Services
                         && v.ViewedAt >= weekAgo
                         && v.ViewedAt <= now)
                 })
-                .OrderByDescending(e => _context.ContentPromotions
+                .OrderByDescending(e => _context.ContentPromotions.Any(cp =>
+                    cp.TargetType == ContentPromotionTargetType.PodcastEpisode
+                    && cp.TargetId == e.Episode.Id
+                    && cp.IsActive
+                    && (!cp.StartsAt.HasValue || cp.StartsAt.Value <= now)
+                    && (!cp.EndsAt.HasValue || cp.EndsAt.Value >= now)))
+                .ThenByDescending(e => _context.ContentPromotions
                     .Where(cp => cp.TargetType == ContentPromotionTargetType.PodcastEpisode
                         && cp.TargetId == e.Episode.Id
                         && cp.IsActive
                         && (!cp.StartsAt.HasValue || cp.StartsAt.Value <= now)
-                        && (!cp.EndsAt.HasValue || cp.EndsAt.Value >= now)
-                        && (cp.Placement == ContentPromotionPlacement.Home
-                            || cp.Placement == ContentPromotionPlacement.Featured
-                            || cp.Placement == ContentPromotionPlacement.General
-                            || cp.ShowOnHome))
-                    .Select(cp => (int?)cp.Priority)
-                    .Max() ?? -1)
+                        && (!cp.EndsAt.HasValue || cp.EndsAt.Value >= now))
+                    .Select(cp => (DateTime?)(cp.StartsAt ?? cp.UpdatedAt ?? cp.CreatedAt))
+                    .Max())
                 .ThenByDescending(e => e.WeeklyViews)
                 .ThenByDescending(e => e.Episode.ViewCount)
                 .ThenByDescending(e => e.Episode.PublishedAt)
@@ -260,25 +264,26 @@ namespace AkordishKeit.Services
 
             var now = DateTime.UtcNow;
             var episodeIds = podcast.Episodes.Select(e => e.Id).ToList();
-            var promotionPriorities = await _context.ContentPromotions
+            var promotionStartDates = await _context.ContentPromotions
                 .AsNoTracking()
                 .Where(cp => cp.TargetType == ContentPromotionTargetType.PodcastEpisode
                     && episodeIds.Contains(cp.TargetId)
                     && cp.IsActive
                     && (!cp.StartsAt.HasValue || cp.StartsAt.Value <= now)
-                    && (!cp.EndsAt.HasValue || cp.EndsAt.Value >= now)
-                    && (cp.Placement == ContentPromotionPlacement.Index
-                        || cp.Placement == ContentPromotionPlacement.Featured
-                        || cp.Placement == ContentPromotionPlacement.General))
+                    && (!cp.EndsAt.HasValue || cp.EndsAt.Value >= now))
                 .GroupBy(cp => cp.TargetId)
-                .Select(group => new { TargetId = group.Key, Priority = group.Max(cp => cp.Priority) })
-                .ToDictionaryAsync(item => item.TargetId, item => item.Priority);
+                .Select(group => new
+                {
+                    TargetId = group.Key,
+                    StartedAt = group.Max(cp => cp.StartsAt ?? cp.UpdatedAt ?? cp.CreatedAt)
+                })
+                .ToDictionaryAsync(item => item.TargetId, item => item.StartedAt);
 
             var episodes = podcast.Episodes
                 .Where(e => !e.IsDeleted && (includeInactive || e.IsActive))
-                .OrderByDescending(e => promotionPriorities.GetValueOrDefault(e.Id, -1))
+                .OrderByDescending(e => promotionStartDates.ContainsKey(e.Id))
+                .ThenByDescending(e => promotionStartDates.GetValueOrDefault(e.Id))
                 .ThenBy(e => e.EpisodeNumber == 0 ? int.MaxValue : e.EpisodeNumber)
-                .ThenBy(e => e.DisplayOrder)
                 .ThenBy(e => e.PublishedAt)
                 .Select(e => MapEpisode(e, podcast))
                 .ToList();
@@ -477,16 +482,20 @@ namespace AkordishKeit.Services
 
             var now = DateTime.UtcNow;
             var episodes = await query
-                .OrderByDescending(e => _context.ContentPromotions
+                .OrderByDescending(e => _context.ContentPromotions.Any(cp =>
+                    cp.TargetType == ContentPromotionTargetType.PodcastEpisode
+                    && cp.TargetId == e.Id
+                    && cp.IsActive
+                    && (!cp.StartsAt.HasValue || cp.StartsAt.Value <= now)
+                    && (!cp.EndsAt.HasValue || cp.EndsAt.Value >= now)))
+                .ThenByDescending(e => _context.ContentPromotions
                     .Where(cp => cp.TargetType == ContentPromotionTargetType.PodcastEpisode
                         && cp.TargetId == e.Id
                         && cp.IsActive
                         && (!cp.StartsAt.HasValue || cp.StartsAt.Value <= now)
-                        && (!cp.EndsAt.HasValue || cp.EndsAt.Value >= now)
-                        && (cp.Placement == ContentPromotionPlacement.Featured
-                            || cp.Placement == ContentPromotionPlacement.General))
-                    .Select(cp => (int?)cp.Priority)
-                    .Max() ?? -1)
+                        && (!cp.EndsAt.HasValue || cp.EndsAt.Value >= now))
+                    .Select(cp => (DateTime?)(cp.StartsAt ?? cp.UpdatedAt ?? cp.CreatedAt))
+                    .Max())
                 .ThenByDescending(e => e.ViewCount)
                 .ThenByDescending(e => e.PublishedAt)
                 .ThenByDescending(e => e.Id)

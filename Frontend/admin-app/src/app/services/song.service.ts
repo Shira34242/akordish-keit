@@ -143,6 +143,10 @@ export class SongService {
         return this.http.post<{ viewCount: number }>(`${this.apiUrl}/${id}/increment-view`, {});
     }
 
+    registerPrint(id: number): Observable<{ allowed: boolean; used: number; limit: number; remaining: number }> {
+        return this.http.post<{ allowed: boolean; used: number; limit: number; remaining: number }>(`${this.apiUrl}/${id}/print`, {});
+    }
+
     getDailyLimitStatus(): Observable<{ limitExceeded: boolean; dailyViewCount: number; dailyLimit: number; remainingViews: number; tagHebrew?: string }> {
         return this.http.get<{ limitExceeded: boolean; dailyViewCount: number; dailyLimit: number; remainingViews: number; tagHebrew?: string }>(`${this.apiUrl}/daily-limit-status`);
     }

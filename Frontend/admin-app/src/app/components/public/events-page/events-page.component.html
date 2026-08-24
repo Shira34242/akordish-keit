@@ -1,5 +1,9 @@
 <div class="events-page"
+  tabindex="0"
+  role="region"
+  [attr.aria-label]="'events.carousel_label' | translate"
   (wheel)="onWheel($event)"
+  (keydown)="onKeyDown($event)"
   (mousedown)="onMouseDown($event)"
   (mousemove)="onMouseMove($event)"
   (mouseup)="onMouseUp()"
@@ -58,6 +62,29 @@
 
     </div>
   </div>
+
+  <button
+    *ngIf="!loading && filteredEvents.length > 1"
+    type="button"
+    class="carousel-arrow carousel-arrow--previous"
+    [attr.aria-label]="'events.previous' | translate"
+    (click)="navigateBy(-1); $event.stopPropagation()">
+    <span class="material-icons" aria-hidden="true">chevron_right</span>
+  </button>
+
+  <button
+    *ngIf="!loading && filteredEvents.length > 1"
+    type="button"
+    class="carousel-arrow carousel-arrow--next"
+    [attr.aria-label]="'events.next' | translate"
+    (click)="navigateBy(1); $event.stopPropagation()">
+    <span class="material-icons" aria-hidden="true">chevron_left</span>
+  </button>
+
+  <p *ngIf="showInteractionHint && !loading && filteredEvents.length > 1" class="interaction-hint">
+    <span class="material-icons" aria-hidden="true">mouse</span>
+    {{ 'events.interaction_hint' | translate }}
+  </p>
 
   <nav class="event-filter-bar" aria-label="סינון הופעות לפי זמן">
     <button type="button" class="filter-pill" [class.filter-pill--active]="filterMode === 'all'" (click)="setFilter('all')">{{ 'events.filter_all' | translate }}</button>

@@ -1086,6 +1086,10 @@ export class SongPageComponent implements OnInit, OnDestroy, AfterViewChecked, A
 
     handlePrint() {
         if (!this.song) return;
+        if (!this.authService.isLoggedIn) {
+            this.openLoginForSong();
+            return;
+        }
         if (!this.hasFullSongContent) {
             this.openLoginForSong();
             return;

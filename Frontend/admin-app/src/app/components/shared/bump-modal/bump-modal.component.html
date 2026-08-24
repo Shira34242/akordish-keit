@@ -13,44 +13,9 @@
 
       <button class="bump-btn bump-btn--now" (click)="bumpNow()" [disabled]="loading">
         <span class="material-icons">trending_up</span>
-        הקפץ עכשיו
+        הקפצה ל־24 שעות
       </button>
-
-      <div class="bump-divider">
-        <span>— או —</span>
-      </div>
-
-      <div class="bump-schedule" *ngIf="!scheduleMode">
-        <button class="bump-btn bump-btn--schedule" (click)="scheduleMode = true" [disabled]="loading">
-          <span class="material-icons">schedule</span>
-          הקפצה אוטומטית
-        </button>
-      </div>
-
-      <div class="bump-schedule-form" *ngIf="scheduleMode">
-        <div class="schedule-row">
-          <label class="schedule-label">מספר פעמים:</label>
-          <select [(ngModel)]="times" class="schedule-select">
-            <option *ngFor="let t of timesOptions" [value]="t">{{ t }}</option>
-          </select>
-        </div>
-
-        <div class="schedule-row">
-          <label class="schedule-label">תדירות:</label>
-          <select [(ngModel)]="intervalHours" class="schedule-select">
-            <option *ngFor="let opt of intervalOptions" [value]="opt.value">{{ opt.label }}</option>
-          </select>
-        </div>
-
-        <div class="schedule-summary">
-          יוקפץ {{ times }} פעמים, {{ intervalLabel() }}
-        </div>
-
-        <button class="bump-btn bump-btn--confirm" (click)="bumpScheduled()" [disabled]="loading">
-          <span class="material-icons">check</span>
-          אישור הקפצה אוטומטית
-        </button>
-      </div>
+      <p class="bump-note">הפריטים יקבלו קדימות למשך 24 שעות ולאחר מכן יחזרו לסדר הרגיל.</p>
     </div>
 
   </div>

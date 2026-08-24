@@ -36,8 +36,9 @@ export class EventsPageComponent implements OnInit, AfterViewInit {
   filteredEvents: EventCardData[] = [];
   visibleCarouselItems: CarouselRenderItem[] = [];
   selectedEvent: EventCardData | null = null;
-  filterMode: FilterMode = 'all';
+  filterMode: FilterMode = 'upcoming';
   isRepositioning = false;
+  showInteractionHint = true;
 
   private activePosition = 0;
   private activeIndex = 0;
@@ -49,9 +50,11 @@ export class EventsPageComponent implements OnInit, AfterViewInit {
   private touchStartPosition = 0;
   private snapTimer?: ReturnType<typeof setTimeout>;
   private wheelAccumulator = 0;
+  private wheelLocked = false;
+  private suppressNextClick = false;
   private readonly visibleRadius = 4;
-  private readonly speedDrag = -0.008;
-  private readonly wheelStepSize = 90;
+  private readonly speedDrag = 0.008;
+  private readonly wheelStepSize = 70;
 
   ngOnInit(): void {
     this.analytics.trackEventView();
@@ -71,6 +74,7 @@ export class EventsPageComponent implements OnInit, AfterViewInit {
   }
 
   setFilter(mode: FilterMode): void {
+    this.registerInteraction();
     this.filterMode = mode;
     this.updateFiltered();
     this.resetCarouselPosition();
@@ -89,17 +93,31 @@ export class EventsPageComponent implements OnInit, AfterViewInit {
   }
 
   private getModeEvents(): EventCardData[] {
-    if (this.filterMode === 'upcoming') {
-      return this.allEvents.filter(e => !e.isPast);
-    }
-    return [...this.allEvents];
+    const byDateAscending = (a: EventCardData, b: EventCardData) =>
+      new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime();
+    const upcoming = this.allEvents.filter(event => !event.isPast).sort(byDateAscending);
+
+    if (this.filterMode === 'upcoming') return upcoming;
+
+    const past = this.allEvents
+      .filter(event => event.isPast)
+      .sort((a, b) => byDateAscending(b, a));
+    return [...upcoming, ...past];
   }
 
   private finishLoading(): void {
     this.updateFiltered();
+    if (this.filterMode === 'upcoming' && this.filteredEvents.length === 0 && this.allEvents.length > 0) {
+      this.filterMode = 'all';
+      this.updateFiltered();
+    }
     this.resetCarouselPosition();
     const requestedEventId = Number(this.route.snapshot.queryParamMap.get('event'));
     if (Number.isFinite(requestedEventId) && requestedEventId > 0) {
+      if (!this.filteredEvents.some(event => event.id === requestedEventId)) {
+        this.filterMode = 'all';
+        this.updateFiltered();
+      }
       const requestedIndex = this.filteredEvents.findIndex(event => event.id === requestedEventId);
       if (requestedIndex >= 0) {
         this.activePosition = requestedIndex;
@@ -125,7 +143,7 @@ export class EventsPageComponent implements OnInit, AfterViewInit {
     const diff = position - this.activePosition;
     const absDiff = Math.abs(diff);
     const brightness = Math.max(0.3, 1 - absDiff * 0.18);
-    const visualPosition = diff / this.getVisualSpread();
+    const visualPosition = -diff / this.getVisualSpread();
     const curve = Math.min(1.65, Math.abs(visualPosition));
     el.style.setProperty('--active', String(visualPosition));
     el.style.setProperty('--curve', String(curve));
@@ -216,32 +234,39 @@ export class EventsPageComponent implements OnInit, AfterViewInit {
   }
 
   private isCarouselControlTarget(target: EventTarget | null): boolean {
-    return target instanceof HTMLElement && !!target.closest('.events-header, .event-filter-bar');
+    return target instanceof HTMLElement &&
+      !!target.closest('.events-header, .event-filter-bar, .carousel-arrow, .slide-ticket');
   }
 
   onWheel(e: WheelEvent): void {
     if (this.isCarouselControlTarget(e.target)) return;
     e.preventDefault();
+    this.registerInteraction();
 
-    this.wheelAccumulator += e.deltaY;
-    const steps = Math.trunc(this.wheelAccumulator / this.wheelStepSize);
-    if (steps === 0) {
-      this.scheduleSnap();
-      return;
-    }
+    if (this.wheelLocked) return;
 
-    const limitedSteps = Math.max(-4, Math.min(steps, 4));
-    this.wheelAccumulator -= limitedSteps * this.wheelStepSize;
-    this.activePosition = Math.round(this.activePosition) + limitedSteps;
-    this.recenterLoopIfNeeded();
-    this.animate();
-    this.scheduleSnap();
+    const isHorizontalGesture = Math.abs(e.deltaX) > Math.abs(e.deltaY);
+    const delta = isHorizontalGesture ? -e.deltaX : e.deltaY;
+    this.wheelAccumulator += delta;
+    if (Math.abs(this.wheelAccumulator) < this.wheelStepSize) return;
+
+    const direction = this.wheelAccumulator > 0 ? 1 : -1;
+    this.wheelAccumulator = 0;
+    this.navigateBy(direction);
+    this.wheelLocked = true;
+    setTimeout(() => {
+      this.wheelLocked = false;
+      this.wheelAccumulator = 0;
+    }, 280);
   }
 
   onMouseDown(e: MouseEvent): void {
     if (this.isCarouselControlTarget(e.target)) return;
+    this.registerInteraction();
+    (e.currentTarget as HTMLElement | null)?.focus({ preventScroll: true });
     this.clearSnapTimer();
     this.isDown = true;
+    this.suppressNextClick = false;
     this.startX = e.clientX;
     this.startPosition = this.activePosition;
   }
@@ -249,6 +274,7 @@ export class EventsPageComponent implements OnInit, AfterViewInit {
   onMouseMove(e: MouseEvent): void {
     if (!this.isDown) return;
     const x = e.clientX - this.startX;
+    if (Math.abs(x) > 6) this.suppressNextClick = true;
     this.activePosition = this.startPosition + x * this.speedDrag;
     this.animate();
     this.recenterLoopIfNeeded();
@@ -257,10 +283,12 @@ export class EventsPageComponent implements OnInit, AfterViewInit {
   onMouseUp(): void {
     this.isDown = false;
     this.snapToNearest();
+    setTimeout(() => { this.suppressNextClick = false; }, 0);
   }
 
   onTouchStart(e: TouchEvent): void {
     if (this.isCarouselControlTarget(e.target)) return;
+    this.registerInteraction();
     this.clearSnapTimer();
     this.touchStartX = e.touches[0].clientX;
     this.touchStartPosition = this.activePosition;
@@ -269,6 +297,7 @@ export class EventsPageComponent implements OnInit, AfterViewInit {
   onTouchMove(e: TouchEvent): void {
     if (this.isCarouselControlTarget(e.target)) return;
     const x = e.touches[0].clientX - this.touchStartX;
+    if (Math.abs(x) > 6) this.suppressNextClick = true;
     this.activePosition = this.touchStartPosition + x * this.speedDrag;
     this.animate();
     this.recenterLoopIfNeeded();
@@ -277,6 +306,28 @@ export class EventsPageComponent implements OnInit, AfterViewInit {
   onTouchEnd(): void {
     this.isDown = false;
     this.snapToNearest();
+    setTimeout(() => { this.suppressNextClick = false; }, 0);
+  }
+
+  onKeyDown(e: KeyboardEvent): void {
+    if (this.isCarouselControlTarget(e.target)) return;
+
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      this.navigateBy(1);
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      this.navigateBy(-1);
+    }
+  }
+
+  navigateBy(direction: number): void {
+    if (this.filteredEvents.length <= 1) return;
+    this.registerInteraction();
+    this.clearSnapTimer();
+    this.activePosition = Math.round(this.activePosition) + Math.sign(direction);
+    this.recenterLoopIfNeeded();
+    this.animate();
   }
 
   private scheduleSnap(): void {
@@ -300,6 +351,8 @@ export class EventsPageComponent implements OnInit, AfterViewInit {
   }
 
   onItemClick(position: number, event: EventCardData): void {
+    if (this.suppressNextClick) return;
+    this.registerInteraction();
     if (position === this.activeIndex) {
       this.selectedEvent = event;
       return;
@@ -307,6 +360,10 @@ export class EventsPageComponent implements OnInit, AfterViewInit {
     this.activePosition = position;
     this.animate();
     this.recenterLoopIfNeeded();
+  }
+
+  private registerInteraction(): void {
+    this.showInteractionHint = false;
   }
 
   getArtist(event: EventCardData): string | null {
