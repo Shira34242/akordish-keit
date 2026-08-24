@@ -228,6 +228,7 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
             Slug = slug,
             VideoEmbedUrl = parsed.YouTubeUrl,
             AudioEmbedUrl = audioUrl,
+            ImageCredit = parsed.Credits,
             ShortDescription = parsed.ShortDescription,
             IsFeatured = false,
             DisplayOrder = 0,
@@ -279,6 +280,7 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
             .ToList();
 
         var contentParagraphs = new List<string>();
+        var creditParagraphs = new List<string>();
         foreach (var block in blocks)
         {
             if (block == "--" || block.StartsWith("-- ", StringComparison.Ordinal))
@@ -295,6 +297,12 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
                 continue;
             }
 
+            if (LooksLikeCredits(block))
+            {
+                creditParagraphs.Add(block);
+                continue;
+            }
+
             contentParagraphs.Add(block);
         }
 
@@ -303,11 +311,11 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
             contentParagraphs.Add("תוכן המייל לא זוהה אוטומטית. יש להשלים את הכתבה לפני הפרסום.");
 
         var contentHtml = string.Join("\n", contentParagraphs.Select(paragraph =>
-        {
-            var encoded = WebUtility.HtmlEncode(paragraph);
-            var looksLikeCredits = paragraph.Contains('|') && paragraph.Contains(':');
-            return looksLikeCredits ? $"<p><strong>{encoded}</strong></p>" : $"<p>{encoded}</p>";
-        }));
+            $"<p>{WebUtility.HtmlEncode(paragraph)}</p>"));
+
+        var credits = string.Join(" | ", creditParagraphs);
+        if (credits.Length > 2000)
+            credits = credits[..2000].TrimEnd();
 
         var description = contentParagraphs.FirstOrDefault() ?? string.Empty;
         if (description.Length > 500)
@@ -321,9 +329,13 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
             contentHtml,
             description,
             youtubeUrl,
+            string.IsNullOrWhiteSpace(credits) ? null : credits,
             Math.Max(1, (int)Math.Ceiling(wordCount / 200d)),
             usedFallbackContent);
     }
+
+    private static bool LooksLikeCredits(string block) =>
+        block.Contains('|') && block.Contains(':');
 
     private static string ExtractEmailAddress(string sender)
     {
@@ -377,6 +389,7 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
         string ContentHtml,
         string ShortDescription,
         string? YouTubeUrl,
+        string? Credits,
         int ReadTimeMinutes,
         bool UsedFallbackContent);
 }
