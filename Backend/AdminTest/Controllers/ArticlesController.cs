@@ -118,7 +118,7 @@ public class ArticlesController : ControllerBase
     [HttpGet("home-news-banners")]
     public async Task<ActionResult<HomeNewsBannersDto>> GetHomeNewsBanners()
     {
-        var cacheKey = $"home_news_banners_v2_{_exposureCacheVersion.ArticleVersion}";
+        var cacheKey = $"home_news_banners_v3_{_exposureCacheVersion.ArticleVersion}";
         var banners = await _cache.GetOrCreateAsync(cacheKey, async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);

@@ -368,10 +368,55 @@ public class ArticleService : IArticleService
             .ToListAsync();
 
         var featuredIds = featured.Select(a => a.Id).ToList();
-        var regular = await ApplyHomeNewsExposureOrdering(
-                newsQuery.Where(a => !featuredIds.Contains(a.Id)),
-                now)
-            .Take(Math.Clamp(regularLimit, 1, 20))
+        var regularTake = Math.Clamp(regularLimit, 1, 20);
+        var latestQuota = (regularTake + 1) / 2;
+        var recommendedQuota = regularTake - latestQuota;
+
+        var latest = await newsQuery
+            .Where(a => !featuredIds.Contains(a.Id))
+            .OrderByDescending(a => a.PublishDate)
+            .ThenByDescending(a => a.Id)
+            .Take(latestQuota)
+            .ToListAsync();
+
+        var latestIds = latest.Select(a => a.Id).ToList();
+        var recommended = recommendedQuota > 0
+            ? await newsQuery
+                .Where(a => a.IsFeatured
+                    && !featuredIds.Contains(a.Id)
+                    && !latestIds.Contains(a.Id))
+                .OrderByDescending(a => a.PublishDate)
+                .ThenByDescending(a => a.Id)
+                .Take(recommendedQuota)
+                .ToListAsync()
+            : [];
+
+        var regularArticles = new List<Article>(regularTake);
+        for (var index = 0; index < Math.Max(latest.Count, recommended.Count); index++)
+        {
+            if (index < latest.Count)
+                regularArticles.Add(latest[index]);
+            if (index < recommended.Count)
+                regularArticles.Add(recommended[index]);
+        }
+
+        if (regularArticles.Count < regularTake)
+        {
+            var selectedIds = featuredIds
+                .Concat(regularArticles.Select(a => a.Id))
+                .Distinct()
+                .ToList();
+            var fillers = await newsQuery
+                .Where(a => !selectedIds.Contains(a.Id))
+                .OrderByDescending(a => a.PublishDate)
+                .ThenByDescending(a => a.Id)
+                .Take(regularTake - regularArticles.Count)
+                .ToListAsync();
+            regularArticles.AddRange(fillers);
+        }
+
+        var regular = regularArticles
+            .Take(regularTake)
             .Select(a => new ArticleBannerDto
             {
                 Id = a.Id,
@@ -384,7 +429,7 @@ public class ArticleService : IArticleService
                 DisplayOrder = a.DisplayOrder,
                 PublishDate = a.PublishDate
             })
-            .ToListAsync();
+            .ToList();
 
         return new HomeNewsBannersDto
         {

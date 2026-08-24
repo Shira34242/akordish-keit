@@ -1166,7 +1166,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
       })).subscribe({
         next: (result) => {
           this.homeCategoryName = result?.categoryName || '';
-          this.homeCategoryArticles = this.uniqueArticles(result?.banners || []);
+          this.homeCategoryArticles = this.uniqueArticles(result?.banners || []).reverse();
         },
         error: (err) => console.error('loadContent: home category articles', err)
       });
