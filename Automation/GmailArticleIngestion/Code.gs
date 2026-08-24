@@ -6,6 +6,8 @@ const MAX_THREADS_PER_RUN = 5;
 const AUDIO_EXTENSIONS = /\.(mp3|wav|m4a|aac|ogg)$/i;
 
 function processIncomingArticles() {
+  ensureFiveMinuteTrigger_();
+
   const properties = PropertiesService.getScriptProperties();
   const apiUrl = requiredProperty_(properties, 'API_URL');
 
@@ -78,6 +80,19 @@ function installFiveMinuteTrigger() {
     .timeBased()
     .everyMinutes(5)
     .create();
+}
+
+function ensureFiveMinuteTrigger_() {
+  const triggerExists = ScriptApp.getProjectTriggers().some(function(trigger) {
+    return trigger.getHandlerFunction() === 'processIncomingArticles';
+  });
+
+  if (!triggerExists) {
+    ScriptApp.newTrigger('processIncomingArticles')
+      .timeBased()
+      .everyMinutes(5)
+      .create();
+  }
 }
 
 function getOrCreateLabel_(name) {
