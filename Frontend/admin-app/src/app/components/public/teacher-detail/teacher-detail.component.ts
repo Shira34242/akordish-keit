@@ -550,7 +550,7 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
       this.updateContactPanelPlacement(this.contactTriggerEl);
     }
     if (this.contactOpen && this.teacher) {
-      this.analytics.trackButtonClick('contact', this.teacher.id, this.teacher.displayName);
+      this.analytics.trackButtonClick('contact', this.teacher.id, `teacher|${this.teacher.displayName}`);
       if (this.agencyBadge) {
         this.analytics.trackInteraction('agency_contact_panel', this.agencyBadge.agencyId, `${this.agencyBadge.agencyName} | ${this.teacher.displayName}`);
       }
@@ -597,6 +597,20 @@ export class TeacherDetailComponent implements OnInit, AfterViewInit, OnDestroy 
   trackAgencyContact(type: 'phone' | 'whatsapp' | 'email' | 'website'): void {
     if (!this.agencyBadge || !this.teacher) return;
     this.analytics.trackInteraction(`agency_contact_${type}`, this.agencyBadge.agencyId, `${this.agencyBadge.agencyName} | ${this.teacher.displayName}`);
+    this.trackProfileContact(type);
+  }
+
+  trackProfileContact(type: 'phone' | 'whatsapp' | 'email' | 'website'): void {
+    if (!this.teacher) return;
+    this.analytics.trackInteraction(`index_teacher_contact_${type}`, this.teacher.id, `teacher|${this.teacher.displayName}`);
+  }
+
+  trackQuickWhatsApp(): void {
+    if (this.showAgencyContact) {
+      this.trackAgencyContact('whatsapp');
+      return;
+    }
+    this.trackProfileContact('whatsapp');
   }
 
   get detailsLine(): string {

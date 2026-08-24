@@ -8,3 +8,4 @@
 @media(max-width:860px){.analytics-header,.panel-heading{align-items:stretch;flex-direction:column}.date-summary{align-self:flex-start}.table-controls{align-items:stretch}.table-scroll{margin:var(--space-lg) calc(var(--space-lg)*-1) calc(var(--space-lg)*-1)}}
 @media(max-width:620px){.segmented-control{overflow-x:auto}.device-list{width:100%;max-width:none}.table-scroll{margin:var(--space-md) calc(var(--space-md)*-1) calc(var(--space-md)*-1)}}
 .device-row{grid-template-columns:auto minmax(0,1fr) auto auto}.device-icon{grid-row:auto}
+.report-panel .quality-note{margin-top:var(--space-lg)}.index-profile-link{color:#000;text-decoration:none}.index-profile-link:hover{text-decoration:underline}

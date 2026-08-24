@@ -18,7 +18,9 @@
       </button>
       <button
         class="tab"
+        type="button"
         [class.active]="activeTab === 'spots'"
+        [attr.aria-current]="activeTab === 'spots' ? 'page' : null"
         (click)="switchTab('spots')">
         שטחי פרסום 
       </button>
@@ -42,7 +44,8 @@
         placeholder="חיפוש..."
         [(ngModel)]="searchTerm"
         (input)="onSearch()"
-        class="search-input">
+        class="search-input"
+        aria-label="חיפוש שטחי פרסום">
     </div>
        <button class="btn-new-spot" (click)="createNewSpot()">
       <span class="material-icons">add</span>
@@ -53,10 +56,10 @@
   <div class="list-controls" *ngIf="!loading">
     <span class="results-info">{{ totalCount }} שטחי פרסום</span>
     <div class="view-controls">
-      <button class="view-btn" type="button" [class.active]="viewMode === 'list'" (click)="setView('list')" title="רשימה">
+      <button class="view-btn" type="button" [class.active]="viewMode === 'list'" [attr.aria-pressed]="viewMode === 'list'" (click)="setView('list')" aria-label="תצוגת רשימה">
         <span class="material-icons">view_list</span>
       </button>
-      <button class="view-btn" type="button" [class.active]="viewMode === 'grid'" (click)="setView('grid')" title="גריד">
+      <button class="view-btn" type="button" [class.active]="viewMode === 'grid'" [attr.aria-pressed]="viewMode === 'grid'" (click)="setView('grid')" aria-label="תצוגת כרטיסים">
         <span class="material-icons">grid_view</span>
       </button>
     </div>
@@ -78,6 +81,9 @@
         <span class="availability-badge" [ngClass]="getCapacityClass(spot)">
           {{ getCapacityText(spot) }}
         </span>
+        <span class="display-mode-badge">
+          {{ spot.displayMode === 'Rotation' ? 'מתחלפות' : 'אחד מתחת לשני' }}
+        </span>
       </div>
       <div class="grid-card-meta">
         <span>{{ spot.dimensions }}<ng-container *ngIf="spot.mobileDimensions"> · מובייל {{ spot.mobileDimensions }}</ng-container></span>
@@ -85,10 +91,13 @@
         <span>{{ spot.activeCampaigns }} פעילים</span>
       </div>
       <div class="grid-card-actions">
-        <button class="btn-action btn-edit" type="button" (click)="editSpot(spot)" title="ערוך">
+        <button class="btn-action" type="button" (click)="createCampaignForSpot(spot)" [attr.aria-label]="'יצירת קמפיין בשטח ' + spot.name" title="יצירת קמפיין בשטח">
+          <span class="material-icons">add_campaign</span>
+        </button>
+        <button class="btn-action btn-edit" type="button" (click)="editSpot(spot)" [attr.aria-label]="'עריכת השטח ' + spot.name">
           <span class="material-icons">edit</span>
         </button>
-        <button class="btn-action btn-delete" type="button" (click)="deleteSpot(spot)" title="מחק">
+        <button class="btn-action btn-delete" type="button" (click)="deleteSpot(spot)" [attr.aria-label]="'מחיקת השטח ' + spot.name">
           <span class="material-icons">delete</span>
         </button>
       </div>
@@ -96,7 +105,8 @@
   </div>
 
   <div *ngIf="!loading && filteredAdSpots.length === 0 && viewMode === 'grid'" class="empty-grid-state">
-    לא נמצאו מקומות פרסום
+    <span>לא נמצאו שטחי פרסום</span>
+    <button type="button" class="btn-new-spot" (click)="createNewSpot()">הוספת שטח פרסום</button>
   </div>
 
   <!-- Table -->
@@ -113,6 +123,7 @@
           <th>מזהה טכני</th>
           <th>סטטוס</th>
           <th>קיבולת פעילה</th>
+          <th>אופן תצוגה</th>
           <th>סיום קרוב</th>
           <th>מידות</th>
           <th>תקציב כולל</th>
@@ -146,6 +157,12 @@
             </span>
           </td>
 
+          <td>
+            <span class="display-mode-badge">
+              {{ spot.displayMode === 'Rotation' ? 'מתחלפות' : 'אחד מתחת לשני' }}
+            </span>
+          </td>
+
           <!-- Next Available Date -->
           <td>
             <div class="next-available">
@@ -172,19 +189,22 @@
 
           <!-- Actions -->
           <td class="actions-cell">
-            <button class="btn-action btn-edit" (click)="editSpot(spot)" title="ערוך">
+            <button class="btn-action" type="button" (click)="createCampaignForSpot(spot)" [attr.aria-label]="'יצירת קמפיין בשטח ' + spot.name" title="יצירת קמפיין בשטח">
+              <span class="material-icons">add_campaign</span>
+            </button>
+            <button class="btn-action btn-edit" type="button" (click)="editSpot(spot)" [attr.aria-label]="'עריכת השטח ' + spot.name">
               <span class="material-icons">edit</span>
             </button>
-            <button class="btn-action btn-delete" (click)="deleteSpot(spot)" title="מחק">
+            <button class="btn-action btn-delete" type="button" (click)="deleteSpot(spot)" [attr.aria-label]="'מחיקת השטח ' + spot.name">
               <span class="material-icons">delete</span>
             </button>
           </td>
         </tr>
 
         <tr *ngIf="filteredAdSpots.length === 0 && !loading" class="empty-state">
-          <td colspan="8">
+          <td colspan="9">
             <div class="empty-message">
-              <p>לא נמצאו מיקומי פרסום</p>
+              <p>לא נמצאו שטחי פרסום</p>
             </div>
           </td>
         </tr>

@@ -19,6 +19,7 @@ interface AdSpotResponse {
   spotTechnicalId: string;
   dimensions: string;
   mobileDimensions?: string;
+  displayMode?: 'Stacked' | 'Rotation';
   rotationIntervalMs: number;
   campaigns: AdCampaign[];
   totalCampaigns: number;
@@ -31,8 +32,9 @@ interface AdSpotResponse {
   template: `
     @if (campaigns.length) {
       <div class="media-stack">
-        @for (campaign of campaigns; track campaign.id) {
+        @for (campaign of displayedCampaigns; track campaign.id) {
           <div class="media-wrapper" [style.aspect-ratio]="aspectRatio" [style.max-width]="maxWidth">
+            <span class="ad-label">מקודם</span>
             <a [attr.href]="campaign.knownUrl || null" target="_blank" rel="noopener sponsored" (click)="handleAdClick($event, campaign)" class="media-link" [class.media-link--disabled]="!campaign.knownUrl">
               @if (getMediaType(getActiveMediaUrl(campaign)) === 'image') {
                 <img
@@ -70,8 +72,25 @@ interface AdSpotResponse {
     .media-wrapper {
       width: 100%;
       display: block;
+      position: relative;
       overflow: hidden;
       margin: 0 auto;
+    }
+
+    .ad-label {
+      position: absolute;
+      top: var(--space-sm, 6px);
+      right: var(--space-sm, 6px);
+      z-index: 1;
+      padding: 2px var(--space-sm, 6px);
+      border-radius: 999px;
+      background: rgba(0,0,0,0.48);
+      color: #ffffff;
+      font-family: 'Open Sans', sans-serif;
+      font-size: var(--font-xs, 12px);
+      font-weight: 300;
+      line-height: 1.5;
+      pointer-events: none;
     }
 
     .media-link {
@@ -115,6 +134,8 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
   private readonly apiUrl = `${environment.apiBaseUrl}/api/media`;
 
   campaigns: AdCampaign[] = [];
+  displayMode: 'Stacked' | 'Rotation' = 'Stacked';
+  currentCampaignIndex = 0;
   loading = false;
   hasLoaded = false;
   maxWidth: string | null = null;
@@ -123,6 +144,10 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
 
   private visibilityObserver?: IntersectionObserver;
   private adViewObserver?: IntersectionObserver;
+  private rotationVisibilityObserver?: IntersectionObserver;
+  private rotationTimer?: ReturnType<typeof setInterval>;
+  private rotationIntervalMs = 30000;
+  private isHostVisible = true;
   private hasStartedLoading = false;
   private readonly observedAdElements = new WeakSet<HTMLElement>();
   private readonly visibleAdElements = new WeakSet<HTMLElement>();
@@ -143,6 +168,18 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.visibilityObserver?.disconnect();
     this.adViewObserver?.disconnect();
+    this.rotationVisibilityObserver?.disconnect();
+    this.stopRotation();
+  }
+
+  @HostListener('document:visibilitychange')
+  onDocumentVisibilityChange(): void {
+    if (document.hidden) {
+      this.stopRotation();
+      return;
+    }
+
+    this.startRotation();
   }
 
   private setupLazyLoading(): void {
@@ -171,6 +208,7 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
   loadAds(fallbackAttempted = false) {
     if (!this.spotTechnicalId) return;
 
+    this.stopRotation();
     this.loading = true;
     this.hasLoaded = false;
 
@@ -188,6 +226,9 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
               : campaign.mediaUrl;
             return !!mediaUrl;
           });
+          this.displayMode = response.displayMode ?? 'Stacked';
+          this.rotationIntervalMs = Math.min(300000, Math.max(5000, response.rotationIntervalMs || 30000));
+          this.currentCampaignIndex = 0;
 
           const dimensions = this.effectiveMobile && response.mobileDimensions
             ? response.mobileDimensions
@@ -207,6 +248,7 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
 
           if (this.campaigns.length > 0) {
             this.hasLoaded = true;
+            this.setupRotationVisibility();
             return;
           }
 
@@ -233,6 +275,58 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
     return this.effectiveMobile && campaign.mobileMediaUrl
       ? campaign.mobileMediaUrl
       : campaign.mediaUrl;
+  }
+
+  get displayedCampaigns(): AdCampaign[] {
+    if (this.displayMode !== 'Rotation' || this.campaigns.length <= 1) {
+      return this.campaigns;
+    }
+
+    const campaign = this.campaigns[this.currentCampaignIndex];
+    return campaign ? [campaign] : [];
+  }
+
+  private setupRotationVisibility(): void {
+    this.rotationVisibilityObserver?.disconnect();
+
+    if (this.displayMode !== 'Rotation' || this.campaigns.length <= 1) return;
+
+    if (typeof IntersectionObserver === 'undefined') {
+      this.isHostVisible = true;
+      this.startRotation();
+      return;
+    }
+
+    this.isHostVisible = false;
+    this.rotationVisibilityObserver = new IntersectionObserver(entries => {
+      this.isHostVisible = entries.some(entry => entry.isIntersecting && entry.intersectionRatio >= 0.01);
+      if (this.isHostVisible) {
+        this.startRotation();
+      } else {
+        this.stopRotation();
+      }
+    }, { threshold: [0, 0.01] });
+    this.rotationVisibilityObserver.observe(this.host.nativeElement);
+  }
+
+  private startRotation(): void {
+    if (
+      this.rotationTimer ||
+      this.displayMode !== 'Rotation' ||
+      this.campaigns.length <= 1 ||
+      !this.isHostVisible ||
+      (typeof document !== 'undefined' && document.hidden)
+    ) return;
+
+    this.rotationTimer = setInterval(() => {
+      this.currentCampaignIndex = (this.currentCampaignIndex + 1) % this.campaigns.length;
+    }, this.rotationIntervalMs);
+  }
+
+  private stopRotation(): void {
+    if (!this.rotationTimer) return;
+    clearInterval(this.rotationTimer);
+    this.rotationTimer = undefined;
   }
 
   get imagePreset(): 'card' | 'hero' {

@@ -24,6 +24,11 @@ public class AnalyticsController : ControllerBase
     ];
     private static readonly string[] AgencyLeadTypes =
         ["agency_contact_phone", "agency_contact_whatsapp", "agency_contact_email", "agency_contact_website"];
+    private static readonly string[] IndexContactTypes =
+    [
+        "index_teacher_contact_phone", "index_teacher_contact_whatsapp", "index_teacher_contact_email", "index_teacher_contact_website",
+        "index_professional_contact_phone", "index_professional_contact_whatsapp", "index_professional_contact_email", "index_professional_contact_website"
+    ];
 
     private readonly AkordishKeitDbContext _context;
     private readonly IMemoryCache _cache;
@@ -612,6 +617,84 @@ public class AnalyticsController : ControllerBase
             },
             byAgency,
             topDetails
+        });
+    }
+
+    [HttpGet("index-profiles")]
+    public async Task<IActionResult> GetIndexProfileAnalytics([FromQuery] DateTime? dateFrom, [FromQuery] DateTime? dateTo)
+    {
+        var rangeResult = ResolveRange(dateFrom, dateTo);
+        if (rangeResult.Error != null) return BadRequest(new { message = rangeResult.Error });
+        var range = rangeResult.Range!;
+
+        var profiles = await _context.ServiceProviders.AsNoTracking()
+            .Where(p => !p.IsDeleted)
+            .Select(p => new { p.Id, p.DisplayName, p.IsTeacher })
+            .ToListAsync();
+
+        var pageViews = await _context.ButtonClicks.AsNoTracking()
+            .Where(c => (c.ButtonType == "page_view" || c.ButtonType.StartsWith("page_view_")) &&
+                        c.ClickedAt >= range.StartUtc && c.ClickedAt < range.EndUtc &&
+                        c.ItemLabel != null &&
+                        (c.ItemLabel.StartsWith("/teacher/") || c.ItemLabel.StartsWith("/professional/")))
+            .ToListAsync();
+
+        var contacts = await _context.ButtonClicks.AsNoTracking()
+            .Where(c => (c.ButtonType == "contact" || IndexContactTypes.Contains(c.ButtonType)) &&
+                        c.ClickedAt >= range.StartUtc && c.ClickedAt < range.EndUtc &&
+                        c.ItemId != null)
+            .ToListAsync();
+
+        var rows = profiles.Select(profile =>
+        {
+            var profileType = profile.IsTeacher ? "teacher" : "professional";
+            var route = $"/{profileType}/{profile.Id}";
+            var profileViews = pageViews.Where(v => string.Equals(v.ItemLabel?.TrimEnd('/'), route, StringComparison.OrdinalIgnoreCase)).ToList();
+            var expectedLabel = $"{profileType}|{profile.DisplayName}";
+            var contactOpens = contacts.Where(c =>
+                c.ButtonType == "contact" &&
+                c.ItemId == profile.Id &&
+                (string.Equals(c.ItemLabel, profile.DisplayName, StringComparison.Ordinal) ||
+                 string.Equals(c.ItemLabel, expectedLabel, StringComparison.Ordinal))).ToList();
+            var profileContactPrefix = $"index_{profileType}_contact_";
+            var contactClicks = contacts.Where(c => c.ItemId == profile.Id && c.ButtonType.StartsWith(profileContactPrefix, StringComparison.Ordinal)).ToList();
+            var views = profileViews.Count;
+            var leads = contactClicks.Count;
+
+            return new
+            {
+                profileId = profile.Id,
+                profileName = profile.DisplayName,
+                profileType,
+                route,
+                views,
+                uniqueVisitors = CountUnique(profileViews),
+                contactOpens = contactOpens.Count,
+                contactClicks = leads,
+                phoneClicks = contactClicks.Count(c => c.ButtonType.EndsWith("_phone", StringComparison.Ordinal)),
+                whatsappClicks = contactClicks.Count(c => c.ButtonType.EndsWith("_whatsapp", StringComparison.Ordinal)),
+                emailClicks = contactClicks.Count(c => c.ButtonType.EndsWith("_email", StringComparison.Ordinal)),
+                websiteClicks = contactClicks.Count(c => c.ButtonType.EndsWith("_website", StringComparison.Ordinal)),
+                conversionRate = views > 0 ? Math.Round((double)leads / views * 100, 1) : 0
+            };
+        }).OrderByDescending(x => x.views).ThenByDescending(x => x.contactClicks).ToList();
+
+        var allProfileContacts = contacts.Where(c => IndexContactTypes.Contains(c.ButtonType)).ToList();
+        return Ok(new
+        {
+            period = new { dateFrom = range.FromLocal, dateTo = range.ToLocal },
+            totals = new
+            {
+                pageViews = pageViews.Count,
+                uniqueVisitors = CountUnique(pageViews),
+                contactOpens = rows.Sum(x => x.contactOpens),
+                contactClicks = allProfileContacts.Count,
+                phoneClicks = allProfileContacts.Count(c => c.ButtonType.EndsWith("_phone", StringComparison.Ordinal)),
+                whatsappClicks = allProfileContacts.Count(c => c.ButtonType.EndsWith("_whatsapp", StringComparison.Ordinal)),
+                emailClicks = allProfileContacts.Count(c => c.ButtonType.EndsWith("_email", StringComparison.Ordinal)),
+                websiteClicks = allProfileContacts.Count(c => c.ButtonType.EndsWith("_website", StringComparison.Ordinal))
+            },
+            profiles = rows
         });
     }
 

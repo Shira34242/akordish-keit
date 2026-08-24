@@ -1,7 +1,7 @@
-import { Component, EventEmitter, Input, Output, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, Output, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { AdSpot, CreateAdSpotRequest, UpdateAdSpotRequest } from '../../../../models/admin/advertisement.model';
+import { AdSpot, AdSpotDisplayMode, CreateAdSpotRequest, UpdateAdSpotRequest } from '../../../../models/admin/advertisement.model';
 
 @Component({
   selector: 'app-ad-spot-form',
@@ -19,6 +19,7 @@ export class AdSpotFormComponent implements OnInit, OnChanges {
 
   adSpotForm!: FormGroup;
   isEditMode = false;
+  readonly displayModes = AdSpotDisplayMode;
 
   constructor(private fb: FormBuilder) {}
 
@@ -41,7 +42,8 @@ export class AdSpotFormComponent implements OnInit, OnChanges {
       technicalId: [this.adSpot?.technicalId || '', [Validators.required, Validators.maxLength(100)]],
       dimensions: [this.adSpot?.dimensions || '', Validators.maxLength(50)],
       mobileDimensions: [this.adSpot?.mobileDimensions || '', Validators.maxLength(50)],
-      rotationIntervalMs: [this.adSpot?.rotationIntervalMs || 30000, [Validators.required, Validators.min(1000)]],
+      displayMode: [this.adSpot?.displayMode || AdSpotDisplayMode.Stacked, Validators.required],
+      rotationIntervalSeconds: [(this.adSpot?.rotationIntervalMs || 30000) / 1000, [Validators.required, Validators.min(5), Validators.max(300)]],
       description: [this.adSpot?.description || '', Validators.maxLength(1000)],
       isActive: [this.adSpot?.isActive ?? true]
     });
@@ -49,12 +51,21 @@ export class AdSpotFormComponent implements OnInit, OnChanges {
 
   onSubmit() {
     if (this.adSpotForm.valid) {
-      this.save.emit(this.adSpotForm.value);
+      const { rotationIntervalSeconds, ...formValue } = this.adSpotForm.getRawValue();
+      this.save.emit({
+        ...formValue,
+        rotationIntervalMs: Math.round(Number(rotationIntervalSeconds) * 1000)
+      });
     }
   }
 
   onCancel() {
     this.cancel.emit();
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.show && !this.saving) this.onCancel();
   }
 
   get f() {

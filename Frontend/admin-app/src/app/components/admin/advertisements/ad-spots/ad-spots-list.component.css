@@ -38,7 +38,8 @@
 .grid-card-sub { font-family: 'Open Sans', sans-serif; font-size: var(--font-xs); font-weight: 300; color: rgba(0,0,0,0.6); line-height: var(--lh-small); }
 .grid-card-badges, .grid-card-actions, .grid-card-meta { display: flex; align-items: center; gap: var(--space-sm); flex-wrap: wrap; }
 .grid-card-meta { margin-top: auto; font-family: 'Open Sans', sans-serif; font-size: var(--font-xs); font-weight: 300; color: #404040; }
-.empty-grid-state { padding: var(--space-3xl) var(--space-lg); text-align: center; font-family: 'Open Sans', sans-serif; font-size: var(--font-base); font-weight: 300; color: #000000; }
+.empty-grid-state { display: flex; flex-direction: column; align-items: center; gap: var(--space-base); padding: var(--space-3xl) var(--space-lg); text-align: center; font-family: 'Open Sans', sans-serif; font-size: var(--font-base); font-weight: 300; color: #000000; }
+.empty-grid-state .btn-new-spot { width: auto; }
 
 .table-container { overflow-x: auto; border-right: 1px solid #f0f0f0; border-left: 1px solid #f0f0f0; }
 .ad-spots-table { width: 100%; border-collapse: collapse; font-size: var(--font-sm); font-weight: 300; }
@@ -60,7 +61,8 @@
 .technical-id { font-family: monospace; font-size: var(--font-xs); background: #F2F2F2; padding: 2px 8px; border-radius: 6px; color: #000000; }
 
 /* Status & availability badges */
-.status-badge, .availability-badge, .badge { display: inline-block; padding: 3px 12px; border-radius: 999px; font-family: 'Open Sans', sans-serif; font-size: var(--font-xs); font-weight: 800; }
+.status-badge, .availability-badge, .display-mode-badge, .badge { display: inline-block; padding: 3px 12px; border-radius: 999px; font-family: 'Open Sans', sans-serif; font-size: var(--font-xs); font-weight: 800; }
+.display-mode-badge { background: #ffffff; color: #000000; border: 1px solid #000000; }
 .status-badge.active, .badge-success { background: #ddff53; color: #000000; }
 .status-badge.inactive, .badge-secondary { background: #F2F2F2; color: #000000; }
 .availability-badge.available,

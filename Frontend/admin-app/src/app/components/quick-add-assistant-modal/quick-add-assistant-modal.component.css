@@ -462,6 +462,39 @@
   min-height: 88px;
 }
 
+.song-submission-note {
+  margin: 0;
+  padding: var(--space-base);
+  border-radius: 18px;
+  background: #ffffff;
+  color: #404040;
+  font-size: var(--font-sm);
+  line-height: var(--lh-body);
+}
+
+.song-raw-textarea {
+  min-height: 260px;
+  resize: vertical;
+  unicode-bidi: plaintext;
+  text-align: start;
+  white-space: pre;
+  overflow: auto;
+}
+
+.song-submission-helper {
+  color: #404040;
+  font-size: var(--font-xs);
+  line-height: var(--lh-small);
+}
+
+.song-artist-result {
+  width: 100%;
+  border: 0;
+  background: #ffffff;
+  text-align: right;
+  font-family: 'Open Sans', sans-serif;
+}
+
 .smart-media-grid {
   display: grid;
   grid-template-columns: 1fr;

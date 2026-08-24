@@ -4,10 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ArticleRank } from '../../../../services/article-feedback.service';
 import { AgencyAnalyticsSummary, AgencyService } from '../../../../services/agency.service';
-import { AnalyticsDashboard, AnalyticsService } from '../../../../services/analytics.service';
+import { AnalyticsDashboard, AnalyticsService, IndexProfileAnalyticsSummary } from '../../../../services/analytics.service';
 import { getArticleLink } from '../../../../utils/article-route.utils';
 
-type Tab = 'overview' | 'traffic' | 'articles' | 'chords' | 'events' | 'podcasts' | 'buttons' | 'ads' | 'adblock' | 'agencies';
+type Tab = 'overview' | 'traffic' | 'articles' | 'chords' | 'events' | 'podcasts' | 'buttons' | 'ads' | 'adblock' | 'agencies' | 'index';
 type Preset = 'today' | 'yesterday' | '7' | '30' | '90' | '365' | 'ytd' | 'all';
 
 @Component({
@@ -32,12 +32,16 @@ export class ContentStatsComponent implements OnInit {
   sortBy: 'views' | 'likes' | 'feedback' = 'views';
   dashboard: AnalyticsDashboard | null = null;
   agencySummary: AgencyAnalyticsSummary | null = null;
+  indexSummary: IndexProfileAnalyticsSummary | null = null;
+  indexSearch = '';
+  indexProfileTypeFilter: 'all' | 'teacher' | 'professional' = 'all';
   dateFrom = '';
   dateTo = '';
   activePreset: Preset | '' = '30';
   loading = true;
   articleLoading = true;
   agencyLoading = false;
+  indexLoading = false;
   error = false;
 
   readonly tabs: { key: Tab; label: string; icon: string }[] = [
@@ -49,6 +53,7 @@ export class ContentStatsComponent implements OnInit {
     { key: 'podcasts', label: 'פודקאסטים', icon: 'podcasts' },
     { key: 'buttons', label: 'פעולות', icon: 'touch_app' },
     { key: 'ads', label: 'פרסום', icon: 'campaign' },
+    { key: 'index', label: 'אינדקס', icon: 'badge' },
     { key: 'agencies', label: 'סוכנויות', icon: 'business' },
     { key: 'adblock', label: 'AdBlock', icon: 'shield' }
   ];
@@ -111,6 +116,7 @@ export class ContentStatsComponent implements OnInit {
     this.activeTab = tab;
     this.router.navigate([], { relativeTo: this.route, queryParams: { tab }, queryParamsHandling: 'merge' });
     if (tab === 'agencies') this.loadAgencyAnalytics();
+    if (tab === 'index') this.loadIndexAnalytics();
   }
 
   setMetric(metric: 'all' | 'pages' | 'articles' | 'chords' | 'events' | 'podcasts' | 'clicks'): void {
@@ -128,6 +134,14 @@ export class ContentStatsComponent implements OnInit {
     });
   }
 
+  get filteredIndexProfiles(): IndexProfileAnalyticsSummary['profiles'] {
+    const query = this.indexSearch.trim().toLocaleLowerCase();
+    return (this.indexSummary?.profiles ?? []).filter(profile =>
+      (this.indexProfileTypeFilter === 'all' || profile.profileType === this.indexProfileTypeFilter) &&
+      (!query || profile.profileName.toLocaleLowerCase().includes(query))
+    );
+  }
+
   loadAll(): void {
     this.loading = true;
     this.error = false;
@@ -137,6 +151,7 @@ export class ContentStatsComponent implements OnInit {
       error: () => { this.loading = false; this.error = true; }
     });
     if (this.activeTab === 'agencies') this.loadAgencyAnalytics();
+    if (this.activeTab === 'index') this.loadIndexAnalytics();
   }
 
   loadArticles(): void {
@@ -152,6 +167,14 @@ export class ContentStatsComponent implements OnInit {
     this.agencyService.getAnalytics(this.dateFrom, this.dateTo).subscribe({
       next: data => { this.agencySummary = data; this.agencyLoading = false; },
       error: () => { this.agencySummary = null; this.agencyLoading = false; }
+    });
+  }
+
+  loadIndexAnalytics(): void {
+    this.indexLoading = true;
+    this.analytics.getIndexProfiles(this.dateFrom, this.dateTo).subscribe({
+      next: data => { this.indexSummary = data; this.indexLoading = false; },
+      error: () => { this.indexSummary = null; this.indexLoading = false; }
     });
   }
 

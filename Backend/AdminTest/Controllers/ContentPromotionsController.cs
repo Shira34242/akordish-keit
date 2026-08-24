@@ -4,6 +4,7 @@ using AkordishKeit.Models.Enum;
 using AkordishKeit.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace AkordishKeit.Controllers;
 
@@ -13,10 +14,12 @@ namespace AkordishKeit.Controllers;
 public class ContentPromotionsController : ControllerBase
 {
     private readonly IContentPromotionService _promotionService;
+    private readonly IMemoryCache _cache;
 
-    public ContentPromotionsController(IContentPromotionService promotionService)
+    public ContentPromotionsController(IContentPromotionService promotionService, IMemoryCache cache)
     {
         _promotionService = promotionService;
+        _cache = cache;
     }
 
     [HttpGet]
@@ -33,7 +36,9 @@ public class ContentPromotionsController : ControllerBase
     {
         try
         {
-            return await _promotionService.UpsertPromotionAsync(dto, GetAdminName());
+            var promotion = await _promotionService.UpsertPromotionAsync(dto, GetAdminName());
+            InvalidatePodcastPromotionCaches(dto.TargetType);
+            return promotion;
         }
         catch (InvalidOperationException ex)
         {
@@ -46,7 +51,9 @@ public class ContentPromotionsController : ControllerBase
     {
         try
         {
-            return await _promotionService.BulkUpsertPromotionAsync(dto, GetAdminName());
+            var promotions = await _promotionService.BulkUpsertPromotionAsync(dto, GetAdminName());
+            InvalidatePodcastPromotionCaches(dto.TargetType);
+            return promotions;
         }
         catch (InvalidOperationException ex)
         {
@@ -61,7 +68,20 @@ public class ContentPromotionsController : ControllerBase
         ContentPromotionPlacement placement)
     {
         var changed = await _promotionService.DeactivatePromotionAsync(targetType, targetId, placement, GetAdminName());
+        if (changed)
+            InvalidatePodcastPromotionCaches(targetType);
         return changed ? NoContent() : NotFound();
+    }
+
+    private void InvalidatePodcastPromotionCaches(ContentPromotionTargetType targetType)
+    {
+        if (targetType is not (ContentPromotionTargetType.Podcast or ContentPromotionTargetType.PodcastEpisode))
+            return;
+
+        for (var limit = 1; limit <= 12; limit++)
+            _cache.Remove($"home_podcast_cards_v2_{limit}");
+
+        _cache.Remove("home_popular_episode_banners_v2");
     }
 
     private string? GetAdminName()

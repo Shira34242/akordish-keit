@@ -14,6 +14,11 @@ export enum AdSpotAvailability {
   Scheduled = 'Scheduled'
 }
 
+export enum AdSpotDisplayMode {
+  Stacked = 'Stacked',
+  Rotation = 'Rotation'
+}
+
 // =============== Client Models ===============
 
 export interface Client {
@@ -57,6 +62,7 @@ export interface AdSpot {
   dimensions: string;
   mobileDimensions?: string;
   isActive: boolean;
+  displayMode: AdSpotDisplayMode;
   rotationIntervalMs: number;
   description?: string;
   createdAt: Date;
@@ -72,6 +78,7 @@ export interface CreateAdSpotRequest {
   technicalId: string;
   dimensions: string;
   mobileDimensions?: string;
+  displayMode: AdSpotDisplayMode;
   rotationIntervalMs: number;
   description?: string;
 }
@@ -82,6 +89,7 @@ export interface UpdateAdSpotRequest {
   dimensions: string;
   mobileDimensions?: string;
   isActive: boolean;
+  displayMode: AdSpotDisplayMode;
   rotationIntervalMs: number;
   description?: string;
 }

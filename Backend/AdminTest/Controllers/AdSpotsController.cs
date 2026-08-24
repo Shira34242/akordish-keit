@@ -50,6 +50,7 @@ namespace AkordishKeit.Controllers
                     Dimensions = spot.Dimensions,
                     MobileDimensions = spot.MobileDimensions,
                     IsActive = spot.IsActive,
+                    DisplayMode = spot.DisplayMode,
                     RotationIntervalMs = spot.RotationIntervalMs,
                     Description = spot.Description,
                     CreatedAt = spot.CreatedAt,
@@ -88,6 +89,7 @@ namespace AkordishKeit.Controllers
                     Dimensions = spot.Dimensions,
                     MobileDimensions = spot.MobileDimensions,
                     IsActive = spot.IsActive,
+                    DisplayMode = spot.DisplayMode,
                     RotationIntervalMs = spot.RotationIntervalMs,
                     Description = spot.Description,
                     CreatedAt = spot.CreatedAt,
@@ -123,12 +125,24 @@ namespace AkordishKeit.Controllers
                 return BadRequest(new { message = "Technical ID already exists" });
             }
 
+            if (!Enum.IsDefined(dto.DisplayMode))
+            {
+                return BadRequest(new { message = "Invalid ad spot display mode" });
+            }
+
+            if (dto.DisplayMode == AdSpotDisplayMode.Rotation &&
+                (dto.RotationIntervalMs < 5000 || dto.RotationIntervalMs > 300000))
+            {
+                return BadRequest(new { message = "Rotation interval must be between 5 and 300 seconds" });
+            }
+
             var adSpot = new AdSpot
             {
                 Name = dto.Name,
                 TechnicalId = dto.TechnicalId,
                 Dimensions = dto.Dimensions,
                 MobileDimensions = dto.MobileDimensions,
+                DisplayMode = dto.DisplayMode,
                 RotationIntervalMs = dto.RotationIntervalMs,
                 Description = dto.Description,
                 IsActive = true,
@@ -146,6 +160,7 @@ namespace AkordishKeit.Controllers
                 Dimensions = adSpot.Dimensions,
                 MobileDimensions = adSpot.MobileDimensions,
                 IsActive = adSpot.IsActive,
+                DisplayMode = adSpot.DisplayMode,
                 RotationIntervalMs = adSpot.RotationIntervalMs,
                 Description = adSpot.Description,
                 CreatedAt = adSpot.CreatedAt,
@@ -175,11 +190,26 @@ namespace AkordishKeit.Controllers
                 return BadRequest(new { message = "Technical ID already exists" });
             }
 
+            if (dto.DisplayMode.HasValue && !Enum.IsDefined(dto.DisplayMode.Value))
+            {
+                return BadRequest(new { message = "Invalid ad spot display mode" });
+            }
+
+            if (dto.DisplayMode == AdSpotDisplayMode.Rotation &&
+                (dto.RotationIntervalMs < 5000 || dto.RotationIntervalMs > 300000))
+            {
+                return BadRequest(new { message = "Rotation interval must be between 5 and 300 seconds" });
+            }
+
             adSpot.Name = dto.Name;
             adSpot.TechnicalId = dto.TechnicalId;
             adSpot.Dimensions = dto.Dimensions;
             adSpot.MobileDimensions = dto.MobileDimensions;
             adSpot.IsActive = dto.IsActive;
+            if (dto.DisplayMode.HasValue)
+            {
+                adSpot.DisplayMode = dto.DisplayMode.Value;
+            }
             adSpot.RotationIntervalMs = dto.RotationIntervalMs;
             adSpot.Description = dto.Description;
             adSpot.UpdatedAt = DateTime.UtcNow;

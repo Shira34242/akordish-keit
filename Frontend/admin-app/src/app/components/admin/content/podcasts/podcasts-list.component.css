@@ -405,6 +405,13 @@
   justify-content: space-between;
 }
 
+.badge-stack {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
 .badge {
   display: inline-flex;
   align-items: center;
@@ -419,6 +426,18 @@
 .badge.inactive {
   background: #ffffff;
   color: #404040;
+}
+
+.promotion-badge {
+  width: fit-content;
+  gap: var(--space-xs);
+  background: #000000;
+  color: #ddff53;
+}
+
+.promotion-badge .material-icons {
+  color: inherit;
+  font-size: 18px;
 }
 
 .icon-btn {

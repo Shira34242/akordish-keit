@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, Output, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Client, CreateClientRequest, UpdateClientRequest } from '../../../../models/admin/advertisement.model';
@@ -55,6 +55,11 @@ export class ClientFormComponent implements OnInit, OnChanges {
 
   onCancel() {
     this.cancel.emit();
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.show && !this.saving) this.onCancel();
   }
 
   get f() {

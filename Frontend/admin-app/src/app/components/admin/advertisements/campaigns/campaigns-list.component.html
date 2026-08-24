@@ -12,7 +12,9 @@
     <div class="tabs">
       <button
         class="tab"
+        type="button"
         [class.active]="activeTab === 'campaigns'"
+        [attr.aria-current]="activeTab === 'campaigns' ? 'page' : null"
         (click)="switchTab('campaigns')">
         קמפיינים
       </button>
@@ -42,7 +44,8 @@
         placeholder="חיפוש..."
         [(ngModel)]="searchTerm"
         (input)="onSearch()"
-        class="search-input">
+        class="search-input"
+        aria-label="חיפוש קמפיינים">
     </div>
         <button class="btn-new-campaign" (click)="createNewCampaign()">
       <span class="material-icons">add</span>
@@ -54,10 +57,10 @@
   <div class="list-controls" *ngIf="!loading">
     <span class="results-info">{{ totalCount }} קמפיינים</span>
     <div class="view-controls">
-      <button class="view-btn" [class.active]="viewMode === 'list'" (click)="setView('list')" title="רשימה">
+      <button class="view-btn" type="button" [class.active]="viewMode === 'list'" [attr.aria-pressed]="viewMode === 'list'" (click)="setView('list')" aria-label="תצוגת רשימה">
         <span class="material-icons">view_list</span>
       </button>
-      <button class="view-btn" [class.active]="viewMode === 'grid'" (click)="setView('grid')" title="גריד">
+      <button class="view-btn" type="button" [class.active]="viewMode === 'grid'" [attr.aria-pressed]="viewMode === 'grid'" (click)="setView('grid')" aria-label="תצוגת כרטיסים">
         <span class="material-icons">grid_view</span>
       </button>
     </div>
@@ -67,7 +70,8 @@
   <div class="data-grid" *ngIf="!loading && filteredCampaigns.length > 0 && viewMode === 'grid'">
     <div class="grid-card" *ngFor="let campaign of filteredCampaigns">
       <div class="grid-card-avatar">
-        <img *ngIf="campaign.mediaUrl" [src]="campaign.mediaUrl" [alt]="campaign.name">
+        <img *ngIf="campaign.mediaUrl && getMediaType(campaign.mediaUrl) === 'image'" [src]="campaign.mediaUrl" [alt]="campaign.name">
+        <video *ngIf="campaign.mediaUrl && getMediaType(campaign.mediaUrl) === 'video'" [src]="campaign.mediaUrl" muted preload="metadata" aria-hidden="true"></video>
         <span *ngIf="!campaign.mediaUrl" class="material-icons" style="font-size:28px">campaign</span>
       </div>
       <div class="grid-card-name">{{ campaign.name }}</div>
@@ -81,11 +85,34 @@
         <span><strong>ביצועים:</strong> {{ campaign.viewCount | number }} צפיות · {{ campaign.clickCount | number }} קליקים · {{ campaign.clickThroughRate | number:'1.2-2' }}% CTR</span>
       </div>
       <div class="grid-card-actions">
-        <button class="btn-action" (click)="editCampaign(campaign)" title="עריכה"><span class="material-icons">edit</span></button>
-        <button class="btn-action btn-delete" (click)="deleteCampaign(campaign)" title="מחיקה"><span class="material-icons">delete</span></button>
+        <button class="btn-action" type="button" (click)="editCampaign(campaign)" [attr.aria-label]="'עריכת הקמפיין ' + campaign.name"><span class="material-icons">edit</span></button>
+        <button class="btn-action btn-delete" type="button" (click)="deleteCampaign(campaign)" [attr.aria-label]="'מחיקת הקמפיין ' + campaign.name"><span class="material-icons">delete</span></button>
       </div>
     </div>
   </div>
+
+  <section class="summary-grid" *ngIf="campaignStats as stats" aria-label="סיכום מערכת הפרסום">
+    <article class="summary-card">
+      <span>כל הקמפיינים</span>
+      <strong>{{ stats.totalCampaigns | number }}</strong>
+      <small>כולל טיוטות וארכיון</small>
+    </article>
+    <article class="summary-card highlight">
+      <span>פעילים עכשיו</span>
+      <strong>{{ stats.activeCampaigns | number }}</strong>
+      <small>בתוך תקופת הפרסום</small>
+    </article>
+    <article class="summary-card">
+      <span>צפיות</span>
+      <strong>{{ stats.totalViews | number }}</strong>
+      <small>{{ stats.totalClicks | number }} קליקים</small>
+    </article>
+    <article class="summary-card">
+      <span>CTR ממוצע</span>
+      <strong>{{ stats.averageClickThroughRate | number:'1.2-2' }}%</strong>
+      <small>בכל הקמפיינים</small>
+    </article>
+  </section>
 
   <div *ngIf="!loading && filteredCampaigns.length === 0 && viewMode === 'grid'" class="empty-grid-state">
     <span>לא נמצאו קמפיינים</span>
@@ -127,7 +154,8 @@
           <!-- Media -->
           <td class="media-cell">
             <div class="media-preview" *ngIf="campaign.mediaUrl">
-              <img [src]="campaign.mediaUrl" [alt]="campaign.name">
+              <img *ngIf="getMediaType(campaign.mediaUrl) === 'image'" [src]="campaign.mediaUrl" [alt]="campaign.name">
+              <video *ngIf="getMediaType(campaign.mediaUrl) === 'video'" [src]="campaign.mediaUrl" muted preload="metadata" aria-hidden="true"></video>
             </div>
             <div class="media-placeholder" *ngIf="!campaign.mediaUrl">
               <span class="material-icons">image</span>
@@ -185,10 +213,10 @@
 
           <!-- Actions -->
           <td class="actions-cell">
-            <button class="btn-action btn-edit" (click)="editCampaign(campaign)" title="ערוך">
+            <button class="btn-action btn-edit" type="button" (click)="editCampaign(campaign)" [attr.aria-label]="'עריכת הקמפיין ' + campaign.name">
               <span class="material-icons">edit</span>
             </button>
-            <button class="btn-action btn-delete" (click)="deleteCampaign(campaign)" title="מחק">
+            <button class="btn-action btn-delete" type="button" (click)="deleteCampaign(campaign)" [attr.aria-label]="'מחיקת הקמפיין ' + campaign.name">
               <span class="material-icons">delete</span>
             </button>
           </td>
@@ -221,6 +249,8 @@
 <app-campaign-form
   [show]="showCampaignForm"
   [campaign]="selectedCampaign"
+  [initialClientId]="initialClientId"
+  [initialAdSpotId]="initialAdSpotId"
   [saving]="saving"
   (save)="onSaveCampaign($event)"
   (cancel)="onCancelCampaignForm()">

@@ -71,6 +71,35 @@ export interface AnalyticsDashboard {
   };
 }
 
+export interface IndexProfileAnalyticsSummary {
+  period: { dateFrom: string; dateTo: string };
+  totals: {
+    pageViews: number;
+    uniqueVisitors: number;
+    contactOpens: number;
+    contactClicks: number;
+    phoneClicks: number;
+    whatsappClicks: number;
+    emailClicks: number;
+    websiteClicks: number;
+  };
+  profiles: {
+    profileId: number;
+    profileName: string;
+    profileType: 'teacher' | 'professional';
+    route: string;
+    views: number;
+    uniqueVisitors: number;
+    contactOpens: number;
+    contactClicks: number;
+    phoneClicks: number;
+    whatsappClicks: number;
+    emailClicks: number;
+    websiteClicks: number;
+    conversionRate: number;
+  }[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class AnalyticsService {
   private readonly http = inject(HttpClient);
@@ -113,6 +142,13 @@ export class AnalyticsService {
     return this.http.get<ArticleRank[]>(`${this.base}/articles`, {
       params: { dateFrom, dateTo, sortBy, limit: String(limit) }
     });
+  }
+
+  getIndexProfiles(dateFrom?: string, dateTo?: string): Observable<IndexProfileAnalyticsSummary> {
+    const params: Record<string, string> = {};
+    if (dateFrom) params['dateFrom'] = dateFrom;
+    if (dateTo) params['dateTo'] = dateTo;
+    return this.http.get<IndexProfileAnalyticsSummary>(`${this.base}/index-profiles`, { params });
   }
 
   /** Keeps the admin usable while the live API and frontend are deployed at different times. */

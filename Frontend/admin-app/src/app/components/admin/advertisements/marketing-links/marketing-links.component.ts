@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import {
@@ -41,6 +41,15 @@ export class MarketingLinksComponent implements OnInit {
   formOpen = false;
   editingCampaign: MarketingCampaignSummary | null = null;
   deleteCandidate: MarketingCampaignSummary | null = null;
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.deleteCandidate && !this.deleting) {
+      this.deleteCandidate = null;
+      return;
+    }
+    if (this.formOpen && !this.saving) this.closeForm();
+  }
   campaignName = '';
   source = '';
   targetPath = '/';

@@ -2,10 +2,11 @@
 
   <div class="top-scroll-mask"></div>
 
-  <div class="hero-bg" #heroBg>
-    <img class="hero-bg-image" src="/artist-composer-creating-new-song-his-electro-guitar-studio.png" alt="" aria-hidden="true" loading="eager" decoding="async" fetchpriority="high">
-    <div class="hero-collapse-overlay"></div>
-  </div>
+  <div class="hero-bg">
+    <div class="hero-bg-visual" #heroBg>
+      <img class="hero-bg-image" src="/artist-composer-creating-new-song-his-electro-guitar-studio.png" alt="" aria-hidden="true" loading="eager" decoding="async" fetchpriority="high">
+      <div class="hero-collapse-overlay"></div>
+    </div>
 
   <section class="hero-content-area">
     <div class="hero-content">
@@ -43,6 +44,7 @@
       </div>
     </div>
   </section>
+  </div>
 
   <div class="banners-area" *ngIf="!searchTerm && sortBy === 'smart'">
 
@@ -74,7 +76,6 @@
 
   <!-- פרסומת ראשונה — בין שורות האמנים לרשת הכללית -->
   <div class="content-slot artists-content-slot">
-    <span class="content-slot__label">פרסומת</span>
     <app-media-item spotTechnicalId="artists-list-top-banner"></app-media-item>
   </div>
 
@@ -105,7 +106,6 @@
 
     <!-- פרסומת שנייה -->
     <div class="content-slot artists-content-slot" *ngIf="!loadingAll && allArtists.length > 0">
-      <span class="content-slot__label">פרסומת</span>
       <app-media-item spotTechnicalId="artists-list-bottom-banner"></app-media-item>
     </div>
 

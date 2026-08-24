@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AuthService } from '../../services/auth.service';
+import { AuthService, UpdateSoftProfilePayload } from '../../services/auth.service';
 import { CitiesService, City } from '../../services/cities.service';
 import { SystemItem, SystemTablesService } from '../../services/system-tables.service';
 export { UserType } from './user-type.enum';
@@ -168,13 +168,7 @@ export class AdditionalDetailsModalComponent {
   }
 
   get canContinueProfileDetails(): boolean {
-    return !this.loading && !!(
-      this.phone.trim()
-      && this.cityId
-      && this.address.trim()
-      && this.birthMonth
-      && this.birthYear
-    );
+    return !this.loading;
   }
 
   onCityInput(): void {
@@ -202,14 +196,20 @@ export class AdditionalDetailsModalComponent {
       return;
     }
 
+    const payload: UpdateSoftProfilePayload = {};
+    if (this.phone.trim()) payload.phone = this.phone.trim();
+    if (this.cityId) payload.cityId = this.cityId;
+    if (this.address.trim()) payload.address = this.address.trim();
+    if (this.birthMonth) payload.birthMonth = this.birthMonth;
+    if (this.birthYear) payload.birthYear = this.birthYear;
+
+    if (Object.keys(payload).length === 0) {
+      this.currentStep = 'userType';
+      return;
+    }
+
     this.loading = true;
-    this.authService.updateSoftProfile({
-      phone: this.phone.trim(),
-      cityId: this.cityId,
-      address: this.address.trim(),
-      birthMonth: this.birthMonth,
-      birthYear: this.birthYear
-    }).subscribe({
+    this.authService.updateSoftProfile(payload).subscribe({
       next: () => {
         this.loading = false;
         this.currentStep = 'userType';

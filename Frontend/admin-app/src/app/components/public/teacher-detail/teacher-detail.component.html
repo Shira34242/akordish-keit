@@ -64,7 +64,8 @@
            [href]="teacher.websiteUrl"
            target="_blank"
            rel="noopener"
-           class="hero-website-link">
+           class="hero-website-link"
+           (click)="trackProfileContact('website')">
           {{ getShortUrl(teacher.websiteUrl) }}
         </a>
       </div>
@@ -102,21 +103,21 @@
               <span>{{ getShortUrl(agencyBadge!.websiteUrl!) }}</span>
             </a>
             <div *ngIf="showDirectContact && showAgencyContact" class="contact-group-label">יצירת קשר ישירה</div>
-            <a *ngIf="showDirectContact && teacher.phoneNumber" [href]="'tel:' + teacher.phoneNumber" class="contact-item">
+            <a *ngIf="showDirectContact && teacher.phoneNumber" [href]="'tel:' + teacher.phoneNumber" class="contact-item" (click)="trackProfileContact('phone')">
               <span class="material-icons">phone</span>
               <span>{{ teacher.phoneNumber }}</span>
             </a>
-            <a *ngIf="showDirectContact && teacher.whatsAppNumber" [href]="getWhatsAppUrl(teacher.whatsAppNumber)" target="_blank" rel="noopener" class="contact-item">
+            <a *ngIf="showDirectContact && teacher.whatsAppNumber" [href]="getWhatsAppUrl(teacher.whatsAppNumber)" target="_blank" rel="noopener" class="contact-item" (click)="trackProfileContact('whatsapp')">
               <svg class="contact-whatsapp-icon" viewBox="0 0 512 512" aria-hidden="true">
                 <path clip-rule="evenodd" d="m256 10c135.862 0 246 110.138 246 246s-110.138 246-246 246c-44.828 0-86.852-11.995-123.045-32.945l-114.59 30.704c-1.773.475-3.531.004-4.829-1.294s-1.769-3.056-1.294-4.829l30.704-114.59c-20.949-36.195-32.946-78.218-32.946-123.046 0-135.862 110.138-246 246-246zm130.546 355.614c9.272-9.272 9.272-24.396 0-33.667l-30.953-30.953c-9.272-9.272-24.395-9.272-33.667 0l-10.483 10.483c-8.112 8.112-20.519 9.335-30.059 2.961-15.455-10.326-31.033-23.069-45.894-37.929-14.86-14.86-27.603-30.438-37.929-45.894-6.374-9.539-5.151-21.946 2.961-30.059l10.483-10.483c9.271-9.271 9.272-24.395 0-33.667l-30.953-30.953c-9.271-9.272-24.395-9.272-33.667 0l-4.471 4.47c-57.913 57.913 4.362 145.958 49.282 190.878s132.965 107.195 190.879 49.282z" fill-rule="evenodd"/>
               </svg>
               <span>{{ teacher.whatsAppNumber }}</span>
             </a>
-            <a *ngIf="showDirectContact && teacher.email" [href]="'mailto:' + teacher.email" class="contact-item">
+            <a *ngIf="showDirectContact && teacher.email" [href]="'mailto:' + teacher.email" class="contact-item" (click)="trackProfileContact('email')">
               <span class="material-icons">email</span>
               <span>{{ teacher.email }}</span>
             </a>
-            <a *ngIf="showDirectContact && teacher.websiteUrl" [href]="teacher.websiteUrl" target="_blank" rel="noopener" class="contact-item">
+            <a *ngIf="showDirectContact && teacher.websiteUrl" [href]="teacher.websiteUrl" target="_blank" rel="noopener" class="contact-item" (click)="trackProfileContact('website')">
               <span class="material-icons">language</span>
               <span>{{ getShortUrl(teacher.websiteUrl) }}</span>
             </a>
@@ -132,7 +133,7 @@
            target="_blank"
            rel="noopener"
            class="btn-cta-whatsapp"
-           (click)="showAgencyContact ? trackAgencyContact('whatsapp') : null"
+           (click)="trackQuickWhatsApp()"
            [attr.aria-label]="'teacher.whatsapp_label' | translate">
           <svg viewBox="0 0 512 512" aria-hidden="true">
             <path clip-rule="evenodd" d="m256 10c135.862 0 246 110.138 246 246s-110.138 246-246 246c-44.828 0-86.852-11.995-123.045-32.945l-114.59 30.704c-1.773.475-3.531.004-4.829-1.294s-1.769-3.056-1.294-4.829l30.704-114.59c-20.949-36.195-32.946-78.218-32.946-123.046 0-135.862 110.138-246 246-246zm130.546 355.614c9.272-9.272 9.272-24.396 0-33.667l-30.953-30.953c-9.272-9.272-24.395-9.272-33.667 0l-10.483 10.483c-8.112 8.112-20.519 9.335-30.059 2.961-15.455-10.326-31.033-23.069-45.894-37.929-14.86-14.86-27.603-30.438-37.929-45.894-6.374-9.539-5.151-21.946 2.961-30.059l10.483-10.483c9.271-9.271 9.272-24.395 0-33.667l-30.953-30.953c-9.271-9.272-24.395-9.272-33.667 0l-4.471 4.47c-57.913 57.913 4.362 145.958 49.282 190.878s132.965 107.195 190.879 49.282z" fill-rule="evenodd"/>

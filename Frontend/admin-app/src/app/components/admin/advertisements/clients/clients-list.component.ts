@@ -113,6 +113,12 @@ export class ClientsListComponent implements OnInit {
     this.showClientForm = true;
   }
 
+  createCampaignForClient(client: Client): void {
+    this.router.navigate(['/admin/advertising'], {
+      queryParams: { create: 1, clientId: client.id }
+    });
+  }
+
   onSaveClient(clientData: CreateClientRequest | UpdateClientRequest) {
     this.saving = true;
     if (this.selectedClient) {

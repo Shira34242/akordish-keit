@@ -1,4 +1,5 @@
 using AkordishKeit.Models.Entities;
+using AkordishKeit.Models.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -32,6 +33,10 @@ public class AdSpotConfiguration : IEntityTypeConfiguration<AdSpot>
 
         builder.Property(e => e.IsActive)
                .HasDefaultValue(true);
+
+        builder.Property(e => e.DisplayMode)
+               .HasConversion<int>()
+               .HasDefaultValue(AdSpotDisplayMode.Stacked);
 
         builder.Property(e => e.CreatedAt)
                .HasDefaultValueSql("GETUTCDATE()");

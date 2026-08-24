@@ -1,3 +1,5 @@
+using AkordishKeit.Models.Enums;
+
 namespace AkordishKeit.Models.Entities;
 
 public class AdSpot
@@ -8,6 +10,7 @@ public class AdSpot
     public string Dimensions { get; set; } = string.Empty;
     public string? MobileDimensions { get; set; }
     public bool IsActive { get; set; }
+    public AdSpotDisplayMode DisplayMode { get; set; } = AdSpotDisplayMode.Stacked;
     public int RotationIntervalMs { get; set; } = 30000; // Default 30 seconds
     public string? Description { get; set; }
     public DateTime CreatedAt { get; set; }

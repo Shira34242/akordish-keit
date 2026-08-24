@@ -102,12 +102,21 @@ export class ArtistsListComponent implements OnInit, OnDestroy, AfterViewInit {
   private initHeroHeight(): void {
     const bg = this.heroBg?.nativeElement;
     if (!bg) return;
+
+    if (window.matchMedia('(max-width: 768px)').matches) {
+      this.fullHeroHeight = 0;
+      bg.style.height = '';
+      return;
+    }
+
     this.fullHeroHeight = Math.round(window.innerHeight * 0.6);
     bg.style.height = `${this.fullHeroHeight}px`;
     this.shrinkHero();
   }
 
   private shrinkHero(): void {
+    if (window.matchMedia('(max-width: 768px)').matches) return;
+
     const bg = this.heroBg?.nativeElement;
     if (!bg || this.fullHeroHeight === 0) return;
 

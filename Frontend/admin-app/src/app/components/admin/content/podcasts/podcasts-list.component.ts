@@ -8,7 +8,12 @@ import { PagedResult } from '../../../../models/pagination.model';
 import { PodcastService } from '../../../../services/podcast.service';
 import { SiteAlertService } from '../../../../services/site-alert.service';
 import { ContentPromotionModalComponent } from '../../../shared/content-promotion-modal/content-promotion-modal.component';
-import { ContentPromotionTargetType } from '../../../../services/content-promotion.service';
+import {
+  ContentPromotionDto,
+  ContentPromotionPlacement,
+  ContentPromotionService,
+  ContentPromotionTargetType
+} from '../../../../services/content-promotion.service';
 
 @Component({
   selector: 'app-podcasts-list',
@@ -19,6 +24,7 @@ import { ContentPromotionTargetType } from '../../../../services/content-promoti
 })
 export class PodcastsListComponent implements OnInit {
   private readonly podcastService = inject(PodcastService);
+  private readonly contentPromotionService = inject(ContentPromotionService);
   private readonly router = inject(Router);
   private readonly siteAlerts = inject(SiteAlertService);
 
@@ -37,6 +43,8 @@ export class PodcastsListComponent implements OnInit {
   promotionTargetType = ContentPromotionTargetType.PodcastEpisode;
   promotionTargetIds: number[] = [];
   promotionTitle = 'קידום פרקי פודקאסט';
+  activePodcastPromotions = new Map<number, ContentPromotionDto[]>();
+  activeEpisodePromotions = new Map<number, ContentPromotionDto[]>();
   searchTerm = '';
   statusFilter: 'all' | 'active' | 'draft' = 'all';
   selectedPodcastId?: number;
@@ -56,6 +64,7 @@ export class PodcastsListComponent implements OnInit {
   ngOnInit(): void {
     this.loadPodcasts();
     this.loadEpisodes();
+    this.loadPromotionState();
   }
 
   loadPodcasts(): void {
@@ -215,6 +224,13 @@ export class PodcastsListComponent implements OnInit {
     this.promotionModalOpen = true;
   }
 
+  openSinglePodcastPromotion(podcast: Podcast): void {
+    this.promotionTargetIds = [podcast.id];
+    this.promotionTargetType = ContentPromotionTargetType.Podcast;
+    this.promotionTitle = `קידום הסדרה: ${podcast.name}`;
+    this.promotionModalOpen = true;
+  }
+
   openEpisodePromotionModal(): void {
     this.promotionTargetIds = Array.from(this.selectedEpisodeIds);
     if (this.promotionTargetIds.length === 0) {
@@ -226,6 +242,14 @@ export class PodcastsListComponent implements OnInit {
     this.promotionModalOpen = true;
   }
 
+  openSingleEpisodePromotion(episode: PodcastEpisode, event?: Event): void {
+    event?.stopPropagation();
+    this.promotionTargetIds = [episode.id];
+    this.promotionTargetType = ContentPromotionTargetType.PodcastEpisode;
+    this.promotionTitle = `קידום הפרק: ${episode.title}`;
+    this.promotionModalOpen = true;
+  }
+
   onPromoted(): void {
     this.promotionModalOpen = false;
     this.clearSelection();
@@ -234,6 +258,96 @@ export class PodcastsListComponent implements OnInit {
     if (this.selectedSeriesPodcast) {
       this.loadSelectedSeriesEpisodes();
     }
+    this.loadPromotionState();
+  }
+
+  hasActivePodcastPromotion(podcastId: number): boolean {
+    return this.activePodcastPromotions.has(podcastId);
+  }
+
+  hasActiveEpisodePromotion(episodeId: number): boolean {
+    return this.activeEpisodePromotions.has(episodeId);
+  }
+
+  getPodcastPromotionSummary(podcastId: number): string {
+    return this.getPromotionSummary(this.activePodcastPromotions.get(podcastId));
+  }
+
+  getEpisodePromotionSummary(episodeId: number): string {
+    return this.getPromotionSummary(this.activeEpisodePromotions.get(episodeId));
+  }
+
+  cancelPodcastPromotion(podcast: Podcast, event?: Event): void {
+    event?.stopPropagation();
+    this.cancelPromotions(
+      this.activePodcastPromotions.get(podcast.id),
+      `לבטל את הקידום הפעיל של הסדרה "${podcast.name}"?`
+    );
+  }
+
+  cancelEpisodePromotion(episode: PodcastEpisode, event?: Event): void {
+    event?.stopPropagation();
+    this.cancelPromotions(
+      this.activeEpisodePromotions.get(episode.id),
+      `לבטל את הקידום הפעיל של הפרק "${episode.title}"?`
+    );
+  }
+
+  private loadPromotionState(): void {
+    forkJoin({
+      podcasts: this.contentPromotionService.getPromotions(ContentPromotionTargetType.Podcast),
+      episodes: this.contentPromotionService.getPromotions(ContentPromotionTargetType.PodcastEpisode)
+    }).subscribe({
+      next: ({ podcasts, episodes }) => {
+        this.activePodcastPromotions = this.groupActivePromotions(podcasts);
+        this.activeEpisodePromotions = this.groupActivePromotions(episodes);
+      },
+      error: error => console.error('Error loading podcast promotion state:', error)
+    });
+  }
+
+  private groupActivePromotions(promotions: ContentPromotionDto[]): Map<number, ContentPromotionDto[]> {
+    const grouped = new Map<number, ContentPromotionDto[]>();
+    promotions.filter(promotion => promotion.isCurrentlyActive).forEach(promotion => {
+      const current = grouped.get(promotion.targetId) || [];
+      current.push(promotion);
+      grouped.set(promotion.targetId, current);
+    });
+    return grouped;
+  }
+
+  private getPromotionSummary(promotions?: ContentPromotionDto[]): string {
+    if (!promotions?.length) return '';
+
+    const placementLabels: Record<ContentPromotionPlacement, string> = {
+      [ContentPromotionPlacement.General]: 'כללי',
+      [ContentPromotionPlacement.Home]: 'דף הבית',
+      [ContentPromotionPlacement.Index]: 'אינדקס',
+      [ContentPromotionPlacement.Featured]: 'מומלצים'
+    };
+    const placements = promotions.map(promotion => placementLabels[promotion.placement]).join(', ');
+    return `קידום פעיל: ${placements}`;
+  }
+
+  private async cancelPromotions(promotions: ContentPromotionDto[] | undefined, message: string): Promise<void> {
+    if (!promotions?.length || !await this.siteAlerts.confirm(message)) return;
+
+    this.bulkActionLoading = true;
+    forkJoin(promotions.map(promotion => this.contentPromotionService.deactivate(
+      promotion.targetType,
+      promotion.targetId,
+      promotion.placement
+    ))).subscribe({
+      next: () => {
+        this.bulkActionLoading = false;
+        this.loadPromotionState();
+      },
+      error: error => {
+        console.error('Error cancelling podcast promotion:', error);
+        this.bulkActionLoading = false;
+        alert('שגיאה בביטול הקידום');
+      }
+    });
   }
 
   onPageChange(page: number): void {

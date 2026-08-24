@@ -24,7 +24,9 @@
       </button>
       <button
         class="tab"
+        type="button"
         [class.active]="activeTab === 'clients'"
+        [attr.aria-current]="activeTab === 'clients' ? 'page' : null"
         (click)="switchTab('clients')">
         לקוחות
       </button>
@@ -42,11 +44,12 @@
         placeholder="חיפוש..."
         [(ngModel)]="searchTerm"
         (input)="onSearch()"
-        class="search-input">
+        class="search-input"
+        aria-label="חיפוש לקוחות פרסום">
     </div>
 
     <div class="search-box">
-      <select class="search-input" [(ngModel)]="sortBy" (change)="onSortChange()">
+      <select class="search-input" [(ngModel)]="sortBy" (change)="onSortChange()" aria-label="מיון לקוחות">
         <option *ngFor="let option of sortOptions" [value]="option.value">
           {{ option.label }}
         </option>
@@ -63,10 +66,10 @@
   <div class="list-controls" *ngIf="!loading">
     <span class="results-info">{{ totalCount }} לקוחות</span>
     <div class="view-controls">
-      <button class="view-btn" [class.active]="viewMode === 'list'" (click)="setView('list')" title="רשימה">
+      <button class="view-btn" type="button" [class.active]="viewMode === 'list'" [attr.aria-pressed]="viewMode === 'list'" (click)="setView('list')" aria-label="תצוגת רשימה">
         <span class="material-icons">view_list</span>
       </button>
-      <button class="view-btn" [class.active]="viewMode === 'grid'" (click)="setView('grid')" title="גריד">
+      <button class="view-btn" type="button" [class.active]="viewMode === 'grid'" [attr.aria-pressed]="viewMode === 'grid'" (click)="setView('grid')" aria-label="תצוגת כרטיסים">
         <span class="material-icons">grid_view</span>
       </button>
     </div>
@@ -93,8 +96,9 @@
         <span>{{ formatCurrency(client.totalBudget) }} · {{ client.totalCampaigns }} קמפיינים</span>
       </div>
       <div class="grid-card-actions">
-        <button class="btn-action" (click)="editClient(client)" title="עריכה"><span class="material-icons">edit</span></button>
-        <button class="btn-action btn-delete" (click)="deleteClient(client)" title="מחיקה"><span class="material-icons">delete</span></button>
+        <button class="btn-action" type="button" (click)="createCampaignForClient(client)" [attr.aria-label]="'יצירת קמפיין עבור ' + client.businessName" title="יצירת קמפיין"><span class="material-icons">add_campaign</span></button>
+        <button class="btn-action" type="button" (click)="editClient(client)" [attr.aria-label]="'עריכת הלקוח ' + client.businessName"><span class="material-icons">edit</span></button>
+        <button class="btn-action btn-delete" type="button" (click)="deleteClient(client)" [attr.aria-label]="'מחיקת הלקוח ' + client.businessName"><span class="material-icons">delete</span></button>
       </div>
     </div>
   </div>
@@ -191,10 +195,13 @@
 
           <!-- Actions -->
           <td class="actions-cell">
-            <button class="btn-action btn-edit" (click)="editClient(client)" title="ערוך">
+            <button class="btn-action" type="button" (click)="createCampaignForClient(client)" [attr.aria-label]="'יצירת קמפיין עבור ' + client.businessName" title="יצירת קמפיין">
+              <span class="material-icons">add_campaign</span>
+            </button>
+            <button class="btn-action btn-edit" type="button" (click)="editClient(client)" [attr.aria-label]="'עריכת הלקוח ' + client.businessName">
               <span class="material-icons">edit</span>
             </button>
-            <button class="btn-action btn-delete" (click)="deleteClient(client)" title="מחק">
+            <button class="btn-action btn-delete" type="button" (click)="deleteClient(client)" [attr.aria-label]="'מחיקת הלקוח ' + client.businessName">
               <span class="material-icons">delete</span>
             </button>
           </td>

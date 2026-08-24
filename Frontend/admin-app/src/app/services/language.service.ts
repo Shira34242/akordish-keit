@@ -1255,6 +1255,16 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'quick_add.enter_podcast_episode_link': 'נא להדביק קישור לפרק.',
     'quick_add.error_submit_podcast': 'שגיאה בשליחת הפודקאסט.',
     'quick_add.error_submit_podcast_episode': 'שגיאה בשליחת פרק הפודקאסט.',
+    'quick_add.song_raw_note': 'מדביקים את המילים והאקורדים בדיוק כפי שהם. התוכן יישמר ללא שינוי ויעבור לסידור ולאישור מנהל.',
+    'quick_add.song_title': 'שם השיר',
+    'quick_add.song_title_placeholder': 'לדוגמה: שלום עליכם',
+    'quick_add.song_artist': 'שם האמן',
+    'quick_add.song_artist_placeholder': 'הקלידו או בחרו אמן',
+    'quick_add.song_raw_text': 'מילים ואקורדים',
+    'quick_add.song_raw_placeholder': 'הדביקו כאן את כל הטקסט כפי שיש לכם...',
+    'quick_add.song_raw_helper': 'אין צורך להפוך אקורדים או לסדר רווחים. מנהל יעבור על התוכן לפני הפרסום.',
+    'quick_add.enter_chords_text': 'יש להדביק לפחות 10 תווים של מילים ואקורדים.',
+    'quick_add.error_submit_song': 'לא הצלחנו לשלוח את האקורדים כרגע. נסו שוב.',
 
     // Chord dictionary
     'chord_dict.all_roots': 'כל השורשים',
@@ -2651,6 +2661,16 @@ const TRANSLATIONS: Record<Lang, Record<string, string>> = {
     'quick_add.enter_podcast_episode_link': 'Please paste an episode link.',
     'quick_add.error_submit_podcast': 'Error submitting podcast.',
     'quick_add.error_submit_podcast_episode': 'Error submitting podcast episode.',
+    'quick_add.song_raw_note': 'Paste the lyrics and chords exactly as you have them. The content will be saved unchanged for an admin to arrange and approve.',
+    'quick_add.song_title': 'Song name',
+    'quick_add.song_title_placeholder': 'For example: Shalom Aleichem',
+    'quick_add.song_artist': 'Artist name',
+    'quick_add.song_artist_placeholder': 'Type or choose an artist',
+    'quick_add.song_raw_text': 'Lyrics and chords',
+    'quick_add.song_raw_placeholder': 'Paste the complete text here exactly as you have it...',
+    'quick_add.song_raw_helper': 'There is no need to reverse chords or adjust spacing. An admin will review the content before publishing.',
+    'quick_add.enter_chords_text': 'Please paste at least 10 characters of lyrics and chords.',
+    'quick_add.error_submit_song': 'We could not submit the chords right now. Please try again.',
 
     // Chord dictionary
     'chord_dict.all_roots': 'All roots',

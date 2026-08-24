@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, OnInit, OnChanges, SimpleChanges, inject } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, Output, OnInit, OnChanges, SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -25,6 +25,8 @@ import { FileUploadInputComponent } from '../../../shared/file-upload-input/file
 })
 export class CampaignFormComponent implements OnInit, OnChanges {
   @Input() campaign?: AdCampaign;
+  @Input() initialClientId?: number;
+  @Input() initialAdSpotId?: number;
   @Input() show = false;
   @Input() saving = false;
   @Output() save = new EventEmitter<CreateAdCampaignRequest | UpdateAdCampaignRequest>();
@@ -47,6 +49,8 @@ export class CampaignFormComponent implements OnInit, OnChanges {
   overlappingCampaigns: any[] = [];
   takenPriorities: number[] = [];
   availablePriorities: number[] = [];
+  previewMode: 'desktop' | 'mobile' = 'desktop';
+  previewAspectWarning = '';
 
   constructor(private fb: FormBuilder) {}
 
@@ -92,11 +96,11 @@ export class CampaignFormComponent implements OnInit, OnChanges {
 
     this.campaignForm = this.fb.group({
       name: [this.campaign?.name || '', Validators.maxLength(200)],
-      adSpotId: [this.campaign?.adSpotId || null, Validators.required],
-      clientId: [this.campaign?.clientId || null],
+      adSpotId: [this.campaign?.adSpotId || this.initialAdSpotId || null, Validators.required],
+      clientId: [this.campaign?.clientId || this.initialClientId || null],
       mediaUrl: [this.campaign?.mediaUrl || '', [Validators.required, Validators.maxLength(500)]],
       mobileMediaUrl: [this.campaign?.mobileMediaUrl || '', Validators.maxLength(500)],
-      knownUrl: [this.campaign?.knownUrl || '', Validators.maxLength(500)],
+      knownUrl: [this.campaign?.knownUrl || '', [Validators.maxLength(500), Validators.pattern(/^https?:\/\/.+/i)]],
       priority: [this.campaign?.priority || 1, [Validators.min(1), Validators.max(5)]],
       status: [this.campaign?.status || 'Draft'],
       startDate: [this.campaign?.startDate ? this.formatDateForInput(this.campaign.startDate) : defaultStartDate],
@@ -212,7 +216,19 @@ export class CampaignFormComponent implements OnInit, OnChanges {
   }
 
   get previewDimensions(): { width: number; height: number; ratio: string } | null {
-    const value = String(this.selectedAdSpot?.dimensions || '').trim();
+    return this.parseDimensions(this.selectedAdSpot?.dimensions);
+  }
+
+  get previewMobileDimensions(): { width: number; height: number; ratio: string } | null {
+    return this.parseDimensions(this.selectedAdSpot?.mobileDimensions) || this.previewDimensions;
+  }
+
+  get activePreviewDimensions(): { width: number; height: number; ratio: string } | null {
+    return this.previewMode === 'mobile' ? this.previewMobileDimensions : this.previewDimensions;
+  }
+
+  private parseDimensions(dimensions: string | undefined): { width: number; height: number; ratio: string } | null {
+    const value = String(dimensions || '').trim();
     const match = value.match(/^(\d+)\s*[xX*]\s*(\d+)$/);
     if (!match) return null;
 
@@ -229,6 +245,50 @@ export class CampaignFormComponent implements OnInit, OnChanges {
 
   get previewMediaUrl(): string {
     return this.campaignForm?.get('mediaUrl')?.value || '';
+  }
+
+  get activePreviewMediaUrl(): string {
+    if (this.previewMode === 'mobile') {
+      return this.campaignForm?.get('mobileMediaUrl')?.value || this.previewMediaUrl;
+    }
+    return this.previewMediaUrl;
+  }
+
+  getMediaType(url: string): 'image' | 'video' {
+    const normalized = (url || '').toLowerCase().split('?')[0].split('#')[0];
+    return ['.mp4', '.webm', '.ogg', '.ogv'].some(extension => normalized.endsWith(extension))
+      ? 'video'
+      : 'image';
+  }
+
+  setPreviewMode(mode: 'desktop' | 'mobile'): void {
+    this.previewMode = mode;
+    this.previewAspectWarning = '';
+  }
+
+  checkImageAspect(event: Event): void {
+    const image = event.currentTarget as HTMLImageElement;
+    this.updateAspectWarning(image.naturalWidth, image.naturalHeight);
+  }
+
+  checkVideoAspect(event: Event): void {
+    const video = event.currentTarget as HTMLVideoElement;
+    this.updateAspectWarning(video.videoWidth, video.videoHeight);
+  }
+
+  private updateAspectWarning(width: number, height: number): void {
+    const preview = this.activePreviewDimensions;
+    if (!preview || width <= 0 || height <= 0) {
+      this.previewAspectWarning = '';
+      return;
+    }
+
+    const mediaRatio = width / height;
+    const spotRatio = preview.width / preview.height;
+    const difference = Math.abs(mediaRatio - spotRatio) / spotRatio;
+    this.previewAspectWarning = difference > 0.08
+      ? `מידות המדיה הן ${width}×${height}, בעוד שמידות השטח הן ${preview.width}×${preview.height}. מומלץ לשנות את מידות שטח הפרסום ל־${width}×${height}, אם זהו הגודל הקבוע המיועד לשטח.`
+      : '';
   }
 
   onSubmit() {
@@ -261,6 +321,11 @@ export class CampaignFormComponent implements OnInit, OnChanges {
 
   onCancel() {
     this.cancel.emit();
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.show && !this.saving) this.onCancel();
   }
 
   get f() {

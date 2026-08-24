@@ -149,7 +149,10 @@ namespace AkordishKeit.Services
                         && cp.IsActive
                         && (!cp.StartsAt.HasValue || cp.StartsAt.Value <= now)
                         && (!cp.EndsAt.HasValue || cp.EndsAt.Value >= now)
-                        && (cp.Placement == ContentPromotionPlacement.Home || cp.Placement == ContentPromotionPlacement.General || cp.ShowOnHome))
+                        && (cp.Placement == ContentPromotionPlacement.Home
+                            || cp.Placement == ContentPromotionPlacement.Featured
+                            || cp.Placement == ContentPromotionPlacement.General
+                            || cp.ShowOnHome))
                     .Select(cp => (int?)cp.Priority)
                     .Max() ?? -1)
                 .ThenByDescending(p => p.MonthlyViews)
@@ -219,7 +222,10 @@ namespace AkordishKeit.Services
                         && cp.IsActive
                         && (!cp.StartsAt.HasValue || cp.StartsAt.Value <= now)
                         && (!cp.EndsAt.HasValue || cp.EndsAt.Value >= now)
-                        && (cp.Placement == ContentPromotionPlacement.Home || cp.Placement == ContentPromotionPlacement.General || cp.ShowOnHome))
+                        && (cp.Placement == ContentPromotionPlacement.Home
+                            || cp.Placement == ContentPromotionPlacement.Featured
+                            || cp.Placement == ContentPromotionPlacement.General
+                            || cp.ShowOnHome))
                     .Select(cp => (int?)cp.Priority)
                     .Max() ?? -1)
                 .ThenByDescending(e => e.WeeklyViews)
@@ -252,9 +258,26 @@ namespace AkordishKeit.Services
 
             if (podcast == null) return null;
 
+            var now = DateTime.UtcNow;
+            var episodeIds = podcast.Episodes.Select(e => e.Id).ToList();
+            var promotionPriorities = await _context.ContentPromotions
+                .AsNoTracking()
+                .Where(cp => cp.TargetType == ContentPromotionTargetType.PodcastEpisode
+                    && episodeIds.Contains(cp.TargetId)
+                    && cp.IsActive
+                    && (!cp.StartsAt.HasValue || cp.StartsAt.Value <= now)
+                    && (!cp.EndsAt.HasValue || cp.EndsAt.Value >= now)
+                    && (cp.Placement == ContentPromotionPlacement.Index
+                        || cp.Placement == ContentPromotionPlacement.Featured
+                        || cp.Placement == ContentPromotionPlacement.General))
+                .GroupBy(cp => cp.TargetId)
+                .Select(group => new { TargetId = group.Key, Priority = group.Max(cp => cp.Priority) })
+                .ToDictionaryAsync(item => item.TargetId, item => item.Priority);
+
             var episodes = podcast.Episodes
                 .Where(e => !e.IsDeleted && (includeInactive || e.IsActive))
-                .OrderBy(e => e.EpisodeNumber == 0 ? int.MaxValue : e.EpisodeNumber)
+                .OrderByDescending(e => promotionPriorities.GetValueOrDefault(e.Id, -1))
+                .ThenBy(e => e.EpisodeNumber == 0 ? int.MaxValue : e.EpisodeNumber)
                 .ThenBy(e => e.DisplayOrder)
                 .ThenBy(e => e.PublishedAt)
                 .Select(e => MapEpisode(e, podcast))
@@ -452,8 +475,19 @@ namespace AkordishKeit.Services
 
             if (podcastId.HasValue) query = query.Where(e => e.PodcastId == podcastId.Value);
 
+            var now = DateTime.UtcNow;
             var episodes = await query
-                .OrderByDescending(e => e.ViewCount)
+                .OrderByDescending(e => _context.ContentPromotions
+                    .Where(cp => cp.TargetType == ContentPromotionTargetType.PodcastEpisode
+                        && cp.TargetId == e.Id
+                        && cp.IsActive
+                        && (!cp.StartsAt.HasValue || cp.StartsAt.Value <= now)
+                        && (!cp.EndsAt.HasValue || cp.EndsAt.Value >= now)
+                        && (cp.Placement == ContentPromotionPlacement.Featured
+                            || cp.Placement == ContentPromotionPlacement.General))
+                    .Select(cp => (int?)cp.Priority)
+                    .Max() ?? -1)
+                .ThenByDescending(e => e.ViewCount)
                 .ThenByDescending(e => e.PublishedAt)
                 .ThenByDescending(e => e.Id)
                 .Take(limit)

@@ -88,23 +88,47 @@
           </div>
         </div>
 
-        <div class="form-row">
+        <div class="form-group">
+          <span class="field-label" id="displayModeLabel">אופן הצגת פרסומות</span>
+          <div class="display-mode-options" role="radiogroup" aria-labelledby="displayModeLabel">
+            <label class="display-mode-option" [class.selected]="f['displayMode'].value === displayModes.Stacked">
+              <input type="radio" formControlName="displayMode" [value]="displayModes.Stacked" />
+              <span class="material-icons" aria-hidden="true">view_agenda</span>
+              <span>
+                <strong>אחד מתחת לשני</strong>
+                <small>כל הקמפיינים הפעילים יוצגו לפי סדר העדיפות.</small>
+              </span>
+            </label>
+            <label class="display-mode-option" [class.selected]="f['displayMode'].value === displayModes.Rotation">
+              <input type="radio" formControlName="displayMode" [value]="displayModes.Rotation" />
+              <span class="material-icons" aria-hidden="true">autorenew</span>
+              <span>
+                <strong>פרסומות מתחלפות</strong>
+                <small>בכל רגע תוצג פרסומת אחת והמערכת תעבור לבאה.</small>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-row" *ngIf="f['displayMode'].value === displayModes.Rotation">
           <div class="form-group">
-            <label for="rotationIntervalMs">מרווח תצוגה עתידי (מילישניות) <span class="required">*</span></label>
+            <label for="rotationIntervalSeconds">זמן לכל פרסומת (בשניות) <span class="required">*</span></label>
             <input
               type="number"
-              id="rotationIntervalMs"
-              formControlName="rotationIntervalMs"
+              id="rotationIntervalSeconds"
+              formControlName="rotationIntervalSeconds"
               class="form-control"
-              [class.error]="f['rotationIntervalMs'].invalid && f['rotationIntervalMs'].touched"
-              placeholder="למשל: 30000 (30 שניות)"
-              min="1000"
+              [class.error]="f['rotationIntervalSeconds'].invalid && f['rotationIntervalSeconds'].touched"
+              min="5"
+              max="300"
+              step="1"
             />
-            <div class="error-message" *ngIf="f['rotationIntervalMs'].invalid && f['rotationIntervalMs'].touched">
-              <span *ngIf="f['rotationIntervalMs'].errors?.['required']">שדה חובה</span>
-              <span *ngIf="f['rotationIntervalMs'].errors?.['min']">מינימום 1000 מילישניות (שנייה אחת)</span>
+            <div class="error-message" *ngIf="f['rotationIntervalSeconds'].invalid && f['rotationIntervalSeconds'].touched">
+              <span *ngIf="f['rotationIntervalSeconds'].errors?.['required']">שדה חובה</span>
+              <span *ngIf="f['rotationIntervalSeconds'].errors?.['min']">זמן מינימלי: 5 שניות</span>
+              <span *ngIf="f['rotationIntervalSeconds'].errors?.['max']">זמן מרבי: 300 שניות</span>
             </div>
-            <small class="help-text">כרגע פרסומות מרובות מוצגות בערימה לפי סדר העדיפות. הערך נשמר לצורך מצב רוטציה עתידי (30000 = 30 שניות).</small>
+            <small class="help-text">הסדר נקבע לפי עדיפות הקמפיין. כאשר יש קמפיין פעיל אחד בלבד, לא תופעל החלפה.</small>
           </div>
         </div>
 

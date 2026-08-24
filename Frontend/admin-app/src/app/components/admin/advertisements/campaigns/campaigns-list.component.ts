@@ -1,9 +1,9 @@
 import { Component, HostListener, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AdCampaignService } from '../../../../services/admin/ad-campaign.service';
-import { AdCampaign, CreateAdCampaignRequest, UpdateAdCampaignRequest } from '../../../../models/admin/advertisement.model';
+import { AdCampaign, AdCampaignStats, CreateAdCampaignRequest, UpdateAdCampaignRequest } from '../../../../models/admin/advertisement.model';
 import { PagedResult } from '../../../../models/pagination.model';
 import { CampaignFormComponent } from './campaign-form.component';
 import { PaginationComponent } from '../../../shared/pagination/pagination.component';
@@ -21,6 +21,7 @@ export class CampaignsListComponent implements OnInit {
   private readonly siteAlerts = inject(SiteAlertService);
   private readonly campaignService = inject(AdCampaignService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   campaigns: AdCampaign[] = [];
   filteredCampaigns: AdCampaign[] = [];
@@ -44,9 +45,28 @@ export class CampaignsListComponent implements OnInit {
 
   showCampaignForm = false;
   selectedCampaign?: AdCampaign;
+  campaignStats?: AdCampaignStats;
+  initialClientId?: number;
+  initialAdSpotId?: number;
 
   ngOnInit() {
+    this.loadStats();
     this.loadCampaigns();
+    const clientId = Number(this.route.snapshot.queryParamMap.get('clientId'));
+    const adSpotId = Number(this.route.snapshot.queryParamMap.get('adSpotId'));
+    const shouldCreate = this.route.snapshot.queryParamMap.get('create') === '1';
+    this.initialClientId = Number.isFinite(clientId) && clientId > 0 ? clientId : undefined;
+    this.initialAdSpotId = Number.isFinite(adSpotId) && adSpotId > 0 ? adSpotId : undefined;
+    if (shouldCreate || this.initialClientId || this.initialAdSpotId) {
+      this.showCampaignForm = true;
+    }
+  }
+
+  loadStats(): void {
+    this.campaignService.getStats().subscribe({
+      next: stats => this.campaignStats = stats,
+      error: error => console.error('Error loading campaign stats:', error)
+    });
   }
 
   loadCampaigns() {
@@ -108,6 +128,13 @@ export class CampaignsListComponent implements OnInit {
     return statusTextMap[status] || status;
   }
 
+  getMediaType(url: string | undefined): 'image' | 'video' {
+    const normalized = (url || '').toLowerCase().split('?')[0].split('#')[0];
+    return ['.mp4', '.webm', '.ogg', '.ogv'].some(extension => normalized.endsWith(extension))
+      ? 'video'
+      : 'image';
+  }
+
   formatDate(date: Date): string {
     return new Date(date).toLocaleDateString('he-IL');
   }
@@ -118,6 +145,8 @@ export class CampaignsListComponent implements OnInit {
 
   createNewCampaign() {
     this.selectedCampaign = undefined;
+    this.initialClientId = undefined;
+    this.initialAdSpotId = undefined;
     this.showCampaignForm = true;
   }
 
@@ -133,6 +162,7 @@ export class CampaignsListComponent implements OnInit {
         next: () => {
           this.saving = false;
           this.showCampaignForm = false;
+          this.loadStats();
           this.loadCampaigns();
         },
         error: (error) => {
@@ -146,6 +176,7 @@ export class CampaignsListComponent implements OnInit {
         next: () => {
           this.saving = false;
           this.showCampaignForm = false;
+          this.loadStats();
           this.loadCampaigns();
         },
         error: (error) => {
@@ -169,6 +200,7 @@ export class CampaignsListComponent implements OnInit {
 
     this.campaignService.deleteCampaign(campaign.id).subscribe({
       next: () => {
+        this.loadStats();
         this.loadCampaigns();
       },
       error: (error) => {

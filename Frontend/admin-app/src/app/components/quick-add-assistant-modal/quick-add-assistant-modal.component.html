@@ -67,11 +67,63 @@
         </div>
 
         <div class="embedded-flow" *ngIf="currentMode === 'song'">
-          <app-add-song-modal
-            [embedded]="true"
-            (close)="closeModal()"
-            (songAdded)="onSongAdded()">
-          </app-add-song-modal>
+          <div class="smart-form song-submission-form">
+            <p class="song-submission-note">{{ 'quick_add.song_raw_note' | translate }}</p>
+
+            <label class="smart-label" for="song-submission-title">{{ 'quick_add.song_title' | translate }}</label>
+            <input
+              id="song-submission-title"
+              class="smart-input"
+              [(ngModel)]="songSubmission.title"
+              [placeholder]="'quick_add.song_title_placeholder' | translate">
+
+            <label class="smart-label" for="song-submission-artist">{{ 'quick_add.song_artist' | translate }}</label>
+            <div class="profile-search-wrapper song-artist-search">
+              <input
+                id="song-submission-artist"
+                class="smart-input"
+                [(ngModel)]="songSubmission.artistName"
+                (input)="onSongArtistInput()"
+                (focus)="onSongArtistInput()"
+                autocomplete="off"
+                [placeholder]="'quick_add.song_artist_placeholder' | translate">
+
+              <div *ngIf="showSongArtistDropdown && songArtistResults.length > 0" class="profile-dropdown">
+                <button
+                  type="button"
+                  class="profile-dropdown-item song-artist-result"
+                  *ngFor="let artist of songArtistResults"
+                  (click)="selectSongArtist(artist)">
+                  <img *ngIf="artist.imageUrl" [src]="artist.imageUrl" [alt]="artist.displayText" class="profile-dropdown-avatar">
+                  <span *ngIf="!artist.imageUrl" class="profile-dropdown-avatar profile-dropdown-initial">{{ artist.displayText.charAt(0) }}</span>
+                  <span class="profile-dropdown-info">
+                    <span class="profile-dropdown-name">{{ artist.displayText }}</span>
+                    <span class="profile-dropdown-type" *ngIf="artist.secondaryText">{{ artist.secondaryText }}</span>
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            <label class="smart-label" for="song-submission-text">{{ 'quick_add.song_raw_text' | translate }}</label>
+            <textarea
+              id="song-submission-text"
+              class="smart-textarea song-raw-textarea"
+              [(ngModel)]="songSubmission.lyricsWithChords"
+              rows="14"
+              dir="auto"
+              spellcheck="false"
+              [placeholder]="'quick_add.song_raw_placeholder' | translate"></textarea>
+
+            <small class="song-submission-helper">{{ 'quick_add.song_raw_helper' | translate }}</small>
+            <div class="form-error" *ngIf="formError">{{ formError }}</div>
+
+            <div class="smart-actions">
+              <button type="button" class="assistant-chip assistant-chip-back" (click)="goBackToPreviousStep()">{{ 'fab.back' | translate }}</button>
+              <button type="button" class="smart-submit" (click)="submitSongSubmission()" [disabled]="isSubmitting">
+                {{ isSubmitting ? ('fab.submitting' | translate) : ('fab.submit_approval' | translate) }}
+              </button>
+            </div>
+          </div>
         </div>
 
         <div class="embedded-flow" *ngIf="currentMode === 'article'">

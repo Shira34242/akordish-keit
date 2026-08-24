@@ -21,6 +21,10 @@
 }
 
 .hero-bg {
+  display: contents;
+}
+
+.hero-bg-visual {
   position: fixed;
   top: 8px;
   left: 8px;
@@ -401,13 +405,51 @@
 }
 
 @media (max-width: 768px) {
+  .artists-page {
+    --mobile-artists-hero-height: 17rem;
+  }
+
   .hero-bg {
-    border-radius: 20px;
+    display: block;
+    position: relative;
+    height: calc(var(--mobile-artists-hero-height) + 8px);
+    margin-top: -58px;
+    background: #ddff53;
+  }
+
+  .hero-bg-visual {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100% !important;
+    border-radius: 0;
+    overflow: hidden;
+    will-change: auto;
+  }
+
+  .hero-bg-image {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  .hero-collapse-overlay,
+  .top-scroll-mask {
+    display: none;
   }
 
   .hero-content-area {
-    min-height: calc(50vh - 76px);
-    padding: var(--space-2xl) var(--space-lg);
+    height: calc(100% - 58px);
+    min-height: 0;
+    margin-top: 58px;
+    padding: var(--space-lg);
+  }
+
+  .hero-content {
+    min-width: 0;
+    gap: var(--space-sm);
   }
 
   .page-title {
@@ -415,8 +457,36 @@
   }
 
   .artists-content {
-    padding: var(--space-xl) var(--space-lg) var(--space-3xl);
-    gap: var(--space-2xl);
+    padding: var(--space-lg) var(--space-base) var(--space-2xl);
+    gap: var(--space-lg);
+  }
+
+  .banners-area {
+    padding: var(--space-lg) 0 var(--space-base);
+  }
+
+  .loop-section {
+    gap: var(--space-sm);
+    margin-bottom: var(--space-lg);
+  }
+
+  .artists-loop-track {
+    gap: var(--space-md);
+    padding-inline: var(--space-base);
+  }
+
+  .artists-loop-track app-artist-circle {
+    width: 7.5rem;
+  }
+
+  .artists-loop-track app-artist-circle ::ng-deep .artist-circle {
+    width: 7.5rem;
+  }
+
+  .artists-loop-track app-artist-circle ::ng-deep .image-wrapper {
+    width: 6.5rem;
+    height: 6.5rem;
+    margin-bottom: var(--space-sm);
   }
 
   .section-tag {
@@ -431,13 +501,18 @@
 }
 
 @media (max-width: 480px) {
+  .artists-page {
+    --mobile-artists-hero-height: 15rem;
+  }
+
   .hero-bg {
-    border-radius: 16px;
+    margin-top: -54px;
   }
 
   .hero-content-area {
-    min-height: calc(44vh - 76px);
-    padding: var(--space-2xl) var(--space-md) var(--space-xl);
+    height: calc(100% - 54px);
+    margin-top: 54px;
+    padding: var(--space-base);
   }
 
   .hero-content {
@@ -457,17 +532,31 @@
   }
 
   .artists-content {
-    padding: var(--space-lg) var(--space-md) var(--space-3xl);
+    padding: var(--space-base) var(--space-md) var(--space-2xl);
   }
 
   .artists-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     column-gap: var(--space-sm);
-    row-gap: var(--space-lg);
+    row-gap: var(--space-base);
   }
 
   .artists-grid app-artist-circle ::ng-deep .image-wrapper {
-    width: min(128px, 100%);
+    width: min(96px, 100%);
+  }
+
+  .artists-grid app-artist-circle ::ng-deep .artist-circle {
+    width: 100%;
+  }
+
+  .artists-loop-track app-artist-circle,
+  .artists-loop-track app-artist-circle ::ng-deep .artist-circle {
+    width: 6.5rem;
+  }
+
+  .artists-loop-track app-artist-circle ::ng-deep .image-wrapper {
+    width: 5.5rem;
+    height: 5.5rem;
   }
 }
 

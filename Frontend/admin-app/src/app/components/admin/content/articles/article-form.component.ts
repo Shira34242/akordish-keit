@@ -75,6 +75,7 @@ export class ArticleFormComponent implements OnInit {
   // Tag state
   selectedTags: SelectedTag[] = [];
   popularTags: SelectedTag[] = [];
+  availableTags: SelectedTag[] = [];
   tagSearchQuery = '';
   tagSearchResults: SelectedTag[] = [];
   showTagDropdown = false;
@@ -433,9 +434,10 @@ export class ArticleFormComponent implements OnInit {
   }
 
   loadPopularTags(): void {
-    this.systemTablesService.getItems('tags', 1, 200).subscribe({
+    this.systemTablesService.getItems('tags', 1, 5000).subscribe({
       next: (result) => {
-        this.popularTags = result.items.map(t => ({ id: t.id, name: t.name }));
+        this.availableTags = result.items.map(t => ({ id: t.id, name: t.name }));
+        this.popularTags = this.availableTags.slice(0, 200);
         this.queueTagSuggestionScan();
       },
       error: (err) => console.error('Error loading popular tags', err)
@@ -492,6 +494,9 @@ export class ArticleFormComponent implements OnInit {
         this.selectTag(selected);
         if (!this.popularTags.some(item => item.id === tag.id)) {
           this.popularTags = [selected, ...this.popularTags];
+        }
+        if (!this.availableTags.some(item => item.id === tag.id)) {
+          this.availableTags = [selected, ...this.availableTags];
         }
         this.creatingSuggestedTag = '';
       },
@@ -999,19 +1004,19 @@ export class ArticleFormComponent implements OnInit {
     const fields = [
       { value: this.article.title, weight: 8 },
       { value: this.article.subtitle, weight: 5 },
-      { value: this.article.shortDescription, weight: 4 },
-      { value: this.article.content, weight: 1 }
+      { value: this.article.shortDescription, weight: 5 },
+      { value: this.article.content, weight: 4 }
     ].map(field => ({ ...field, value: this.cleanTagText(field.value || '') }))
       .filter(field => field.value.length >= 3);
 
     if (fields.length === 0) return [];
 
     const selectedNames = new Set(this.selectedTags.map(tag => this.normalizeTagName(tag.name)));
-    const suggestions: SuggestedTag[] = this.popularTags
+    const existingSuggestions: SuggestedTag[] = this.availableTags
       .map(tag => {
         const name = this.normalizeTagName(tag.name);
         const score = name.length < 2 ? 0 : fields.reduce(
-          (total, field) => total + (this.containsTagPhrase(field.value, name) ? field.weight : 0),
+          (total, field) => total + (this.countTagPhraseOccurrences(field.value, name) * field.weight),
           0
         );
         return { ...tag, isNew: false, score };
@@ -1020,39 +1025,88 @@ export class ArticleFormComponent implements OnInit {
         && !selectedNames.has(this.normalizeTagName(tag.name))
         && !this.dismissedTagSuggestions.has(this.normalizeTagName(tag.name)));
 
-    const existingNames = new Set(this.popularTags.map(tag => this.normalizeTagName(tag.name)));
-    const candidateScores = new Map<string, { name: string; score: number; appearances: number }>();
+    const existingNames = new Set(this.availableTags.map(tag => this.normalizeTagName(tag.name)));
+    const candidateScores = new Map<string, {
+      name: string;
+      score: number;
+      occurrences: number;
+      fieldIndexes: Set<number>;
+      explicit: boolean;
+      wordCount: number;
+    }>();
 
-    fields.forEach(field => {
-      const tokens = field.value.split(' ').filter(token => this.isUsefulTagToken(token));
-      const seenInField = new Set<string>();
-      tokens.forEach(token => {
-        const key = this.normalizeTagName(token);
-        const current = candidateScores.get(key) || { name: token, score: 0, appearances: 0 };
-        current.score += field.weight;
-        if (!seenInField.has(key)) current.appearances += 1;
-        candidateScores.set(key, current);
-        seenInField.add(key);
-      });
+    // New tags must be meaningful phrases seen more than once or in more than one field.
+    // This deliberately avoids turning isolated title words into random-looking tags.
+    fields.forEach((field, fieldIndex) => {
+      const tokens = field.value.split(' ');
+      for (const phraseLength of [3, 2, 1]) {
+        for (let index = 0; index <= tokens.length - phraseLength; index += 1) {
+          const phraseTokens = tokens.slice(index, index + phraseLength);
+          if (!phraseTokens.every(token => this.isUsefulTagToken(token))) continue;
+
+          const name = phraseTokens.map(token => token.replace(/^#/, '')).join(' ');
+          const key = this.normalizeTagName(name);
+          const current = candidateScores.get(key) || {
+            name,
+            score: 0,
+            occurrences: 0,
+            fieldIndexes: new Set<number>(),
+            explicit: false,
+            wordCount: phraseLength
+          };
+          current.score += field.weight + (4 - phraseLength);
+          current.occurrences += 1;
+          current.fieldIndexes.add(fieldIndex);
+          candidateScores.set(key, current);
+        }
+      }
     });
 
     const sourceText = [this.article.title, this.article.subtitle, this.article.shortDescription, this.article.content].join(' ');
     for (const match of sourceText.matchAll(/#([\p{L}\p{N}][\p{L}\p{N}_-]{1,39})/gu)) {
       const name = match[1].replace(/_/g, ' ');
-      candidateScores.set(this.normalizeTagName(name), { name, score: 30, appearances: 2 });
+      candidateScores.set(this.normalizeTagName(name), {
+        name,
+        score: 30,
+        occurrences: 1,
+        fieldIndexes: new Set<number>(),
+        explicit: true,
+        wordCount: name.split(' ').length
+      });
+    }
+
+    for (const match of sourceText.matchAll(/["״“”]([^"״“”]{3,80})["״“”]/gu)) {
+      const name = this.cleanTagText(match[1]);
+      const words = name.split(' ').filter(Boolean);
+      if (words.length < 2 || words.length > 4 || !words.every(word => this.isUsefulTagToken(word))) continue;
+
+      candidateScores.set(this.normalizeTagName(name), {
+        name,
+        score: 24,
+        occurrences: 1,
+        fieldIndexes: new Set<number>(),
+        explicit: true,
+        wordCount: words.length
+      });
     }
 
     const newSuggestions: SuggestedTag[] = [...candidateScores.values()]
-      .filter(candidate => candidate.appearances >= 2 || candidate.score >= 8)
+      .filter(candidate => candidate.explicit
+        || (candidate.wordCount === 1
+          ? candidate.fieldIndexes.size >= 2 && candidate.occurrences >= 3
+          : candidate.fieldIndexes.size >= 2 || candidate.occurrences >= 2))
       .filter(candidate => {
         const key = this.normalizeTagName(candidate.name);
         return !existingNames.has(key) && !selectedNames.has(key) && !this.dismissedTagSuggestions.has(key);
       })
       .map(candidate => ({ name: candidate.name, isNew: true, score: candidate.score }));
 
-    return [...suggestions, ...newSuggestions]
-      .sort((a, b) => b.score - a.score || Number(a.isNew) - Number(b.isNew) || a.name.localeCompare(b.name, 'he'))
-      .slice(0, 4);
+    const rankedExisting = existingSuggestions
+      .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name, 'he'));
+    const rankedNew = newSuggestions
+      .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name, 'he'));
+
+    return [...rankedExisting, ...rankedNew].slice(0, 4);
   }
 
   private cleanTagText(value: string): string {
@@ -1070,8 +1124,29 @@ export class ArticleFormComponent implements OnInit {
     return this.cleanTagText(value).replace(/^#/, '');
   }
 
-  private containsTagPhrase(text: string, phrase: string): boolean {
-    return (` ${text} `).includes(` ${phrase} `);
+  private countTagPhraseOccurrences(text: string, phrase: string): number {
+    const textTokens = text.split(' ').filter(Boolean);
+    const phraseTokens = phrase.split(' ').filter(Boolean);
+    if (phraseTokens.length === 0 || phraseTokens.length > textTokens.length) return 0;
+
+    let count = 0;
+
+    for (let index = 0; index <= textTokens.length - phraseTokens.length; index += 1) {
+      const matches = phraseTokens.every((phraseToken, offset) =>
+        this.tagTokenMatches(textTokens[index + offset], phraseToken)
+      );
+      if (matches) count += 1;
+    }
+
+    return count;
+  }
+
+  private tagTokenMatches(textToken: string, tagToken: string): boolean {
+    if (textToken === tagToken) return true;
+    if (!textToken.endsWith(tagToken)) return false;
+
+    const prefix = textToken.slice(0, textToken.length - tagToken.length);
+    return prefix.length > 0 && prefix.length <= 2 && /^[ובכלמהש]+$/u.test(prefix);
   }
 
   private isUsefulTagToken(token: string): boolean {

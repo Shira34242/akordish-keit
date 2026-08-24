@@ -27,6 +27,21 @@
         <h2>סדרות פודקאסטים</h2>
         <span>{{ podcasts.length }} סדרות קיימות</span>
       </div>
+      <div class="section-actions" *ngIf="selectedSeriesPodcast">
+        <button class="filter-btn" type="button" (click)="openSinglePodcastPromotion(selectedSeriesPodcast)">
+          <span class="material-icons">workspace_premium</span>
+          הגדרת קידום לסדרה
+        </button>
+        <button
+          *ngIf="hasActivePodcastPromotion(selectedSeriesPodcast.id)"
+          class="filter-btn"
+          type="button"
+          (click)="cancelPodcastPromotion(selectedSeriesPodcast)"
+          [disabled]="bulkActionLoading">
+          <span class="material-icons">cancel</span>
+          ביטול קידום
+        </button>
+      </div>
     </div>
 
     <div class="admin-series-row">
@@ -53,6 +68,13 @@
           </span>
           <strong>{{ podcast.name }}</strong>
           <small>{{ podcast.episodeCount }} פרקים</small>
+          <span
+            *ngIf="hasActivePodcastPromotion(podcast.id)"
+            class="badge promotion-badge"
+            [title]="getPodcastPromotionSummary(podcast.id)">
+            <span class="material-icons">workspace_premium</span>
+            מקודמת
+          </span>
         </div>
       </div>
     </div>
@@ -136,7 +158,34 @@
         </small>
 
         <div class="tile-actions">
-          <span class="badge" [class.inactive]="!episode.isActive">{{ getStatusLabel(episode.isActive) }}</span>
+          <div class="badge-stack">
+            <span class="badge" [class.inactive]="!episode.isActive">{{ getStatusLabel(episode.isActive) }}</span>
+            <span
+              *ngIf="hasActiveEpisodePromotion(episode.id)"
+              class="badge promotion-badge"
+              [title]="getEpisodePromotionSummary(episode.id)">
+              <span class="material-icons">workspace_premium</span>
+              מקודם
+            </span>
+          </div>
+          <button
+            type="button"
+            class="icon-btn"
+            (click)="openSingleEpisodePromotion(episode, $event)"
+            [attr.aria-label]="'קידום הפרק ' + episode.title"
+            title="קידום הפרק">
+            <span class="material-icons">workspace_premium</span>
+          </button>
+          <button
+            *ngIf="hasActiveEpisodePromotion(episode.id)"
+            type="button"
+            class="icon-btn"
+            (click)="cancelEpisodePromotion(episode, $event)"
+            [disabled]="bulkActionLoading"
+            [attr.aria-label]="'ביטול קידום הפרק ' + episode.title"
+            title="ביטול קידום">
+            <span class="material-icons">cancel</span>
+          </button>
         </div>
       </article>
 
@@ -175,7 +224,34 @@
         </div>
 
         <div class="tile-actions" (click)="$event.stopPropagation()">
-          <span class="badge" [class.inactive]="!episode.isActive">{{ getStatusLabel(episode.isActive) }}</span>
+          <div class="badge-stack">
+            <span class="badge" [class.inactive]="!episode.isActive">{{ getStatusLabel(episode.isActive) }}</span>
+            <span
+              *ngIf="hasActiveEpisodePromotion(episode.id)"
+              class="badge promotion-badge"
+              [title]="getEpisodePromotionSummary(episode.id)">
+              <span class="material-icons">workspace_premium</span>
+              מקודם
+            </span>
+          </div>
+          <button
+            type="button"
+            class="icon-btn"
+            (click)="openSingleEpisodePromotion(episode, $event)"
+            [attr.aria-label]="'קידום הפרק ' + episode.title"
+            title="קידום הפרק">
+            <span class="material-icons">workspace_premium</span>
+          </button>
+          <button
+            *ngIf="hasActiveEpisodePromotion(episode.id)"
+            type="button"
+            class="icon-btn"
+            (click)="cancelEpisodePromotion(episode, $event)"
+            [disabled]="bulkActionLoading"
+            [attr.aria-label]="'ביטול קידום הפרק ' + episode.title"
+            title="ביטול קידום">
+            <span class="material-icons">cancel</span>
+          </button>
         </div>
       </article>
 

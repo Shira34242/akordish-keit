@@ -278,7 +278,7 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
       this.updateContactPanelPlacement(this.contactTriggerEl);
     }
     if (this.contactOpen && this.professional) {
-      this.analytics.trackButtonClick('contact', this.professional.id, this.professional.displayName);
+      this.analytics.trackButtonClick('contact', this.professional.id, `professional|${this.professional.displayName}`);
       if (this.agencyBadge) {
         this.analytics.trackInteraction('agency_contact_panel', this.agencyBadge.agencyId, `${this.agencyBadge.agencyName} | ${this.professional.displayName}`);
       }
@@ -522,6 +522,20 @@ export class ProfessionalProfileModalComponent implements OnInit, AfterViewInit,
   trackAgencyContact(type: 'phone' | 'whatsapp' | 'email' | 'website'): void {
     if (!this.agencyBadge || !this.professional) return;
     this.analytics.trackInteraction(`agency_contact_${type}`, this.agencyBadge.agencyId, `${this.agencyBadge.agencyName} | ${this.professional.displayName}`);
+    this.trackProfileContact(type);
+  }
+
+  trackProfileContact(type: 'phone' | 'whatsapp' | 'email' | 'website'): void {
+    if (!this.professional) return;
+    this.analytics.trackInteraction(`index_professional_contact_${type}`, this.professional.id, `professional|${this.professional.displayName}`);
+  }
+
+  trackQuickWhatsApp(): void {
+    if (this.showAgencyContact) {
+      this.trackAgencyContact('whatsapp');
+      return;
+    }
+    this.trackProfileContact('whatsapp');
   }
 
   get wazeNavigationUrl(): string {

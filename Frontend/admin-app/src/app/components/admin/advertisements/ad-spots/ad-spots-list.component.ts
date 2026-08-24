@@ -95,24 +95,6 @@ export class AdSpotsListComponent implements OnInit {
     localStorage.setItem('admin-ad-spots-view', mode);
   }
 
-  getAvailabilityClass(availability: string): string {
-    const classMap: { [key: string]: string } = {
-      'Available': 'availability-available',
-      'Occupied': 'availability-occupied',
-      'Scheduled': 'availability-scheduled'
-    };
-    return classMap[availability] || 'availability-default';
-  }
-
-  getAvailabilityText(availability: string): string {
-    const textMap: { [key: string]: string } = {
-      'Available': 'פנוי',
-      'Occupied': 'תפוס',
-      'Scheduled': 'מיידי'
-    };
-    return textMap[availability] || availability;
-  }
-
   getCapacityClass(spot: AdSpot): string {
     if (spot.activeCampaigns >= 5) return 'unavailable';
     if (spot.activeCampaigns > 0) return 'partial';
@@ -140,6 +122,12 @@ export class AdSpotsListComponent implements OnInit {
   editSpot(spot: AdSpot) {
     this.selectedAdSpot = spot;
     this.showAdSpotForm = true;
+  }
+
+  createCampaignForSpot(spot: AdSpot): void {
+    this.router.navigate(['/admin/advertising'], {
+      queryParams: { create: 1, adSpotId: spot.id }
+    });
   }
 
   private openRequestedSpot(): void {

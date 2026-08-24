@@ -155,6 +155,28 @@
 
       <section *ngIf="activeTab === 'adblock'" class="report-panel panel"><div class="panel-heading"><div><h2>AdBlock ובדיקות דפדפן</h2><p>ניטור טכני לפי דפים</p></div></div><div class="mini-kpis"><div><small>בדיקות</small><strong>{{ dashboard.adBlock.totalChecks | number }}</strong></div><div><small>זוהו חוסמים</small><strong>{{ dashboard.adBlock.detectedCount | number }}</strong></div><div><small>שיעור חסימה</small><strong>{{ adBlockRate }}%</strong></div></div><div class="table-scroll"><table><thead><tr><th>#</th><th>דף</th><th>בדיקות</th><th>זיהויים</th><th>שיעור</th></tr></thead><tbody><tr *ngFor="let page of dashboard.adBlock.topPages; let i = index"><td><span class="row-rank">0{{ i + 1 }}</span></td><td><strong>{{ page.pagePath }}</strong></td><td>{{ page.checks | number }}</td><td>{{ page.detected | number }}</td><td class="number-cell">{{ page.rate }}%</td></tr></tbody></table></div></section>
 
+      <section *ngIf="activeTab === 'index'" class="report-panel panel">
+        <div *ngIf="indexLoading" class="state-card"><span class="spinner"></span><p>טוען נתוני אינדקס...</p></div>
+        <div *ngIf="!indexLoading && !indexSummary" class="state-card"><p>לא ניתן לטעון כרגע את נתוני האינדקס.</p></div>
+        <ng-container *ngIf="!indexLoading && indexSummary">
+          <div class="panel-heading table-heading">
+            <div><h2>ביצועי דפי האינדקס</h2><p>צפיות ופעולות לפי מורה או נותן שירות</p></div>
+            <div class="table-controls">
+              <label class="search-field"><span class="material-symbols-outlined">search</span><input type="search" [(ngModel)]="indexSearch" placeholder="חיפוש פרופיל"></label>
+              <select [(ngModel)]="indexProfileTypeFilter" aria-label="סוג פרופיל"><option value="all">כולם</option><option value="teacher">מורים</option><option value="professional">נותני שירות</option></select>
+            </div>
+          </div>
+          <div class="mini-kpis">
+            <div><small>צפיות בדפים</small><strong>{{ indexSummary.totals.pageViews | number }}</strong></div>
+            <div><small>גולשים ייחודיים</small><strong>{{ indexSummary.totals.uniqueVisitors | number }}</strong></div>
+            <div><small>פתיחות יצירת קשר</small><strong>{{ indexSummary.totals.contactOpens | number }}</strong></div>
+            <div><small>לחיצות לפנייה</small><strong>{{ indexSummary.totals.contactClicks | number }}</strong></div>
+          </div>
+          <div class="quality-note"><span class="material-symbols-outlined">info</span><p><strong>פירוט ערוצי הפנייה</strong>טלפון, וואטסאפ, אימייל ואתר נספרים מרגע הפעלת הדוח; צפיות ופתיחות יצירת קשר כוללות גם נתונים קיימים.</p></div>
+          <div class="table-scroll"><table><thead><tr><th>#</th><th>פרופיל</th><th>סוג</th><th>צפיות</th><th>ייחודיים</th><th>פתיחת קשר</th><th>טלפון</th><th>וואטסאפ</th><th>אימייל</th><th>אתר</th><th>פניות</th><th>יחס פניות</th></tr></thead><tbody><tr *ngFor="let profile of filteredIndexProfiles; let i = index"><td><span class="row-rank">{{ i + 1 }}</span></td><td><a class="index-profile-link" [href]="profile.route" target="_blank" rel="noopener"><strong>{{ profile.profileName }}</strong></a><small class="secondary-text">{{ profile.route }}</small></td><td><span class="status-pill" [class.active]="profile.profileType === 'teacher'">{{ profile.profileType === 'teacher' ? 'מורה' : 'נותן שירות' }}</span></td><td class="number-cell">{{ profile.views | number }}</td><td>{{ profile.uniqueVisitors | number }}</td><td>{{ profile.contactOpens | number }}</td><td>{{ profile.phoneClicks | number }}</td><td>{{ profile.whatsappClicks | number }}</td><td>{{ profile.emailClicks | number }}</td><td>{{ profile.websiteClicks | number }}</td><td class="number-cell">{{ profile.contactClicks | number }}</td><td>{{ profile.conversionRate | number:'1.1-1' }}%</td></tr><tr *ngIf="filteredIndexProfiles.length === 0"><td colspan="12" class="empty-inline">לא נמצאו פרופילים מתאימים.</td></tr></tbody></table></div>
+        </ng-container>
+      </section>
+
       <section *ngIf="activeTab === 'agencies'" class="report-panel panel"><div *ngIf="agencyLoading" class="state-card"><span class="spinner"></span><p>טוען נתוני סוכנויות...</p></div><ng-container *ngIf="!agencyLoading && agencySummary"><div class="panel-heading"><div><h2>ביצועי סוכנויות</h2><p>צפיות, משתמשים ופעולות בפועל</p></div></div><div class="mini-kpis"><div><small>צפיות</small><strong>{{ agencySummary.totals.pageViews | number }}</strong></div><div><small>ייחודיים</small><strong>{{ agencySummary.totals.uniqueVisitors | number }}</strong></div><div><small>פניות בפועל</small><strong>{{ agencySummary.totals.contactClicks | number }}</strong></div><div><small>פתיחות פאנל</small><strong>{{ agencySummary.totals.contactPanelOpens | number }}</strong></div></div><div class="table-scroll"><table><thead><tr><th>#</th><th>סוכנות</th><th>צפיות</th><th>ייחודיים</th><th>באנר</th><th>פניות</th><th>פאנל</th><th>פרופילים</th><th>תוכן</th></tr></thead><tbody><tr *ngFor="let agency of agencySummary.byAgency; let i = index"><td><span class="row-rank">0{{ i + 1 }}</span></td><td><strong>{{ agency.agencyName }}</strong></td><td>{{ agency.pageViews | number }}</td><td>{{ agency.uniqueVisitors | number }}</td><td>{{ agency.bannerClicks | number }}</td><td>{{ agency.contactClicks | number }}</td><td>{{ agency.contactPanelOpens | number }}</td><td>{{ agency.profileClicks | number }}</td><td>{{ agency.contentClicks | number }}</td></tr></tbody></table></div></ng-container></section>
     </ng-container>
   </ng-container>

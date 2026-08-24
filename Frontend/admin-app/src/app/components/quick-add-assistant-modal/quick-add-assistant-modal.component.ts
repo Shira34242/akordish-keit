@@ -3,7 +3,6 @@ import { Component, EventEmitter, HostListener, Input, OnChanges, OnDestroy, OnI
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Subject, catchError, debounceTime, distinctUntilChanged, of, switchMap } from 'rxjs';
-import { AddSongModalComponent } from '../add-song-modal/add-song-modal.component';
 import { ArticleService } from '../../services/admin/article.service';
 import { EventService } from '../../services/admin/event.service';
 import { MediaService } from '../../services/admin/media.service';
@@ -22,6 +21,8 @@ import { ChordRequestMatch } from '../../models/report.model';
 import { QuickAddEntryPoint } from '../../services/quick-add-assistant.service';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { LanguageService } from '../../services/language.service';
+import { SongService } from '../../services/song.service';
+import { AddSongRequest, AutocompleteResult } from '../../models/song.model';
 export type { QuickAddAction } from './quick-add-action.type';
 import type { QuickAddAction } from './quick-add-action.type';
 
@@ -52,7 +53,7 @@ interface AssistantStepDefinition {
 @Component({
   selector: 'app-quick-add-assistant-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, AddSongModalComponent, TranslatePipe],
+  imports: [CommonModule, FormsModule, TranslatePipe],
   templateUrl: './quick-add-assistant-modal.component.html',
   styleUrls: ['./quick-add-assistant-modal.component.css']
 })
@@ -66,6 +67,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
   private readonly artistService = inject(ArtistService);
   private readonly systemTablesService = inject(SystemTablesService);
   private readonly reportService = inject(ReportService);
+  private readonly songService = inject(SongService);
   private readonly router = inject(Router);
   private readonly langService = inject(LanguageService);
   private readonly cdr = inject(ChangeDetectorRef);
@@ -112,6 +114,11 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
   chordRequestMatch: ChordRequestMatch | null = null;
   chordRequestChecked = false;
   isCheckingChordRequest = false;
+  songSubmission = { title: '', artistName: '', lyricsWithChords: '' };
+  songArtistResults: AutocompleteResult[] = [];
+  selectedSongArtist: AutocompleteResult | null = null;
+  showSongArtistDropdown = false;
+  isSearchingSongArtists = false;
 
   contactForm = { fullName: '', email: '', subject: '', message: '' };
   contactAttachments: { file: File; url: string; uploading: boolean; error: boolean }[] = [];
@@ -128,6 +135,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
   showProfileDropdown = false;
   tagAsMyself = true;
   private readonly profileSearch$ = new Subject<string>();
+  private readonly songArtistSearch$ = new Subject<string>();
   eventArtists: ArtistListDto[] = [];
   professionalCategories: SystemItem[] = [];
   articleCategories: SystemItem[] = [];
@@ -138,6 +146,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
 
   constructor() {
     this.initProfileSearch();
+    this.initSongArtistSearch();
     this.initializeUploaderSelector();
     this.loadEventArtists();
     this.loadProfessionalCategories();
@@ -166,6 +175,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
     } catch {}
     try {
       this.profileSearch$.complete();
+      this.songArtistSearch$.complete();
     } catch {}
   }
 
@@ -288,6 +298,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
     switch (option.action) {
       case 'song':
         this.modeOriginStep = this.currentStep;
+        this.resetSongSubmission();
         await this.typeMessage(this.langService.translate('fab.song_selected'), 'question');
         this.currentMode = 'song';
         this.scrollToActiveFlowStart(true);
@@ -651,6 +662,79 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
     this.animateSuccessMessage(msg);
   }
 
+  onSongArtistInput(): void {
+    const artistName = this.songSubmission.artistName;
+    if (this.selectedSongArtist && this.selectedSongArtist.displayText !== artistName) {
+      this.selectedSongArtist = null;
+    }
+
+    this.songArtistSearch$.next(artistName);
+  }
+
+  selectSongArtist(artist: AutocompleteResult): void {
+    this.selectedSongArtist = artist;
+    this.songSubmission.artistName = artist.displayText;
+    this.songArtistResults = [];
+    this.showSongArtistDropdown = false;
+  }
+
+  submitSongSubmission(): void {
+    if (this.isSubmitting) return;
+
+    const title = this.songSubmission.title.trim();
+    const artistName = this.songSubmission.artistName.trim();
+    const rawLyrics = this.songSubmission.lyricsWithChords;
+
+    if (title.length < 2) {
+      this.pushError(this.langService.translate('quick_add.enter_song_name'));
+      return;
+    }
+
+    if (artistName.length < 2) {
+      this.pushError(this.langService.translate('quick_add.enter_artist_name'));
+      return;
+    }
+
+    if (rawLyrics.trim().length < 10) {
+      this.pushError(this.langService.translate('quick_add.enter_chords_text'));
+      return;
+    }
+
+    const exactArtist = this.selectedSongArtist
+      ?? this.songArtistResults.find(result =>
+        result.displayText.trim().localeCompare(artistName, undefined, { sensitivity: 'base' }) === 0
+      )
+      ?? null;
+
+    const request: AddSongRequest = {
+      title,
+      artists: [{ id: exactArtist?.id, name: artistName }],
+      youtubeUrl: '',
+      lyricsWithChords: rawLyrics,
+      originalKeyId: 0,
+      isApproved: false
+    };
+
+    this.isSubmitting = true;
+    this.formError = '';
+    this.songService.addSong(request).subscribe({
+      next: response => {
+        if (this.destroyed) return;
+        this.isSubmitting = false;
+        if (response?.success === false) {
+          this.pushError(response.message || this.langService.translate('quick_add.error_submit_song'));
+          return;
+        }
+        this.onSongAdded();
+      },
+      error: error => {
+        if (this.destroyed) return;
+        this.isSubmitting = false;
+        this.pushError(error?.error?.message || this.langService.translate('quick_add.error_submit_song'));
+      }
+    });
+  }
+
   closeModal(): void {
     this.close.emit();
   }
@@ -829,6 +913,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
     if (!target.closest('.profile-search-wrapper')) {
       this.showProfileDropdown = false;
       this.showEventArtistDropdown = false;
+      this.showSongArtistDropdown = false;
     }
   }
 
@@ -958,6 +1043,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
     this.chordRequestMatch = null;
     this.chordRequestChecked = false;
     this.isCheckingChordRequest = false;
+    this.resetSongSubmission();
     this.contactForm = { fullName: '', email: '', subject: '', message: '' };
     this.contactAttachments = [];
     this.botThinking = false;
@@ -965,6 +1051,7 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
     this.typingMessageId = null;
 
     if (this.entryPoint === 'song') {
+      this.resetSongSubmission();
       await this.typeMessage(this.langService.translate('fab.song_selected'), 'question');
       this.modeOriginStep = 'root';
       this.currentMode = 'song';
@@ -1549,6 +1636,37 @@ export class QuickAddAssistantModalComponent implements OnInit, OnChanges, OnDes
         this.profileSearchLoading = false;
       }
     });
+  }
+
+  private initSongArtistSearch(): void {
+    this.songArtistSearch$.pipe(
+      debounceTime(250),
+      distinctUntilChanged(),
+      switchMap(query => {
+        const normalizedQuery = query.trim();
+        if (normalizedQuery.length < 2) {
+          this.isSearchingSongArtists = false;
+          return of([] as AutocompleteResult[]);
+        }
+
+        this.isSearchingSongArtists = true;
+        return this.songService.autocompleteArtists(normalizedQuery).pipe(
+          catchError(() => of([] as AutocompleteResult[]))
+        );
+      })
+    ).subscribe(results => {
+      this.songArtistResults = results.slice(0, 8);
+      this.isSearchingSongArtists = false;
+      this.showSongArtistDropdown = this.songSubmission.artistName.trim().length >= 2;
+    });
+  }
+
+  private resetSongSubmission(): void {
+    this.songSubmission = { title: '', artistName: '', lyricsWithChords: '' };
+    this.songArtistResults = [];
+    this.selectedSongArtist = null;
+    this.showSongArtistDropdown = false;
+    this.isSearchingSongArtists = false;
   }
 
   private getYouTubeThumbnailUrl(url?: string): string | null {

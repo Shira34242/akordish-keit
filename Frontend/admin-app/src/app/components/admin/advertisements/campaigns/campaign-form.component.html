@@ -73,14 +73,14 @@
 
         <!-- Media Upload -->
         <div class="form-group">
-          <label>תמונה <span class="required">*</span></label>
+          <label>מדיה למחשב <span class="required">*</span></label>
           <app-file-upload-input
             [url]="campaignForm.get('mediaUrl')?.value || ''"
             (urlChange)="campaignForm.patchValue({mediaUrl: $event})"
-            accept="image/*,.heic,.heif,.jxl"
+            accept="image/*,video/mp4,video/webm,.heic,.heif,.jxl"
             [showPreview]="false"
             [maxLength]="500"
-            placeholder="https://example.com/banner.jpg"
+            placeholder="https://example.com/banner.jpg או banner.mp4"
           />
           <div class="error-message" *ngIf="f['mediaUrl'].invalid && f['mediaUrl'].touched">
             <span *ngIf="f['mediaUrl'].errors?.['required']">שדה חובה</span>
@@ -89,30 +89,36 @@
         </div>
 
         <div class="form-group">
-          <label>תמונה למובייל</label>
+          <label>מדיה למובייל</label>
           <app-file-upload-input
             [url]="campaignForm.get('mobileMediaUrl')?.value || ''"
             (urlChange)="campaignForm.patchValue({mobileMediaUrl: $event})"
-            accept="image/*,.heic,.heif,.jxl"
+            accept="image/*,video/mp4,video/webm,.heic,.heif,.jxl"
             [showPreview]="false"
             [maxLength]="500"
             placeholder="https://example.com/mobile-banner.jpg"
           />
         </div>
 
-        <div class="ad-preview" *ngIf="previewDimensions as preview">
+        <div class="ad-preview" *ngIf="activePreviewDimensions as preview">
           <div class="ad-preview__header">
             <span>תצוגה מקדימה</span>
             <small>{{ selectedAdSpot?.name }} · {{ preview.width }}×{{ preview.height }}</small>
+          </div>
+          <div class="preview-mode" aria-label="סוג התצוגה המקדימה">
+            <button type="button" [class.active]="previewMode === 'desktop'" [attr.aria-pressed]="previewMode === 'desktop'" (click)="setPreviewMode('desktop')">מחשב</button>
+            <button type="button" [class.active]="previewMode === 'mobile'" [attr.aria-pressed]="previewMode === 'mobile'" (click)="setPreviewMode('mobile')">מובייל</button>
           </div>
           <div class="ad-preview__canvas">
             <div
               class="ad-preview__box"
               [style.aspect-ratio]="preview.ratio">
-              <img *ngIf="previewMediaUrl" [src]="previewMediaUrl" alt="תצוגה מקדימה של פרסומת">
-              <span *ngIf="!previewMediaUrl">בחר תמונה כדי לראות את הפרסומת בגודל השטח</span>
+              <img *ngIf="activePreviewMediaUrl && getMediaType(activePreviewMediaUrl) === 'image'" [src]="activePreviewMediaUrl" alt="תצוגה מקדימה של פרסומת" (load)="checkImageAspect($event)">
+              <video *ngIf="activePreviewMediaUrl && getMediaType(activePreviewMediaUrl) === 'video'" [src]="activePreviewMediaUrl" muted loop autoplay playsinline controls (loadedmetadata)="checkVideoAspect($event)"></video>
+              <span *ngIf="!activePreviewMediaUrl">בחר מדיה כדי לראות את הפרסומת בגודל השטח</span>
             </div>
           </div>
+          <p class="preview-warning" *ngIf="previewAspectWarning"><span class="material-icons">warning</span>{{ previewAspectWarning }}</p>
         </div>
 
         <!-- Target URL -->
@@ -126,6 +132,10 @@
             maxlength="500"
             placeholder="https://example.com"
           />
+          <div class="error-message" *ngIf="f['knownUrl'].invalid && f['knownUrl'].touched">
+            <span>יש להזין כתובת מלאה שמתחילה ב־http:// או https://</span>
+          </div>
+          <a class="test-link" *ngIf="f['knownUrl'].valid && f['knownUrl'].value" [href]="f['knownUrl'].value" target="_blank" rel="noopener">בדיקת כתובת היעד</a>
         </div>
 
         <!-- Priority & Status -->
