@@ -89,6 +89,10 @@ function processIncomingArticles() {
   });
 }
 
+function authorizeDriveAccess() {
+  DriveApp.getRootFolder().getName();
+}
+
 function extractDriveFolderId_(plainBody) {
   const match = DRIVE_FOLDER_REGEX.exec(plainBody || '');
   return match ? match[1] : null;

@@ -162,13 +162,24 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
         var slug = BuildDeterministicSlug(parsed.Title, request.MessageId);
 
         var existing = await _context.Articles
-            .AsNoTracking()
+            .IgnoreQueryFilters()
             .Where(a => a.Slug == slug)
-            .Select(a => new { a.Id, a.Title })
             .FirstOrDefaultAsync();
 
         if (existing != null)
         {
+            if (existing.IsDeleted)
+            {
+                existing.IsDeleted = false;
+                existing.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation(
+                    "Soft-deleted email article restored: ArticleId={ArticleId} MessageId={MessageId}",
+                    existing.Id,
+                    request.MessageId);
+            }
+
             return new EmailArticleIngestionResponseDto
             {
                 Success = true,
