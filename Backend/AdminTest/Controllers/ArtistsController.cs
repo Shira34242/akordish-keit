@@ -179,14 +179,6 @@ public class ArtistsController : ControllerBase
             var bumpCutoff = now.AddHours(-24);
             var artists = await _context.Artists
                 .Where(a => !a.IsDeleted && a.Status == ArtistStatus.Active)
-                .Where(a => a.IsFeatured || a.IsPremium || a.LastBoostDate.HasValue
-                    || (a.BumpedAt.HasValue && a.BumpedAt.Value >= bumpCutoff)
-                    || _context.ContentPromotions.Any(p =>
-                    p.TargetType == ContentPromotionTargetType.Artist
-                    && p.TargetId == a.Id
-                    && p.IsActive
-                    && (!p.StartsAt.HasValue || p.StartsAt.Value <= now)
-                    && (!p.EndsAt.HasValue || p.EndsAt.Value >= now)))
                 .OrderByDescending(a => a.IsFeatured && a.CreatedAt >= freshRecommendationCutoff)
                 .ThenByDescending(a => _context.ContentPromotions.Any(p =>
                     p.TargetType == ContentPromotionTargetType.Artist
@@ -205,8 +197,10 @@ public class ArtistsController : ControllerBase
                 .ThenByDescending(a => a.BumpedAt.HasValue && a.BumpedAt.Value >= bumpCutoff)
                 .ThenByDescending(a => a.BumpedAt)
                 .ThenByDescending(a => a.IsFeatured)
+                .ThenBy(a => a.IsFeatured ? a.DisplayOrder : int.MaxValue)
                 .ThenByDescending(a => a.IsPremium)
                 .ThenByDescending(a => a.LastBoostDate)
+                .ThenByDescending(a => a.SongArtists.Count(sa => !sa.Song.IsDeleted && sa.Song.IsApproved))
                 .ThenBy(a => a.Name)
                 .Take(count)
                 .Select(a => new ArtistListDto

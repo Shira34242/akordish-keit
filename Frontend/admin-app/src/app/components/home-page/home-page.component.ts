@@ -946,11 +946,8 @@ export class HomePageComponent implements OnInit, AfterViewInit, AfterViewChecke
   }
 
   private buildMobileArtistRows(artists: any[]): any[][] {
-    if (artists.length === 0) return [];
-
-    return Array.from({ length: 2 }, (_, rowIndex) =>
-      Array.from({ length: 4 }, (_, artistIndex) => artists[(rowIndex * 4 + artistIndex) % artists.length])
-    );
+    const visibleArtists = artists.slice(0, 8);
+    return [visibleArtists.slice(0, 4), visibleArtists.slice(4, 8)].filter(row => row.length > 0);
   }
 
   get useScrollingNewsBanner(): boolean {

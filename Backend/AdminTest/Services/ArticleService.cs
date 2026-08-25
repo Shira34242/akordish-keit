@@ -610,9 +610,14 @@ public class ArticleService : IArticleService
         pageNumber = Math.Max(1, pageNumber);
         pageSize = Math.Clamp(pageSize, 1, 40);
         var totalCount = await query.CountAsync();
-        var items = await ApplyMusicNewsExposureOrdering(query, DateTime.UtcNow)
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
+        var requestedEnd = (int)Math.Min((long)pageNumber * pageSize, totalCount);
+        var now = DateTime.UtcNow;
+        var bumpCutoff = now.AddHours(-24);
+
+        var chronologicalCandidates = await query
+            .OrderByDescending(a => a.PublishDate)
+            .ThenByDescending(a => a.Id)
+            .Take(requestedEnd)
             .Select(a => new ArticleBannerDto
             {
                 Id = a.Id,
@@ -626,6 +631,87 @@ public class ArticleService : IArticleService
                 PublishDate = a.PublishDate
             })
             .ToListAsync();
+
+        var exposureCandidates = await ApplyMusicNewsExposureOrdering(
+                query.Where(a =>
+                    (a.BumpedAt.HasValue && a.BumpedAt.Value >= bumpCutoff)
+                    || _context.ContentPromotions.Any(p =>
+                        p.TargetType == ContentPromotionTargetType.Article
+                        && p.TargetId == a.Id
+                        && p.IsActive
+                        && (!p.StartsAt.HasValue || p.StartsAt.Value <= now)
+                        && (!p.EndsAt.HasValue || p.EndsAt.Value >= now))),
+                now)
+            .Take(requestedEnd)
+            .Select(a => new ArticleBannerDto
+            {
+                Id = a.Id,
+                Title = a.Title,
+                FeaturedImageUrl = a.FeaturedImageUrl,
+                Slug = a.Slug,
+                ShortDescription = a.ShortDescription,
+                ContentType = contentType,
+                IsFeatured = a.IsFeatured,
+                DisplayOrder = a.DisplayOrder,
+                PublishDate = a.PublishDate
+            })
+            .ToListAsync();
+
+        var feed = new List<ArticleBannerDto>(requestedEnd);
+        var usedIds = new HashSet<int>();
+        var chronologicalIndex = 0;
+        var exposureIndex = 0;
+
+        void AddChronological(int count)
+        {
+            var added = 0;
+            while (added < count && feed.Count < requestedEnd && chronologicalIndex < chronologicalCandidates.Count)
+            {
+                var article = chronologicalCandidates[chronologicalIndex++];
+                if (!usedIds.Add(article.Id))
+                    continue;
+
+                feed.Add(article);
+                added++;
+            }
+        }
+
+        void AddExposure(int count)
+        {
+            var added = 0;
+            while (added < count && feed.Count < requestedEnd && exposureIndex < exposureCandidates.Count)
+            {
+                var article = exposureCandidates[exposureIndex++];
+                if (!usedIds.Add(article.Id))
+                    continue;
+
+                feed.Add(article);
+                added++;
+            }
+
+            if (added < count)
+                AddChronological(count - added);
+        }
+
+        AddChronological(8);
+        AddExposure(2);
+
+        var useThreeExposureSlots = true;
+        while (feed.Count < requestedEnd)
+        {
+            var countBeforeBlock = feed.Count;
+            AddChronological(4);
+            AddExposure(useThreeExposureSlots ? 3 : 2);
+            useThreeExposureSlots = !useThreeExposureSlots;
+
+            if (feed.Count == countBeforeBlock)
+                break;
+        }
+
+        var items = feed
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
 
         return new PagedResult<ArticleBannerDto>
         {
