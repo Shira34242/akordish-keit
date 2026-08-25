@@ -174,11 +174,23 @@ public class ArtistsController : ControllerBase
     {
         try
         {
+            count = Math.Clamp(count, 1, 50);
             var now = DateTime.UtcNow;
             var freshRecommendationCutoff = now.AddDays(-7);
             var bumpCutoff = now.AddHours(-24);
-            var artists = await _context.Artists
-                .Where(a => !a.IsDeleted && a.Status == ArtistStatus.Active)
+            var activeArtists = _context.Artists
+                .AsNoTracking()
+                .Where(a => !a.IsDeleted && a.Status == ArtistStatus.Active);
+
+            var artists = await activeArtists
+                .Where(a => a.IsFeatured || a.IsPremium || a.LastBoostDate.HasValue
+                    || (a.BumpedAt.HasValue && a.BumpedAt.Value >= bumpCutoff)
+                    || _context.ContentPromotions.Any(p =>
+                        p.TargetType == ContentPromotionTargetType.Artist
+                        && p.TargetId == a.Id
+                        && p.IsActive
+                        && (!p.StartsAt.HasValue || p.StartsAt.Value <= now)
+                        && (!p.EndsAt.HasValue || p.EndsAt.Value >= now)))
                 .OrderByDescending(a => a.IsFeatured && a.CreatedAt >= freshRecommendationCutoff)
                 .ThenByDescending(a => _context.ContentPromotions.Any(p =>
                     p.TargetType == ContentPromotionTargetType.Artist
@@ -200,7 +212,6 @@ public class ArtistsController : ControllerBase
                 .ThenBy(a => a.IsFeatured ? a.DisplayOrder : int.MaxValue)
                 .ThenByDescending(a => a.IsPremium)
                 .ThenByDescending(a => a.LastBoostDate)
-                .ThenByDescending(a => a.SongArtists.Count(sa => !sa.Song.IsDeleted && sa.Song.IsApproved))
                 .ThenBy(a => a.Name)
                 .Take(count)
                 .Select(a => new ArtistListDto
@@ -219,6 +230,34 @@ public class ArtistsController : ControllerBase
                     BumpCount = a.BumpCount
                 })
                 .ToListAsync();
+
+            if (artists.Count < count)
+            {
+                var selectedArtistIds = artists.Select(a => a.Id).ToArray();
+                var fallbackArtists = await activeArtists
+                    .Where(a => !selectedArtistIds.Contains(a.Id))
+                    .OrderByDescending(a => a.SongArtists.Count(sa => !sa.Song.IsDeleted && sa.Song.IsApproved))
+                    .ThenBy(a => a.Name)
+                    .Take(count - artists.Count)
+                    .Select(a => new ArtistListDto
+                    {
+                        Id = a.Id,
+                        Name = a.Name,
+                        ShortBio = a.ShortBio,
+                        ImageUrl = a.ImageUrl,
+                        IsVerified = a.IsVerified,
+                        IsPremium = a.IsPremium,
+                        IsFeatured = a.IsFeatured,
+                        SongCount = a.SongArtists.Count(sa => !sa.Song.IsDeleted && sa.Song.IsApproved),
+                        Status = a.Status,
+                        CreatedAt = a.CreatedAt,
+                        BumpedAt = a.BumpedAt,
+                        BumpCount = a.BumpCount
+                    })
+                    .ToListAsync();
+
+                artists.AddRange(fallbackArtists);
+            }
 
             return Ok(artists);
         }
