@@ -21,10 +21,26 @@ public sealed class EmailArticleIngestionController : ControllerBase
         _logger = logger;
     }
 
+    [HttpGet("producers")]
+    [AllowAnonymous]
+    [EnableRateLimiting("email-article-ingest")]
+    public async Task<ActionResult<object>> GetApprovedProducers()
+    {
+        if (!_ingestionService.IsEnabled)
+            return NotFound();
+
+        if (!await _ingestionService.IsAuthorizedAsync(
+                Request.Headers.Authorization.FirstOrDefault(),
+                HttpContext.RequestAborted))
+            return Unauthorized(new { message = "Invalid ingestion credentials" });
+
+        return Ok(new { senders = _ingestionService.ApprovedSenderEmails });
+    }
+
     [HttpPost]
     [AllowAnonymous]
     [EnableRateLimiting("email-article-ingest")]
-    [Consumes("multipart/form-data")]
+    [Consumes("multipart/form-data", "application/x-www-form-urlencoded")]
     [RequestSizeLimit(31_457_280)]
     public async Task<ActionResult<EmailArticleIngestionResponseDto>> Ingest(
         [FromForm] EmailArticleIngestionRequestDto request)

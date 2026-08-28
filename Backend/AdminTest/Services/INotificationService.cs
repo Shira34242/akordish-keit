@@ -25,6 +25,11 @@ public interface INotificationService
     Task NotifySongApprovedAsync(int userId, int songId, string songTitle);
     Task NotifySongRejectedAsync(int userId, int songId, string songTitle);
     Task NotifyArticleSubmittedAsync(int userId, int articleId, string articleTitle);
+    Task NotifyEmailArticleDraftCreatedAsync(
+        int articleId,
+        string articleTitle,
+        string producerEmail,
+        IReadOnlyCollection<string> warnings);
     Task NotifyArticleApprovedAsync(int userId, int articleId, string articleTitle, string? slug, int contentType);
     Task NotifyEventSubmittedAsync(int userId, int eventId, string eventName);
     Task NotifyEventApprovedAsync(int userId, int eventId, string eventName);

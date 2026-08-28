@@ -28,11 +28,13 @@ public sealed class EmailArticleProducerOptions
     public string CategoryName { get; set; } = "חדשות";
     public string Template { get; set; } = "irpr-v1";
     public string? AuthorName { get; set; }
+    public bool AutoDiscover { get; set; } = true;
 }
 
 public interface IEmailArticleIngestionService
 {
     bool IsEnabled { get; }
+    IReadOnlyList<string> ApprovedSenderEmails { get; }
     Task<bool> IsAuthorizedAsync(string? authorizationHeader, CancellationToken cancellationToken);
     Task<EmailArticleIngestionResponseDto> IngestAsync(EmailArticleIngestionRequestDto request);
 }
@@ -51,10 +53,19 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
         @"https?://(?:drive|docs)\.google\.com/[^\s<>]*",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
+    private static readonly Regex GoogleDriveFolderUrlRegex = new(
+        @"https?://drive\.google\.com/drive/folders/[A-Za-z0-9_-]+[^\s<>]*",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    private static readonly Regex AnyUrlRegex = new(
+        @"https?://[^\s<>]+",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
     private readonly AkordishKeitDbContext _context;
     private readonly IArticleService _articleService;
     private readonly IAzureBlobService _blobService;
     private readonly IYouTubeService _youTubeService;
+    private readonly INotificationService _notificationService;
     private readonly HttpClient _httpClient;
     private readonly EmailArticleIngestionOptions _options;
     private readonly ILogger<EmailArticleIngestionService> _logger;
@@ -64,6 +75,7 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
         IArticleService articleService,
         IAzureBlobService blobService,
         IYouTubeService youTubeService,
+        INotificationService notificationService,
         HttpClient httpClient,
         IOptions<EmailArticleIngestionOptions> options,
         ILogger<EmailArticleIngestionService> logger)
@@ -72,12 +84,20 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
         _articleService = articleService;
         _blobService = blobService;
         _youTubeService = youTubeService;
+        _notificationService = notificationService;
         _httpClient = httpClient;
         _options = options.Value;
         _logger = logger;
     }
 
     public bool IsEnabled => _options.Enabled;
+
+    public IReadOnlyList<string> ApprovedSenderEmails => _options.Producers
+        .Where(producer => producer.AutoDiscover)
+        .Select(producer => producer.SenderEmail.Trim().ToLowerInvariant())
+        .Where(email => !string.IsNullOrWhiteSpace(email))
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToList();
 
     public async Task<bool> IsAuthorizedAsync(
         string? authorizationHeader,
@@ -157,8 +177,13 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
                 request.Subject,
                 request.PlainBody,
                 request.DocumentText),
+            "mendy-kornet-v1" => ParseMendyKornetMessage(
+                request.Subject,
+                request.PlainBody,
+                request.DocumentText),
             _ => throw new InvalidOperationException($"Unsupported producer template: {producer.Template}")
         };
+        var warnings = BuildStructureWarnings(parsed, request, producer.Template);
         var slug = BuildDeterministicSlug(parsed.Title, request.MessageId);
 
         var existing = await _context.Articles
@@ -180,36 +205,38 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
                     request.MessageId);
             }
 
+            await _notificationService.NotifyEmailArticleDraftCreatedAsync(
+                existing.Id,
+                existing.Title,
+                senderEmail,
+                warnings);
+
             return new EmailArticleIngestionResponseDto
             {
                 Success = true,
                 Duplicate = true,
                 ArticleId = existing.Id,
-                Title = existing.Title
+                Title = existing.Title,
+                RequiresReview = warnings.Count > 0,
+                Warnings = warnings
             };
         }
-
-        var warnings = new List<string>();
-        if (parsed.UsedFallbackContent)
-            warnings.Add("תוכן הכתבה לא זוהה במלואו");
-        if (string.IsNullOrWhiteSpace(parsed.YouTubeUrl))
-            warnings.Add("לא נמצא קישור YouTube");
 
         string? audioUrl = null;
         if (request.AudioFile == null || request.AudioFile.Length == 0)
         {
-            warnings.Add("לא נמצא קובץ שמע");
+            AddWarning(warnings, "לא נמצא קובץ שמע");
         }
         else if (request.AudioFile.Length > MaxAudioFileSizeBytes)
         {
-            warnings.Add("קובץ השמע גדול מ-30MB");
+            AddWarning(warnings, "קובץ השמע גדול מ-30MB");
         }
         else
         {
             var extension = Path.GetExtension(request.AudioFile.FileName);
             if (!AllowedAudioExtensions.Contains(extension))
             {
-                warnings.Add("סוג קובץ השמע אינו נתמך");
+                AddWarning(warnings, "סוג קובץ השמע אינו נתמך");
             }
             else
             {
@@ -221,7 +248,7 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
                     "uploads/email-articles/audio");
 
                 if (string.IsNullOrWhiteSpace(audioUrl))
-                    warnings.Add("העלאת קובץ השמע נכשלה");
+                    AddWarning(warnings, "העלאת קובץ השמע נכשלה");
             }
         }
 
@@ -231,7 +258,7 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
             var metadata = await _youTubeService.GetVideoMetadataAsync(parsed.YouTubeUrl);
             thumbnailUrl = metadata.ThumbnailUrl;
             if (string.IsNullOrWhiteSpace(thumbnailUrl))
-                warnings.Add("לא ניתן היה לשמור את תמונת YouTube");
+                AddWarning(warnings, "לא ניתן היה לשמור את תמונת YouTube");
         }
 
         var requiresReview = warnings.Count > 0;
@@ -268,6 +295,12 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
             request.MessageId,
             requiresReview);
 
+        await _notificationService.NotifyEmailArticleDraftCreatedAsync(
+            article.Id,
+            article.Title,
+            senderEmail,
+            warnings);
+
         return new EmailArticleIngestionResponseDto
         {
             Success = true,
@@ -277,6 +310,203 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
             Warnings = warnings
         };
     }
+
+    private static List<string> BuildStructureWarnings(
+        ParsedEmailArticle parsed,
+        EmailArticleIngestionRequestDto request,
+        string template)
+    {
+        var warnings = new List<string>();
+        var templateName = template.Trim().ToLowerInvariant();
+        var plainBody = request.PlainBody ?? string.Empty;
+
+        if (parsed.UsedFallbackContent)
+            AddWarning(warnings, "תוכן הכתבה לא זוהה במלואו");
+        if (string.IsNullOrWhiteSpace(parsed.YouTubeUrl))
+            AddWarning(warnings, "לא נמצא קישור YouTube");
+        if (string.IsNullOrWhiteSpace(parsed.Credits))
+            AddWarning(warnings, "לא זוהתה שורת קרדיטים");
+        if (parsed.Title == "כתבה ללא כותרת")
+            AddWarning(warnings, "לא זוהתה כותרת");
+
+        if (request.AudioFile == null || request.AudioFile.Length == 0)
+        {
+            AddWarning(warnings, "לא נמצא קובץ שמע");
+        }
+        else if (request.AudioFile.Length > MaxAudioFileSizeBytes)
+        {
+            AddWarning(warnings, "קובץ השמע גדול מ-30MB");
+        }
+        else if (!AllowedAudioExtensions.Contains(Path.GetExtension(request.AudioFile.FileName)))
+        {
+            AddWarning(warnings, "סוג קובץ השמע אינו נתמך");
+        }
+
+        var contentText = CleanText(Regex.Replace(parsed.ContentHtml, "<[^>]+>", " "));
+        var contentWordCount = contentText
+            .Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)
+            .Length;
+        if (!parsed.UsedFallbackContent && contentWordCount < 20)
+            AddWarning(warnings, "תוכן הכתבה קצר מהמבנה הרגיל וייתכן שחסר בו חלק");
+
+        var youtubeUrls = YouTubeUrlRegex.Matches(plainBody)
+            .Select(match => NormalizeDetectedUrl(match.Value))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        if (youtubeUrls.Count > 1)
+            AddWarning(warnings, $"נמצאו {youtubeUrls.Count} קישורי YouTube במקום קישור אחד");
+
+        var driveUrls = GoogleDriveUrlRegex.Matches(plainBody)
+            .Select(match => NormalizeDetectedUrl(match.Value))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        var folderUrls = GoogleDriveFolderUrlRegex.Matches(plainBody)
+            .Select(match => NormalizeDetectedUrl(match.Value))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var knownUrls = youtubeUrls
+            .Concat(driveUrls)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var otherUrls = AnyUrlRegex.Matches(plainBody)
+            .Select(match => NormalizeDetectedUrl(match.Value))
+            .Where(url => !knownUrls.Contains(url))
+            .Where(url => templateName != "mendy-kornet-v1" || !IsMendyKornetAllowedExtraUrl(url))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        if (otherUrls.Count > 0)
+            AddWarning(warnings, $"נמצאו {otherUrls.Count} קישורים נוספים שלא הוגדרו בתבנית");
+
+        switch (templateName)
+        {
+            case "irpr-v1":
+                if (driveUrls.Count > 0 && !HasExpectedIrprDriveLinks(plainBody, driveUrls.Count))
+                    AddWarning(warnings, "נמצא קישור Drive שלא הוגדר בתבנית המפיק");
+                if (HasShortUnexpectedOpening(plainBody, parsed.Title))
+                    AddWarning(warnings, "נמצא טקסט קצר ולא צפוי בתחילת המייל");
+                break;
+
+            case "tomer-cohen-v1":
+                if (string.IsNullOrWhiteSpace(request.DocumentText))
+                    AddWarning(warnings, "קובץ ה-Word חסר או שלא ניתן היה לקרוא אותו");
+                if (driveUrls.Count > 0)
+                    AddWarning(warnings, "נמצא קישור Drive שלא הוגדר בתבנית המפיק");
+                AddUnexpectedBodyWarning(warnings, plainBody);
+                break;
+
+            case "control-drive-v1":
+                if (string.IsNullOrWhiteSpace(request.DocumentText))
+                    AddWarning(warnings, "מסמך הקומוניקט בתיקיית Drive חסר או שלא ניתן היה לקרוא אותו");
+                if (folderUrls.Count == 0)
+                    AddWarning(warnings, "לא נמצא קישור לתיקיית Drive");
+                else if (folderUrls.Count > 1)
+                    AddWarning(warnings, $"נמצאו {folderUrls.Count} קישורים לתיקיות Drive במקום קישור אחד");
+                if (driveUrls.Count > folderUrls.Count)
+                    AddWarning(warnings, "נמצא קישור Drive נוסף שאינו קישור התיקייה שהוגדר");
+                AddUnexpectedBodyWarning(warnings, plainBody);
+                break;
+
+            case "mendy-kornet-v1":
+                if (driveUrls.Count == 0)
+                    AddWarning(warnings, "לא נמצא קישור Google Drive שמופיע בדרך כלל בתבנית המפיק");
+                else if (driveUrls.Count > 2)
+                    AddWarning(warnings, $"נמצאו {driveUrls.Count} קישורי Drive, יותר מהמבנה הרגיל");
+                break;
+        }
+
+        return warnings;
+    }
+
+    private static void AddUnexpectedBodyWarning(List<string> warnings, string plainBody)
+    {
+        var remainingLines = (plainBody ?? string.Empty)
+            .Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Replace('\r', '\n')
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .TakeWhile(line =>
+            {
+                var cleaned = CleanText(line);
+                return cleaned != "--" && !cleaned.StartsWith("-- ", StringComparison.Ordinal);
+            })
+            .Select(line => AnyUrlRegex.Replace(line, string.Empty))
+            .Select(CleanText)
+            .Where(line => !string.IsNullOrWhiteSpace(line))
+            .Where(line => !IsExpectedLinkLabel(line))
+            .Where(line => !IsExpectedAttachmentIntroduction(line))
+            .ToList();
+
+        if (remainingLines.Count == 0)
+            return;
+
+        var preview = string.Join(" ", remainingLines);
+        if (preview.Length > 90)
+            preview = preview[..87].TrimEnd() + "...";
+        AddWarning(warnings, $"נמצא טקסט נוסף בגוף המייל שלא הוגדר בתבנית: \"{preview}\"");
+    }
+
+    private static bool IsExpectedLinkLabel(string line)
+    {
+        var normalized = ComparableTitle(line);
+        return normalized is "קישורליוטיוב" or "קישורלדרייב" or "יוטיוב" or "דרייב"
+            || (line.EndsWith(':')
+                && (line.Contains("YouTube", StringComparison.OrdinalIgnoreCase)
+                    || line.Contains("יוטיוב", StringComparison.OrdinalIgnoreCase)
+                    || line.Contains("דרייב", StringComparison.OrdinalIgnoreCase)));
+    }
+
+    private static bool IsExpectedAttachmentIntroduction(string line)
+    {
+        var normalized = ComparableTitle(line);
+        return (normalized.StartsWith("מצב", StringComparison.Ordinal)
+                || normalized.StartsWith("מצורף", StringComparison.Ordinal))
+            && (normalized.Contains("קישור", StringComparison.Ordinal)
+                || normalized.Contains("חומר", StringComparison.Ordinal));
+    }
+
+    private static bool HasExpectedIrprDriveLinks(string plainBody, int driveUrlCount)
+    {
+        return driveUrlCount == 2
+            && plainBody.Contains("אודיו בדרייב", StringComparison.OrdinalIgnoreCase)
+            && plainBody.Contains("וידאו בדרייב", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsMendyKornetAllowedExtraUrl(string url)
+    {
+        return Uri.TryCreate(url, UriKind.Absolute, out var uri)
+            && uri.Host.EndsWith("youtube.com", StringComparison.OrdinalIgnoreCase)
+            && uri.AbsolutePath.Equals("/playlist", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool HasShortUnexpectedOpening(string plainBody, string title)
+    {
+        var blocks = Regex.Split(plainBody ?? string.Empty, @"\n\s*\n")
+            .Select(block => CleanText(Regex.Replace(block, @"\s*\n\s*", " ")))
+            .Where(block => !string.IsNullOrWhiteSpace(block))
+            .Where(block => !IsDuplicateTitle(block, title))
+            .Where(block => !YouTubeUrlRegex.IsMatch(block) && !GoogleDriveUrlRegex.IsMatch(block))
+            .Where(block => !LooksLikeCredits(block))
+            .ToList();
+
+        if (blocks.Count < 2)
+            return false;
+
+        var firstBlockWordCount = blocks[0]
+            .Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)
+            .Length;
+        var secondBlockWordCount = blocks[1]
+            .Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)
+            .Length;
+        return firstBlockWordCount <= 8 && secondBlockWordCount >= 15;
+    }
+
+    private static void AddWarning(List<string> warnings, string warning)
+    {
+        if (!warnings.Contains(warning, StringComparer.Ordinal))
+            warnings.Add(warning);
+    }
+
+    private static string NormalizeDetectedUrl(string url) =>
+        url.Trim().TrimEnd('*', ')', '>', '.', ',', ';');
 
     private static ParsedEmailArticle ParseIrprMessage(string subject, string plainBody)
     {
@@ -301,18 +531,25 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
 
         var contentParagraphs = new List<string>();
         var creditParagraphs = new List<string>();
-        foreach (var block in blocks)
+        foreach (var originalBlock in blocks)
         {
+            var block = originalBlock;
             if (block == "--" || block.StartsWith("-- ", StringComparison.Ordinal))
                 break;
 
             if (IsDuplicateTitle(block, title))
                 continue;
 
-            if (YouTubeUrlRegex.IsMatch(block)
-                || GoogleDriveUrlRegex.IsMatch(block)
-                || block.StartsWith("יוטיוב", StringComparison.OrdinalIgnoreCase)
-                || block.StartsWith("וידאו בדרייב", StringComparison.OrdinalIgnoreCase))
+            if (YouTubeUrlRegex.IsMatch(block) || GoogleDriveUrlRegex.IsMatch(block))
+            {
+                block = RemoveMediaLinkText(block);
+                if (string.IsNullOrWhiteSpace(block))
+                    continue;
+            }
+
+            if (block.StartsWith("יוטיוב", StringComparison.OrdinalIgnoreCase)
+                || block.StartsWith("וידאו בדרייב", StringComparison.OrdinalIgnoreCase)
+                || block.StartsWith("אודיו בדרייב", StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }
@@ -352,6 +589,21 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
             string.IsNullOrWhiteSpace(credits) ? null : credits,
             Math.Max(1, (int)Math.Ceiling(wordCount / 200d)),
             usedFallbackContent);
+    }
+
+    private static string RemoveMediaLinkText(string block)
+    {
+        var cleaned = AnyUrlRegex.Replace(block, " ");
+        cleaned = Regex.Replace(cleaned, @"[<>*]+", " ");
+        cleaned = Regex.Replace(
+            cleaned,
+            @"(?i)(?:\|\s*)?(?:אודיו|וידאו)\s+בדרייב\s*:?",
+            " ");
+        cleaned = Regex.Replace(
+            cleaned,
+            @"(?i)(?:קישור\s+ל)?(?:יוטיוב|youtube)\s*:?",
+            " ");
+        return CleanText(cleaned).Trim('|', ' ');
     }
 
     private static ParsedEmailArticle ParseTomerCohenMessage(
@@ -510,6 +762,110 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
             string.IsNullOrWhiteSpace(credits) ? null : credits,
             Math.Max(1, (int)Math.Ceiling(wordCount / 200d)),
             usedFallbackContent);
+    }
+
+    private static ParsedEmailArticle ParseMendyKornetMessage(
+        string subject,
+        string plainBody,
+        string? documentText)
+    {
+        var youtubeMatch = YouTubeUrlRegex.Match(plainBody ?? string.Empty);
+        var youtubeUrl = youtubeMatch.Success
+            ? NormalizeDetectedUrl(youtubeMatch.Value)
+            : null;
+
+        var hasDocument = !string.IsNullOrWhiteSpace(documentText);
+        var sourceText = hasDocument ? documentText! : plainBody ?? string.Empty;
+        var normalizedSource = sourceText
+            .Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Replace('\r', '\n')
+            .Trim();
+
+        var hasBlankParagraphSeparators = Regex.IsMatch(normalizedSource, @"\n\s*\n");
+        var rawParagraphs = hasBlankParagraphSeparators
+            ? Regex.Split(normalizedSource, @"\n\s*\n")
+            : normalizedSource.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        var paragraphs = rawParagraphs
+            .Select(paragraph => CleanText(Regex.Replace(paragraph, @"\s*\n\s*", " ")))
+            .Where(paragraph => !string.IsNullOrWhiteSpace(paragraph))
+            .ToList();
+
+        var title = CleanText(subject);
+        if (string.IsNullOrWhiteSpace(title))
+            title = paragraphs.FirstOrDefault() ?? "כתבה ללא כותרת";
+
+        var titleIndex = paragraphs.FindIndex(paragraph => IsTitleOrFragment(paragraph, title));
+        var contentStartIndex = titleIndex >= 0 ? titleIndex : 0;
+        while (contentStartIndex < paragraphs.Count
+            && IsTitleOrFragment(paragraphs[contentStartIndex], title))
+        {
+            contentStartIndex++;
+        }
+
+        var creditsIndex = paragraphs.FindIndex(contentStartIndex, paragraph =>
+            IsCreditsHeading(paragraph)
+            || paragraph.StartsWith("קרדיט", StringComparison.OrdinalIgnoreCase));
+        var mediaIndex = paragraphs.FindIndex(contentStartIndex, paragraph =>
+            YouTubeUrlRegex.IsMatch(paragraph)
+            || GoogleDriveUrlRegex.IsMatch(paragraph)
+            || paragraph.Trim('_', ' ') == string.Empty);
+
+        var contentEndIndex = new[] { creditsIndex, mediaIndex }
+            .Where(index => index >= 0)
+            .DefaultIfEmpty(paragraphs.Count)
+            .Min();
+        var contentParagraphs = paragraphs
+            .Skip(contentStartIndex)
+            .Take(Math.Max(0, contentEndIndex - contentStartIndex))
+            .Where(paragraph => paragraph != "--" && !paragraph.StartsWith("-- ", StringComparison.Ordinal))
+            .ToList();
+
+        var creditParagraphs = creditsIndex >= 0
+            ? paragraphs
+                .Skip(creditsIndex)
+                .TakeWhile(paragraph => paragraph != "--" && !paragraph.StartsWith("-- ", StringComparison.Ordinal))
+                .Where(paragraph => !YouTubeUrlRegex.IsMatch(paragraph)
+                    && !GoogleDriveUrlRegex.IsMatch(paragraph))
+                .ToList()
+            : new List<string>();
+
+        var usedFallbackContent = titleIndex < 0 || contentParagraphs.Count == 0;
+        if (contentParagraphs.Count == 0)
+        {
+            contentParagraphs.Add(
+                "תוכן הקומוניקט לא זוהה אוטומטית. יש להשלים את הכתבה לפני הפרסום.");
+        }
+
+        var contentHtml = string.Join("\n", contentParagraphs.Select(paragraph =>
+            $"<p>{WebUtility.HtmlEncode(paragraph)}</p>"));
+        var credits = string.Join(" | ", creditParagraphs).Trim();
+        if (credits.Length > 2000)
+            credits = credits[..2000].TrimEnd();
+
+        var description = contentParagraphs.FirstOrDefault() ?? string.Empty;
+        if (description.Length > 500)
+            description = description[..497] + "...";
+        var wordCount = contentParagraphs.Sum(paragraph =>
+            paragraph.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length);
+
+        return new ParsedEmailArticle(
+            title,
+            contentHtml,
+            description,
+            youtubeUrl,
+            string.IsNullOrWhiteSpace(credits) ? null : credits,
+            Math.Max(1, (int)Math.Ceiling(wordCount / 200d)),
+            usedFallbackContent);
+    }
+
+    private static bool IsTitleOrFragment(string paragraph, string title)
+    {
+        var comparableParagraph = ComparableTitle(paragraph);
+        var comparableTitle = ComparableTitle(title);
+        return comparableParagraph.Length >= 4
+            && (comparableParagraph == comparableTitle
+                || comparableTitle.Contains(comparableParagraph, StringComparison.Ordinal)
+                || comparableParagraph.Contains(comparableTitle, StringComparison.Ordinal));
     }
 
     private static bool IsCreditsHeading(string paragraph)

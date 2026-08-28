@@ -534,6 +534,51 @@ public class NotificationService : INotificationService
             $"/admin/content/articles/edit/{articleId}");
     }
 
+    public async Task NotifyEmailArticleDraftCreatedAsync(
+        int articleId,
+        string articleTitle,
+        string producerEmail,
+        IReadOnlyCollection<string> warnings)
+    {
+        var notificationAlreadyExists = await _context.Notifications
+            .AsNoTracking()
+            .AnyAsync(notification => !notification.IsDeleted
+                && notification.RelatedEntityType == "EmailArticleDraft"
+                && notification.RelatedEntityId == articleId);
+
+        if (notificationAlreadyExists)
+        {
+            return;
+        }
+
+        var distinctWarnings = warnings
+            .Where(warning => !string.IsNullOrWhiteSpace(warning))
+            .Select(warning => warning.Trim())
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+        var warningText = distinctWarnings.Count == 0
+            ? "לא זוהו חריגות במבנה המייל."
+            : $"חריגות שדורשות בדיקה: {string.Join("; ", distinctWarnings)}.";
+        var message = $"הכתבה \"{articleTitle}\" נקלטה מהמפיק {producerEmail} ונשמרה כטיוטה. {warningText}";
+        if (message.Length > 1000)
+        {
+            message = message[..997].TrimEnd() + "...";
+        }
+
+        await CreateAdminContentSubmissionNotificationsAsync(new CreateNotificationDto
+        {
+            Title = distinctWarnings.Count == 0
+                ? "כתבה חדשה מהמייל ממתינה לאישור"
+                : "כתבה חדשה מהמייל דורשת בדיקה",
+            Message = message,
+            Type = NotificationType.Submission,
+            Category = NotificationCategory.Article,
+            RelatedEntityType = "EmailArticleDraft",
+            RelatedEntityId = articleId,
+            ActionUrl = $"/admin/content/articles/edit/{articleId}"
+        });
+    }
+
     public Task NotifyArticleApprovedAsync(int userId, int articleId, string articleTitle, string? slug, int contentType)
     {
         var routePrefix = contentType == (int)ArticleContentType.Blog ? "/blog" : "/news";

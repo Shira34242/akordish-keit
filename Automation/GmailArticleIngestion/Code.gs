@@ -6,6 +6,9 @@ const MAX_THREADS_PER_RUN = 5;
 const AUDIO_EXTENSIONS = /\.(mp3|wav|m4a|aac|ogg)$/i;
 const WORD_EXTENSIONS = /\.(doc|docx)$/i;
 const DRIVE_FOLDER_REGEX = /https?:\/\/drive\.google\.com\/drive\/folders\/([A-Za-z0-9_-]+)/i;
+const DISCOVERY_CURSOR_PROPERTY = 'ARTICLE_PRODUCER_DISCOVERY_CURSOR_MS';
+const DISCOVERY_OVERLAP_SECONDS = 10 * 60;
+const MAX_DISCOVERY_THREADS_PER_RUN = 20;
 
 function processIncomingArticles() {
   ensureFiveMinuteTrigger_();
@@ -17,6 +20,14 @@ function processIncomingArticles() {
   const processedLabel = getOrCreateLabel_(PROCESSED_LABEL);
   const reviewLabel = getOrCreateLabel_(REVIEW_LABEL);
   const errorLabel = getOrCreateLabel_(ERROR_LABEL);
+  const approvedSenders = fetchApprovedProducerEmails_(apiUrl);
+  discoverApprovedProducerThreads_(
+    approvedSenders,
+    sourceLabel,
+    processedLabel,
+    reviewLabel,
+    properties
+  );
   const threads = sourceLabel.getThreads(0, MAX_THREADS_PER_RUN);
 
   threads.forEach(function(thread) {
@@ -87,6 +98,75 @@ function processIncomingArticles() {
       errorLabel.addToThread(thread);
     }
   });
+}
+
+function fetchApprovedProducerEmails_(apiUrl) {
+  const response = UrlFetchApp.fetch(apiUrl.replace(/\/+$/, '') + '/producers', {
+    method: 'get',
+    headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() },
+    muteHttpExceptions: true
+  });
+
+  if (response.getResponseCode() < 200 || response.getResponseCode() >= 300) {
+    console.warn(
+      'Could not refresh approved email producers: ' +
+      response.getResponseCode() +
+      ' ' +
+      response.getContentText()
+    );
+    return [];
+  }
+
+  const body = parseJson_(response.getContentText());
+  return Array.isArray(body.senders)
+    ? body.senders
+        .map(function(sender) { return String(sender || '').trim().toLowerCase(); })
+        .filter(function(sender) { return sender.length > 0; })
+    : [];
+}
+
+function discoverApprovedProducerThreads_(
+  approvedSenders,
+  sourceLabel,
+  processedLabel,
+  reviewLabel,
+  properties
+) {
+  if (!approvedSenders || approvedSenders.length === 0) {
+    return;
+  }
+
+  const now = Date.now();
+  const previousCursor = Number(properties.getProperty(DISCOVERY_CURSOR_PROPERTY));
+  if (!previousCursor || !isFinite(previousCursor)) {
+    properties.setProperty(DISCOVERY_CURSOR_PROPERTY, String(now));
+    return;
+  }
+
+  const afterSeconds = Math.max(
+    0,
+    Math.floor(previousCursor / 1000) - DISCOVERY_OVERLAP_SECONDS
+  );
+  const senderQuery = approvedSenders
+    .map(function(sender) { return 'from:' + sender; })
+    .join(' ');
+  const query = 'after:' + afterSeconds + ' {' + senderQuery + '}';
+  const completedLabelNames = {};
+  completedLabelNames[processedLabel.getName()] = true;
+  completedLabelNames[reviewLabel.getName()] = true;
+
+  GmailApp.search(query, 0, MAX_DISCOVERY_THREADS_PER_RUN)
+    .forEach(function(thread) {
+      const labels = thread.getLabels();
+      const isCompleted = labels.some(function(label) {
+        return completedLabelNames[label.getName()] === true;
+      });
+      if (!isCompleted) {
+        sourceLabel.addToThread(thread);
+      }
+    });
+
+  properties.setProperty(DISCOVERY_CURSOR_PROPERTY, String(now));
 }
 
 function authorizeDriveAccess() {
