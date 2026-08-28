@@ -382,6 +382,31 @@
   height: 100%;
 }
 
+.video-loading-status {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  background: rgba(0, 0, 0, 0.64);
+  color: #ffffff;
+  font-size: var(--font-sm);
+  font-weight: 800;
+  line-height: var(--lh-small);
+  pointer-events: none;
+}
+
+.video-loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ddff53;
+  border-radius: 50%;
+  animation: audio-status-spin 0.8s linear infinite;
+}
+
 
 /* התחברות להפעלת מדיה */
 .video-preview--without-image {
@@ -935,6 +960,40 @@
   padding: 0;
 }
 
+.audio-status {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  border-radius: 999px;
+  background: #ffffff;
+  color: #000000;
+  font-size: var(--font-sm);
+  font-weight: 800;
+  line-height: var(--lh-small);
+  pointer-events: none;
+}
+
+.audio-frame-wrapper .audio-status {
+  border-radius: 14px;
+}
+
+.audio-status-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #F2F2F2;
+  border-top-color: #000000;
+  border-radius: 50%;
+  animation: audio-status-spin 0.8s linear infinite;
+}
+
+@keyframes audio-status-spin {
+  to { transform: rotate(360deg); }
+}
+
 .audio-player {
   flex: 1;
   min-width: 0;
@@ -1334,7 +1393,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .feedback-circle.attention::before {
+  .feedback-circle.attention::before,
+  .audio-status-spinner,
+  .video-loading-spinner {
     animation: none;
   }
 }

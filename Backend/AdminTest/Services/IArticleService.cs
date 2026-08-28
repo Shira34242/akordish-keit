@@ -77,7 +77,7 @@ public interface IArticleService
 
     Task<ArticleNewsCleanupResultDto?> RunAutomaticNewsCleanupAsync(CancellationToken cancellationToken = default);
 
-    Task<int> IncrementViewCountAsync(int id, int? userId, string? ipAddress, string? userAgent, string? referrer);
+    Task IncrementViewCountAsync(int id, int? userId, string? ipAddress, string? userAgent, string? referrer);
 
     Task<int> IncrementLikeCountAsync(int id);
 

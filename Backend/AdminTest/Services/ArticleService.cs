@@ -1353,14 +1353,16 @@ public class ArticleService : IArticleService
         return await CleanupOldNewsAsync(settings.RetentionDays, cancellationToken);
     }
 
-    public async Task<int> IncrementViewCountAsync(int id, int? userId, string? ipAddress, string? userAgent, string? referrer)
+    public async Task IncrementViewCountAsync(int id, int? userId, string? ipAddress, string? userAgent, string? referrer)
     {
-        var article = await _context.Articles.FindAsync(id);
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+        var updatedRows = await _context.Articles
+            .Where(article => article.Id == id)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(article => article.ViewCount, article => article.ViewCount + 1));
 
-        if (article == null)
-        {
+        if (updatedRows == 0)
             throw new KeyNotFoundException("Article not found");
-        }
 
         // Every real page open is a view. Unique visitors are calculated separately
         // in analytics from UserId, or IP + User-Agent for guests.
@@ -1374,10 +1376,8 @@ public class ArticleService : IArticleService
             ViewedAt = DateTime.UtcNow
         });
 
-        article.ViewCount++;
         await _context.SaveChangesAsync();
-
-        return article.ViewCount;
+        await transaction.CommitAsync();
     }
 
     public async Task<int> IncrementLikeCountAsync(int id)

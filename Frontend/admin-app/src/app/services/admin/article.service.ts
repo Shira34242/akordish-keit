@@ -421,8 +421,8 @@ export class ArticleService {
   /**
    * Increment view count
    */
-  incrementView(id: number): Observable<{ viewCount: number }> {
-    return this.http.post<{ viewCount: number }>(`${this.apiUrl}/${id}/increment-view`, {});
+  incrementView(id: number): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/${id}/increment-view`, {});
   }
 
   /**

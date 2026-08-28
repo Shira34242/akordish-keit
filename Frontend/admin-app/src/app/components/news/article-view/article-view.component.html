@@ -55,6 +55,8 @@
               class="video-preview"
               [class.video-preview--without-image]="!article.featuredImageUrl"
               (click)="activateVideo()"
+              (pointerenter)="warmYouTubeConnections()"
+              (focus)="warmYouTubeConnections()"
               [attr.aria-label]="'הפעלת הסרטון: ' + article.title">
               <img *ngIf="article.featuredImageUrl" [src]="article.featuredImageUrl | cfImage:'content'" [alt]="article.title" class="video-preview-image" decoding="async">
               <span class="video-play-icon material-icons" aria-hidden="true">play_arrow</span>
@@ -64,8 +66,13 @@
               [src]="safeVideoUrl"
               frameborder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              (load)="onVideoLoaded()"
               allowfullscreen>
             </iframe>
+            <div class="video-loading-status" *ngIf="isVideoLoading" role="status" aria-live="polite">
+              <span class="video-loading-spinner" aria-hidden="true"></span>
+              <span>טוען סרטון...</span>
+            </div>
           </div>
         </div>
 
@@ -81,7 +88,22 @@
         <div class="audio-section" *ngIf="article.audioEmbedUrl">
           <ng-container *ngIf="isAudioFileUrl(article.audioEmbedUrl); else audioEmbed">
             <div class="audio-player-card">
-              <audio class="audio-player" [src]="getAudioStreamUrl(article.audioEmbedUrl)" controls preload="metadata"></audio>
+              <div class="audio-status" *ngIf="audioLoading || audioLoadError" role="status" aria-live="polite">
+                <span class="audio-status-spinner" *ngIf="audioLoading" aria-hidden="true"></span>
+                <span>{{ audioLoadError ? 'לא הצלחנו להכין את השמע' : 'מכין את השמע...' }}</span>
+              </div>
+              <audio
+                class="audio-player"
+                [src]="getAudioStreamUrl(article.audioEmbedUrl)"
+                controls
+                preload="metadata"
+                (loadstart)="onAudioLoadStart()"
+                (loadedmetadata)="onAudioReady()"
+                (canplay)="onAudioReady()"
+                (playing)="onAudioReady()"
+                (waiting)="onAudioWaiting()"
+                (error)="onAudioError()">
+              </audio>
               <button
                 *ngIf="!isMediaAvailable"
                 type="button"
@@ -93,12 +115,17 @@
           </ng-container>
           <ng-template #audioEmbed>
             <div class="audio-frame-wrapper">
+            <div class="audio-status" *ngIf="audioLoading || audioLoadError" role="status" aria-live="polite">
+              <span class="audio-status-spinner" *ngIf="audioLoading" aria-hidden="true"></span>
+              <span>{{ audioLoadError ? 'לא הצלחנו להכין את השמע' : 'מכין את השמע...' }}</span>
+            </div>
             <iframe
               [src]="sanitizer.bypassSecurityTrustResourceUrl(article.audioEmbedUrl)"
               frameborder="0"
               allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
               loading="lazy"
-              class="audio-frame">
+              class="audio-frame"
+              (load)="onAudioReady()">
             </iframe>
               <button
                 *ngIf="!isMediaAvailable"
@@ -259,12 +286,12 @@
 
     <!-- Right Sidebar - Advertisement -->
     <aside class="sidebar sidebar-right">
-      <app-media-item spotTechnicalId="view-article-right" fallbackSpotTechnicalId="view-article-left"></app-media-item>
+      <app-media-item spotTechnicalId="view-article-right"></app-media-item>
     </aside>
 
     <!-- Left Sidebar - Advertisement -->
     <aside class="sidebar sidebar-left">
-      <app-media-item spotTechnicalId="view-article-left" fallbackSpotTechnicalId="view-article-right"></app-media-item>
+      <app-media-item spotTechnicalId="view-article-left"></app-media-item>
     </aside>
   </div>
 

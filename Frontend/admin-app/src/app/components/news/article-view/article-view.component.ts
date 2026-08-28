@@ -55,12 +55,22 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
       if (this.sideAdMeasureFrame !== null) {
         window.cancelAnimationFrame(this.sideAdMeasureFrame);
       }
+      if (this.youtubeWarmupTimer !== null) {
+        window.clearTimeout(this.youtubeWarmupTimer);
+      }
+      if (this.youtubeLoadHandler) {
+        window.removeEventListener('load', this.youtubeLoadHandler);
+      }
     });
   }
 
   private relatedObserver: IntersectionObserver | null = null;
   private sideAdResizeObserver: ResizeObserver | null = null;
   private sideAdMeasureFrame: number | null = null;
+  private youtubeWarmupTimer: number | null = null;
+  private youtubeLoadHandler: (() => void) | null = null;
+  private youtubeConnectionsWarmed = false;
+  private youtubeWarmupScheduled = false;
   private _contentWithSidebarsEl: ElementRef<HTMLElement> | undefined;
   private _feedbackSectionEl: ElementRef<HTMLElement> | undefined;
 
@@ -114,6 +124,9 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
   safeVideoUrl: SafeResourceUrl | null = null;
   private videoEmbedUrl: string | null = null;
   isVideoActive = false;
+  isVideoLoading = false;
+  audioLoading = false;
+  audioLoadError = false;
   showMediaLoginPrompt = false;
   loginPromptContext: 'media' | 'feedback' = 'media';
 
@@ -339,6 +352,7 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
     this.article = article;
     this.recommendationExposure.markId(article.id);
     this.isVideoActive = false;
+    this.isVideoLoading = false;
     this.articleContentHtml = this.sanitizer.bypassSecurityTrustHtml(prepareArticleContentHtml(article.content));
     setTimeout(() => {
       attachArticleContentImageFallbacks(this.host.nativeElement);
@@ -346,6 +360,8 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
     });
     this.selectedReaction = null;
     this.reactionCounts = {};
+    this.audioLoading = !!article.audioEmbedUrl;
+    this.audioLoadError = false;
     this.contentPageService.setCurrentArticle(article.id);
     if (this.redirectToCanonicalArticle(article)) return;
     this.applySeo(article);
@@ -358,6 +374,7 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
       const embedUrl = this.convertToYouTubeEmbedUrl(article.videoEmbedUrl);
       this.videoEmbedUrl = embedUrl;
       this.safeVideoUrl = this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl);
+      this.scheduleYouTubeConnectionWarmup();
     }
 
     this.loadRelatedArticles(article);
@@ -509,6 +526,63 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
     return `${environment.apiBaseUrl}/api/Media/audio?url=${encodeURIComponent(url)}`;
   }
 
+  onAudioLoadStart(): void {
+    this.audioLoading = true;
+    this.audioLoadError = false;
+  }
+
+  onAudioReady(): void {
+    this.audioLoading = false;
+    this.audioLoadError = false;
+  }
+
+  onAudioWaiting(): void {
+    if (!this.audioLoadError) {
+      this.audioLoading = true;
+    }
+  }
+
+  onAudioError(): void {
+    this.audioLoading = false;
+    this.audioLoadError = true;
+  }
+
+  warmYouTubeConnections(): void {
+    if (this.youtubeConnectionsWarmed || typeof document === 'undefined') return;
+
+    this.youtubeConnectionsWarmed = true;
+    for (const origin of ['https://www.youtube.com', 'https://i.ytimg.com']) {
+      if (document.head.querySelector(`link[rel="preconnect"][href="${origin}"]`)) continue;
+
+      const link = document.createElement('link');
+      link.rel = 'preconnect';
+      link.href = origin;
+      link.crossOrigin = 'anonymous';
+      document.head.appendChild(link);
+    }
+  }
+
+  private scheduleYouTubeConnectionWarmup(): void {
+    if (this.youtubeWarmupScheduled || typeof window === 'undefined' || typeof document === 'undefined') return;
+
+    this.youtubeWarmupScheduled = true;
+    const scheduleWhenIdle = () => {
+      this.youtubeLoadHandler = null;
+      this.youtubeWarmupTimer = window.setTimeout(() => {
+        this.youtubeWarmupTimer = null;
+        this.warmYouTubeConnections();
+      }, 1200);
+    };
+
+    if (document.readyState === 'complete') {
+      scheduleWhenIdle();
+      return;
+    }
+
+    this.youtubeLoadHandler = scheduleWhenIdle;
+    window.addEventListener('load', scheduleWhenIdle, { once: true });
+  }
+
   formatDate(dateString: string): string {
     return new Date(dateString).toLocaleDateString('he-IL', {
       year: 'numeric',
@@ -603,8 +677,13 @@ export class ArticleViewComponent implements OnInit, AfterViewInit {
       if (this.videoEmbedUrl) {
         this.safeVideoUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.withAutoplay(this.videoEmbedUrl));
       }
+      this.isVideoLoading = true;
       this.isVideoActive = true;
     }
+  }
+
+  onVideoLoaded(): void {
+    this.isVideoLoading = false;
   }
 
   openMediaLoginPrompt(): void {

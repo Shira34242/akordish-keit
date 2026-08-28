@@ -649,9 +649,9 @@ public class ArticlesController : ControllerBase
             // Get Referrer
             var referrer = Request.Headers["Referer"].ToString();
 
-            var viewCount = await _articleService.IncrementViewCountAsync(id, userId, ipAddress, userAgent, referrer);
+            await _articleService.IncrementViewCountAsync(id, userId, ipAddress, userAgent, referrer);
 
-            return Ok(new { viewCount });
+            return NoContent();
         }
         catch (KeyNotFoundException ex)
         {

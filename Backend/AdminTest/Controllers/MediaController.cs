@@ -171,15 +171,49 @@ namespace AkordishKeit.Controllers
             if (!IsSafeAudioUrl(url, out var uri))
                 return BadRequest(new { message = "Invalid audio URL" });
 
-            var audioBytes = await FetchMediaBytes(uri, "audio/*");
-            if (audioBytes == null || audioBytes.Length == 0)
-                return StatusCode(502, new { message = "Audio could not be loaded" });
+            using var request = new HttpRequestMessage(System.Net.Http.HttpMethod.Get, uri.AbsoluteUri);
+            request.Headers.UserAgent.ParseAdd("AkordishKeit/1.0");
+            request.Headers.Accept.ParseAdd("audio/*");
 
-            if (audioBytes.Length > MaxFileSizeBytes)
+            if (Request.Headers.TryGetValue("Range", out var rangeHeader))
+                request.Headers.TryAddWithoutValidation("Range", rangeHeader.ToArray());
+
+            using var upstream = await _httpClient.SendAsync(
+                request,
+                HttpCompletionOption.ResponseHeadersRead,
+                HttpContext.RequestAborted);
+
+            if (!upstream.IsSuccessStatusCode)
+            {
+                if (upstream.StatusCode == System.Net.HttpStatusCode.RequestedRangeNotSatisfiable)
+                    return StatusCode(StatusCodes.Status416RangeNotSatisfiable);
+
+                return StatusCode(StatusCodes.Status502BadGateway, new { message = "Audio could not be loaded" });
+            }
+
+            var totalLength = upstream.Content.Headers.ContentRange?.Length
+                ?? upstream.Content.Headers.ContentLength;
+            if (totalLength > MaxFileSizeBytes)
                 return BadRequest(new { message = "Audio file is too large" });
 
+            Response.StatusCode = (int)upstream.StatusCode;
+            Response.ContentType = upstream.Content.Headers.ContentType?.ToString()
+                ?? GetContentType(Path.GetExtension(uri.AbsolutePath).ToLowerInvariant());
+            Response.ContentLength = upstream.Content.Headers.ContentLength;
             Response.Headers.CacheControl = "public, max-age=3600";
-            return File(audioBytes, GetContentType(Path.GetExtension(uri.AbsolutePath).ToLowerInvariant()), enableRangeProcessing: true);
+            Response.Headers["Accept-Ranges"] = upstream.Headers.AcceptRanges.Any()
+                ? string.Join(", ", upstream.Headers.AcceptRanges)
+                : "bytes";
+
+            if (upstream.Content.Headers.ContentRange != null)
+                Response.Headers["Content-Range"] = upstream.Content.Headers.ContentRange.ToString();
+            if (upstream.Headers.ETag != null)
+                Response.Headers.ETag = upstream.Headers.ETag.ToString();
+            if (upstream.Content.Headers.LastModified != null)
+                Response.Headers.LastModified = upstream.Content.Headers.LastModified.Value.ToString("R");
+
+            await upstream.Content.CopyToAsync(Response.Body, HttpContext.RequestAborted);
+            return new EmptyResult();
         }
 
         [HttpGet("download")]
