@@ -154,7 +154,12 @@ export class AdDisplayComponent implements OnInit, OnDestroy {
   hasLoaded = false;
   maxWidth: string | null = null;
   aspectRatio: string | null = null;
-  readonly srcsetWidths = [360, 600, 1000, 1600];
+  private readonly mobileSrcsetWidths = [600, 1200];
+  private readonly desktopSrcsetWidths = [1000, 1600];
+
+  get srcsetWidths(): number[] {
+    return this.effectiveMobile ? this.mobileSrcsetWidths : this.desktopSrcsetWidths;
+  }
 
   private visibilityObserver?: IntersectionObserver;
   private adViewObserver?: IntersectionObserver;

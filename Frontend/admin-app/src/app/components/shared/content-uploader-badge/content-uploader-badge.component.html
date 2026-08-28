@@ -2,7 +2,7 @@
   <div class="uploader-avatar" [class]="getAvatarClass()">
     <img
       *ngIf="profile.imageUrl; else initials"
-      [src]="profile.imageUrl | cfImage:'profile'"
+      [src]="profile.imageUrl | cfImage:160:82"
       [alt]="profile.name"
       class="uploader-img"
       loading="lazy"

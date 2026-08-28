@@ -16,7 +16,7 @@ import { CloudflareImagePipe, CloudflareImageSrcsetPipe } from '../../../pipes/c
 export class EventCardComponent {
   @Input({ required: true }) event!: EventCardData;
   @Input() showInfo = true;
-  @Input() imageWidth = 360;
+  @Input() imageWidth = 220;
   @Input() imageSizes = '360px';
   @Output() cardClick = new EventEmitter<EventCardData>();
 

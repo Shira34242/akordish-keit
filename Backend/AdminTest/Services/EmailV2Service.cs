@@ -225,9 +225,18 @@ public class EmailV2Service : IEmailV2Service
 
         sanitized = LiftCustomBlockSections(sanitized);
         sanitized = UnwrapCustomBlockTables(sanitized);
+        sanitized = RemoveEmptyMjmlSections(sanitized);
 
         return sanitized;
     }
+
+    private static string RemoveEmptyMjmlSections(string mjml) =>
+        Regex.Replace(
+            mjml,
+            @"<mj-section\b[^>]*>\s*(?:<mj-column\b[^>]*>\s*(?:<mj-raw\b[^>]*>\s*</mj-raw>\s*)*</mj-column>\s*)+</mj-section>",
+            string.Empty,
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant,
+            TimeSpan.FromSeconds(1));
 
     private static string LiftCustomBlockSections(string mjml)
     {
@@ -825,7 +834,44 @@ public class EmailV2Service : IEmailV2Service
         var compact = Regex.Replace(css, @"/\*[\s\S]*?\*/", string.Empty);
         compact = Regex.Replace(compact, @"\s+", " ");
         compact = Regex.Replace(compact, @"\s*([:;,{}])\s*", "$1");
-        return Regex.Replace(compact, @"(?<=[:\s])0px\b", "0", RegexOptions.IgnoreCase);
+        compact = Regex.Replace(
+            compact,
+            @"(?<![\w.-])0(?:px|em|rem|%|in|cm|mm|pc|pt|ex|ch|vw|vh|vmin|vmax)\b",
+            "0",
+            RegexOptions.IgnoreCase);
+        compact = Regex.Replace(
+            compact,
+            @"(?<property>(?:padding|margin|border-(?:width|color|style)|border-radius)):(?<value>[^;{}]+)",
+            match => $"{match.Groups["property"].Value}:{MinifyCssShorthand(match.Groups["value"].Value)}",
+            RegexOptions.IgnoreCase);
+        return Regex.Replace(compact, @";(?=}|$)", string.Empty);
+    }
+
+    private static string MinifyCssShorthand(string value)
+    {
+        if (value.Contains('(') || value.Contains('/') || value.Contains(','))
+            return value;
+
+        var parts = value.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length is < 2 or > 4)
+            return value;
+
+        var comparison = StringComparison.OrdinalIgnoreCase;
+        if (parts.Length == 2 && parts[0].Equals(parts[1], comparison))
+            return parts[0];
+        if (parts.Length == 3 && parts[0].Equals(parts[2], comparison))
+            return $"{parts[0]} {parts[1]}";
+        if (parts.Length == 4)
+        {
+            if (parts.All(part => part.Equals(parts[0], comparison)))
+                return parts[0];
+            if (parts[0].Equals(parts[2], comparison) && parts[1].Equals(parts[3], comparison))
+                return $"{parts[0]} {parts[1]}";
+            if (parts[1].Equals(parts[3], comparison))
+                return $"{parts[0]} {parts[1]} {parts[2]}";
+        }
+
+        return value;
     }
 
     private static string InjectRtlTextRules(string html)
@@ -838,9 +884,10 @@ public class EmailV2Service : IEmailV2Service
     }
 
     private static string AddRtlAttributesToTextContainers(string html) =>
-        // Gmail can discard or lower the priority of rules from <head>. Put the
-        // direction inline on every MJML text wrapper, which also overrides any
-        // incidental LTR value carried over from a custom block.
+        // Keep the semantic dir attribute on each text container for clients that
+        // ignore CSS in <head>. The shared rule injected by InjectRtlTextRules
+        // supplies unicode-bidi without repeating the same long declaration in
+        // every inline style (which materially increases Gmail clipping risk).
         Regex.Replace(
             html,
             @"<(?<tag>td|th|div|p|h1|h2|h3|h4|h5|h6|span|a)\b(?<attributes>[^>]*)>",
@@ -849,21 +896,6 @@ public class EmailV2Service : IEmailV2Service
                 var attributes = match.Groups["attributes"].Value;
                 if (!Regex.IsMatch(attributes, @"\bdir\s*=", RegexOptions.IgnoreCase))
                     attributes += " dir=\"rtl\"";
-
-                const string bidiStyle = "direction:rtl!important;unicode-bidi:plaintext!important;";
-                if (Regex.IsMatch(attributes, @"\bstyle\s*=", RegexOptions.IgnoreCase))
-                {
-                    attributes = Regex.Replace(
-                        attributes,
-                        "\\bstyle\\s*=\\s*(?<quote>[\\\"'])(?<style>.*?)\\k<quote>",
-                        styleMatch => $"style=\"{styleMatch.Groups["style"].Value.TrimEnd(';')};{bidiStyle}\"",
-                        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant,
-                        TimeSpan.FromSeconds(1));
-                }
-                else
-                {
-                    attributes += $" style=\"{bidiStyle}\"";
-                }
 
                 return $"<{match.Groups["tag"].Value}{attributes}>";
             },
@@ -916,11 +948,10 @@ public class EmailV2Service : IEmailV2Service
 <mj-section background-color=""#F2F2F2"" padding=""18px 32px"" text-align=""center"">
   <mj-column>
     <mj-text font-size=""12px"" color=""#404040"" align=""center"" direction=""rtl"">
-      <span dir=""rtl"" style=""direction:rtl;unicode-bidi:plaintext;"">&rlm;&copy; אקורדישקייט — כל הזכויות שמורות</span>
-    </mj-text>
-    <mj-text font-size=""12px"" color=""#404040"" align=""center"" direction=""rtl"">
-      <span dir=""rtl"" style=""direction:rtl;unicode-bidi:plaintext;"">לא רוצה לקבל מאיתנו דיוור שיווקי?</span><br />
-      <a dir=""rtl"" href=""{{ params.unsubscribe_url }}"" style=""direction:rtl;unicode-bidi:plaintext;color:#000000;font-weight:700;text-decoration:underline;"">להסרה מרשימת התפוצה</a>
+      <span>&rlm;&copy; אקורדישקייט — כל הזכויות שמורות</span>
+      <span style=""display:block;height:20px;line-height:20px;"">&nbsp;</span>
+      <span>לא רוצה לקבל מאיתנו דיוור שיווקי?</span><br />
+      <a href=""{{ params.unsubscribe_url }}"" style=""color:#000000;font-weight:700;text-decoration:underline;"">להסרה מרשימת התפוצה</a>
     </mj-text>
   </mj-column>
 </mj-section>";

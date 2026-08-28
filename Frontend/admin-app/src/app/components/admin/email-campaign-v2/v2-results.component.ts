@@ -2,6 +2,7 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { EmailCampaignV2Service } from '../../../services/email-campaign-v2.service';
+import { MarketingCampaignService, MarketingCampaignSummary } from '../../../services/admin/marketing-campaign.service';
 
 interface AnalyticsData {
   campaignId: number;
@@ -40,13 +41,13 @@ interface AnalyticsData {
     } @else if (error()) {
       <div class="error-banner">{{ error() }}</div>
     } @else {
-      <div class="results-page">
+      <div class="results-page" dir="rtl">
         <div class="results-header">
-          <h2>results</h2>
+          <h2>תוצאות המייל</h2>
           <p class="updated">
-            updated: {{ data()?.lastUpdatedAt | date:'short' }}
+            עודכן: {{ data()?.lastUpdatedAt | date:'short' }}
             <button class="refresh-btn" (click)="loadAnalytics()" [disabled]="refreshing()">
-              {{ refreshing() ? 'refreshing...' : 'refresh' }}
+              {{ refreshing() ? 'מעדכן...' : 'רענון' }}
             </button>
           </p>
         </div>
@@ -54,41 +55,41 @@ interface AnalyticsData {
         <div class="kpi-grid">
           <div class="kpi-card">
             <div class="kpi-value">{{ data()?.sentCount | number }}</div>
-            <div class="kpi-label">sent</div>
+            <div class="kpi-label">נשלחו</div>
           </div>
           <div class="kpi-card">
             <div class="kpi-value">{{ data()?.deliveredCount | number }}</div>
-            <div class="kpi-label">delivered</div>
+            <div class="kpi-label">נמסרו</div>
           </div>
           <div class="kpi-card highlight-blue">
             <div class="kpi-value">{{ data()?.uniqueOpens | number }}</div>
-            <div class="kpi-label">unique opens</div>
+            <div class="kpi-label">פתיחות ייחודיות</div>
           </div>
           <div class="kpi-card">
             <div class="kpi-value">{{ data()?.totalOpens | number }}</div>
-            <div class="kpi-label">total opens</div>
+            <div class="kpi-label">סך פתיחות</div>
           </div>
           <div class="kpi-card highlight-green">
             <div class="kpi-value">{{ data()?.uniqueClicks | number }}</div>
-            <div class="kpi-label">unique clicks</div>
+            <div class="kpi-label">לוחצים ייחודיים</div>
           </div>
           <div class="kpi-card">
             <div class="kpi-value">{{ data()?.totalClicks | number }}</div>
-            <div class="kpi-label">total clicks</div>
+            <div class="kpi-label">סך לחיצות</div>
           </div>
         </div>
 
         <div class="rates-grid">
           <div class="rate-card">
             <div class="rate-value">{{ data()?.deliveryRate }}%</div>
-            <div class="rate-label">delivery rate</div>
+            <div class="rate-label">שיעור מסירה</div>
             <div class="rate-bar"><div class="rate-fill green" [style.width.%]="data()?.deliveryRate"></div></div>
           </div>
           <div class="rate-card">
             <div class="rate-value">{{ data()?.openRate }}%</div>
-            <div class="rate-label">open rate</div>
+            <div class="rate-label">שיעור פתיחה</div>
             <div class="rate-bar"><div class="rate-fill blue" [style.width.%]="data()?.openRate"></div></div>
-            <div class="rate-note">data is estimated; some email clients preload images</div>
+            <div class="rate-note">הנתון משוער; חלק מתוכנות המייל טוענות תמונות מראש</div>
           </div>
           <div class="rate-card">
             <div class="rate-value">{{ data()?.clickRate }}%</div>
@@ -105,38 +106,41 @@ interface AnalyticsData {
         <div class="issues-grid">
           <div class="issue-card">
             <div class="issue-value">{{ data()?.hardBounces | number }}</div>
-            <div class="issue-label">hard bounces</div>
+            <div class="issue-label">החזרות קבועות</div>
           </div>
           <div class="issue-card">
             <div class="issue-value">{{ data()?.softBounces | number }}</div>
-            <div class="issue-label">soft bounces</div>
+            <div class="issue-label">החזרות זמניות</div>
           </div>
           <div class="issue-card">
             <div class="issue-value">{{ data()?.unsubscribes | number }}</div>
-            <div class="issue-label">unsubscribes</div>
+            <div class="issue-label">הסרות</div>
           </div>
           <div class="issue-card">
             <div class="issue-value">{{ data()?.spamComplaints | number }}</div>
-            <div class="issue-label">spam complaints</div>
+            <div class="issue-label">דיווחי ספאם</div>
           </div>
           <div class="issue-card">
             <div class="issue-value">{{ data()?.blocked | number }}</div>
-            <div class="issue-label">blocked</div>
+            <div class="issue-label">חסומים</div>
           </div>
           <div class="issue-card">
             <div class="issue-value">{{ data()?.deferred | number }}</div>
-            <div class="issue-label">deferred</div>
+            <div class="issue-label">נדחו זמנית</div>
           </div>
         </div>
 
         @if (data()?.topLinks?.length) {
           <div class="section">
-            <h3>top links</h3>
+            <h3>קישורים מובילים</h3>
             <div class="links-table">
               @for (link of data()?.topLinks; track link.url) {
                 <div class="link-row">
-                  <div class="link-url" [title]="link.url">{{ link.url }}</div>
-                  <div class="link-clicks">{{ link.totalClicks }} clicks ({{ link.uniqueClicks }} unique)</div>
+                  <div class="link-identity">
+                    <strong>{{ linkLabel(link.url) }}</strong>
+                    <a class="link-url" [href]="link.url" target="_blank" rel="noopener" [title]="link.url">{{ link.url }}</a>
+                  </div>
+                  <div class="link-clicks">{{ link.totalClicks }} לחיצות · {{ link.uniqueClicks }} ייחודיות</div>
                 </div>
               }
             </div>
@@ -251,20 +255,26 @@ interface AnalyticsData {
       font-size: 13px; color: #1a73e8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       max-width: 500px;
     }
+    .link-identity { min-width: 0; display: grid; gap: 4px; }
     .link-clicks { font-size: 13px; color: #666; white-space: nowrap; }
   `]
 })
 export class V2ResultsComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private v2Service = inject(EmailCampaignV2Service);
+  private marketingCampaignService = inject(MarketingCampaignService);
 
   campaignId = signal<number>(0);
   loading = signal(true);
   refreshing = signal(false);
   error = signal('');
   data = signal<AnalyticsData | null>(null);
+  trackingCampaigns = signal<MarketingCampaignSummary[]>([]);
 
   ngOnInit(): void {
+    this.marketingCampaignService.getDashboard().subscribe({
+      next: result => this.trackingCampaigns.set(result.campaigns),
+    });
     this.route.paramMap.subscribe(params => {
       const id = Number(params.get('id'));
       if (id && !isNaN(id)) {
@@ -275,6 +285,25 @@ export class V2ResultsComponent implements OnInit {
         this.error.set('invalid campaign id');
       }
     });
+  }
+
+  linkLabel(rawUrl: string): string {
+    try {
+      const url = new URL(rawUrl);
+      const codeFromPath = url.pathname.match(/\/(?:r|open)\/([a-z0-9-]+)/i)?.[1];
+      const code = codeFromPath || url.searchParams.get('ak_campaign');
+      const tracked = code
+        ? this.trackingCampaigns().find(item => item.code.toLowerCase() === code.toLowerCase())
+        : null;
+      if (tracked) return tracked.name;
+
+      const lastSegment = decodeURIComponent(url.pathname.split('/').filter(Boolean).pop() || '');
+      return lastSegment && !/^\d+$/.test(lastSegment)
+        ? lastSegment.replace(/[-_]+/g, ' ')
+        : url.hostname;
+    } catch {
+      return rawUrl;
+    }
   }
 
   loadAnalytics(): void {

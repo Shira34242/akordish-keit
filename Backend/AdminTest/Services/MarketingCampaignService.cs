@@ -200,9 +200,10 @@ public class MarketingCampaignService : IMarketingCampaignService
         return true;
     }
 
-    public async Task<string?> TrackExternalClickAsync(
+    public async Task<string?> ResolveTrackedClickAsync(
         string campaignCode,
         string visitorId,
+        string frontendBaseUrl,
         string? referrer,
         string? ipAddress,
         string? userAgent)
@@ -213,9 +214,13 @@ public class MarketingCampaignService : IMarketingCampaignService
 
         var campaign = await _context.MarketingCampaigns.AsNoTracking()
             .FirstOrDefaultAsync(x => x.Code == code);
-        if (campaign == null || !IsExternalTarget(campaign.TargetPath)) return null;
+        if (campaign == null) return null;
 
-        if (!campaign.IsActive || IsAutomatedAgent(userAgent)) return campaign.TargetPath;
+        var destination = IsExternalTarget(campaign.TargetPath)
+            ? campaign.TargetPath
+            : $"{frontendBaseUrl.TrimEnd('/')}{AppendTrackingParameters(campaign.TargetPath, campaign)}";
+
+        if (!campaign.IsActive || IsAutomatedAgent(userAgent)) return destination;
 
         try
         {
@@ -242,10 +247,10 @@ public class MarketingCampaignService : IMarketingCampaignService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "External marketing click tracking failed for campaign {CampaignId}", campaign.Id);
+            _logger.LogWarning(ex, "Marketing click tracking failed for campaign {CampaignId}", campaign.Id);
         }
 
-        return campaign.TargetPath;
+        return destination;
     }
 
     public async Task RecordSignupAsync(string? campaignCode, string? visitorId, int userId, string? ipAddress, string? userAgent)
@@ -320,11 +325,7 @@ public class MarketingCampaignService : IMarketingCampaignService
     }
 
     private static string BuildTrackingUrl(string frontendBaseUrl, string backendBaseUrl, MarketingCampaign campaign)
-    {
-        if (IsExternalTarget(campaign.TargetPath))
-            return $"{backendBaseUrl.TrimEnd('/')}/api/marketing-campaigns/open/{Uri.EscapeDataString(campaign.Code)}";
-        return $"{frontendBaseUrl.TrimEnd('/')}{AppendTrackingParameters(campaign.TargetPath, campaign)}";
-    }
+        => $"{backendBaseUrl.TrimEnd('/')}/r/{Uri.EscapeDataString(campaign.Code)}";
 
     private static bool IsExternalTarget(string targetPath) =>
         Uri.TryCreate(targetPath, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps;

@@ -710,6 +710,20 @@ public class NotificationService : INotificationService
         });
     }
 
+    public Task NotifyPodcastDraftCreatedAsync(int episodeId, string podcastName, string episodeTitle)
+    {
+        return CreateAdminContentSubmissionNotificationsAsync(new CreateNotificationDto
+        {
+            Title = "פרק פודקאסט חדש ממתין לאישור",
+            Message = $"הפרק \"{episodeTitle}\" נוסף אוטומטית לסדרה \"{podcastName}\" ונשמר כטיוטה.",
+            Type = NotificationType.Submission,
+            Category = NotificationCategory.System,
+            RelatedEntityType = "PodcastEpisode",
+            RelatedEntityId = episodeId,
+            ActionUrl = $"/admin/content/podcasts/episodes/edit/{episodeId}"
+        });
+    }
+
     public Task NotifyArtistSubmittedAsync(int userId, int artistId, string artistName)
     {
         return CreateContentSubmissionNotificationAsync(

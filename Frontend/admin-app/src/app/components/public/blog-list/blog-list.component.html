@@ -19,11 +19,14 @@
           class="managed-row"
           *ngFor="let row of getManagedRows(); trackBy: trackByIndex"
           [ngStyle]="{'grid-template-columns': row.gridCols}">
-          <div class="managed-cell" *ngFor="let slot of row.slots; trackBy: trackByIndex">
+          <div class="managed-cell" *ngFor="let slot of row.slots; let cellIndex = index; trackBy: trackByIndex">
             <app-news-banner
               *ngIf="managedArticles[slot]"
               [article]="managedArticles[slot]"
               routePrefix="/blog"
+              [imagePreset]="960"
+              [imageWidths]="[480, 960, 1600]"
+              [imageSizes]="gridImageSizes(row.gridCols, cellIndex)"
               [imageLoading]="slot === 0 ? 'eager' : 'lazy'"
               [imageFetchPriority]="slot === 0 ? 'high' : 'auto'">
             </app-news-banner>
@@ -37,8 +40,14 @@
           class="stream-row"
           *ngFor="let row of getStreamRows(); trackBy: trackByIndex"
           [ngStyle]="{'grid-template-columns': row.gridCols}">
-          <div class="stream-cell" *ngFor="let article of row.articles; trackBy: trackById">
-            <app-news-banner [article]="article" routePrefix="/blog"></app-news-banner>
+          <div class="stream-cell" *ngFor="let article of row.articles; let cellIndex = index; trackBy: trackById">
+            <app-news-banner
+              [article]="article"
+              routePrefix="/blog"
+              [imagePreset]="960"
+              [imageWidths]="[480, 960, 1600]"
+              [imageSizes]="gridImageSizes(row.gridCols, cellIndex)">
+            </app-news-banner>
           </div>
         </div>
       </div>

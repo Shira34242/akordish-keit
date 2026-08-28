@@ -20,6 +20,7 @@ import { EVENTS_BLOCK } from './blocks/custom-blocks/events-block';
 import { PROFILES_BLOCK } from './blocks/custom-blocks/profiles-block';
 import { ADVERTISEMENT_BLOCK } from './blocks/custom-blocks/advertisement-block';
 import { ContentSelectorBridgeService } from './blocks/content-selector-bridge.service';
+import { MarketingLinkSelectorBridgeService } from './blocks/marketing-link-selector-bridge.service';
 import { ComponentLibraryService } from '../../../services/component-library.service';
 
 @Component({
@@ -93,6 +94,7 @@ export class V2EditorComponent implements AfterViewInit, OnDestroy {
   readonly _error = signal<string | null>(null);
 
   private readonly _bridge = inject(ContentSelectorBridgeService);
+  private readonly _marketingLinkBridge = inject(MarketingLinkSelectorBridgeService);
   private readonly _library = inject(ComponentLibraryService);
 
   private get _allCustomBlocks(): CustomBlockDefinition[] {

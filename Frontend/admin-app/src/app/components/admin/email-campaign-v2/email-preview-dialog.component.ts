@@ -205,6 +205,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
           <div class="meta-item"><span class="meta-label">Preheader:</span><span class="meta-value">{{ previewText() || '—' }}</span></div>
           <div class="meta-item"><span class="meta-label">שולח:</span><span class="meta-value">{{ fromName() || '—' }}</span></div>
           <div class="meta-item"><span class="meta-label">גודל HTML:</span><span class="meta-value" [class.html-size-ok]="!htmlSizeInfo().isOverSafetyTarget">{{ htmlSizeInfo().kilobytes }} KB</span></div>
+          <div class="meta-item"><span class="meta-label">משוער בשליחה:</span><span class="meta-value" [class.html-size-ok]="!htmlSizeInfo().isOverSafetyTarget">{{ htmlSizeInfo().estimatedSendKilobytes }} KB</span></div>
           @if (darkMode()) {
             <div class="meta-item dark-mode-notice">&#9888; הדמיית Dark Mode משוערת</div>
           }
@@ -214,7 +215,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
       @if (htmlSizeInfo().isOverSafetyTarget) {
         <aside class="html-size-warning" role="alert">
           <strong>⚠️ המייל חורג מיעד הבטיחות של Gmail (90KB) ועלול להיחתך.</strong>
-          הגודל הסופי בתצוגה הוא {{ htmlSizeInfo().kilobytes }}KB. גורמי הנפח הבולטים במייל הזה:
+          הגודל המשוער לאחר הוספת מעקב הוא {{ htmlSizeInfo().estimatedSendKilobytes }}KB. גורמי הנפח הבולטים במייל הזה:
           <ul>
             @for (insight of htmlSizeInsights(); track insight.label) {
               <li><strong>{{ insight.label }}:</strong> {{ insight.detail }}</li>
@@ -257,11 +258,28 @@ export class EmailPreviewDialogComponent {
   plainText = signal(false);
 
   htmlSizeInfo = computed(() => {
-    const bytes = new TextEncoder().encode(this.htmlBody() || '').length;
+    const html = this.htmlBody() || '';
+    const bytes = new TextEncoder().encode(html).length;
+    let trackableLinks = 0;
+    try {
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      trackableLinks = Array.from(doc.querySelectorAll<HTMLAnchorElement>('a[href]'))
+        .filter(link => {
+          const href = (link.getAttribute('href') || '').trim().toLowerCase();
+          return !!href && !href.startsWith('#') && !href.startsWith('mailto:') &&
+            !href.startsWith('tel:') && !href.includes('unsubscribe');
+        }).length;
+    } catch { /* Show the raw size when the HTML cannot be parsed. */ }
+
+    // The transient send uses the longest current UTM variant (73 UTF-8 bytes),
+    // so this is a conservative estimate of what Gmail will actually receive.
+    const estimatedSendBytes = bytes + trackableLinks * 73;
     return {
       bytes,
       kilobytes: (bytes / 1024).toFixed(1),
-      isOverSafetyTarget: bytes > 90_000,
+      estimatedSendBytes,
+      estimatedSendKilobytes: (estimatedSendBytes / 1024).toFixed(1),
+      isOverSafetyTarget: estimatedSendBytes > 90_000,
     };
   });
 

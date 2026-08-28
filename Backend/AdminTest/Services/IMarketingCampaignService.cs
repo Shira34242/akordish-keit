@@ -10,6 +10,6 @@ public interface IMarketingCampaignService
     Task<bool> DeleteAsync(int id);
     Task<bool> SetStatusAsync(int id, bool isActive);
     Task<bool> TrackVisitAsync(TrackMarketingCampaignVisitRequest request, int? userId, string? ipAddress, string? userAgent);
-    Task<string?> TrackExternalClickAsync(string campaignCode, string visitorId, string? referrer, string? ipAddress, string? userAgent);
+    Task<string?> ResolveTrackedClickAsync(string campaignCode, string visitorId, string frontendBaseUrl, string? referrer, string? ipAddress, string? userAgent);
     Task RecordSignupAsync(string? campaignCode, string? visitorId, int userId, string? ipAddress, string? userAgent);
 }

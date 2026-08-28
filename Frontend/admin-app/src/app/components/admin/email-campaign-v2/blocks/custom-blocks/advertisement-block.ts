@@ -1,4 +1,5 @@
 import type { CustomBlockDefinition } from '@templatical/types';
+import { openMarketingLinkSelector } from '../marketing-link-selector-bridge.service';
 
 export const ADVERTISEMENT_BLOCK: CustomBlockDefinition = {
   type: 'advertisement',
@@ -31,6 +32,12 @@ export const ADVERTISEMENT_BLOCK: CustomBlockDefinition = {
       key: 'destinationUrl',
       label: 'קישור יעד (URL)',
       type: 'text',
+    },
+    {
+      key: 'trackingLinkName',
+      label: 'קישור המעקב שנבחר',
+      type: 'text',
+      readOnly: true,
     },
     {
       key: 'title',
@@ -91,6 +98,18 @@ export const ADVERTISEMENT_BLOCK: CustomBlockDefinition = {
       step: 4,
     },
   ],
+  dataSource: {
+    label: 'בחירת קישור מעקב',
+    onFetch: async (context) => {
+      const selected = await openMarketingLinkSelector();
+      if (!selected) return null;
+      return {
+        ...context.fieldValues,
+        destinationUrl: selected.trackingUrl,
+        trackingLinkName: selected.name,
+      };
+    },
+  },
   template: `{% assign type = adType | default: 'banner' %}
 {% assign radius = borderRadius | default: 24 | plus: 0 %}
 {% assign bg = backgroundColor | default: '#F2F2F2' %}

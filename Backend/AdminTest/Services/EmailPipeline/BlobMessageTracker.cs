@@ -142,9 +142,25 @@ public class BlobMessageTracker : IMessageTracker
         var linkClicks = new Dictionary<string, (int Unique, int Total)>();
         foreach (var msg in messages)
         {
-            // We'd need per-link data from webhook events
-            // For now this comes from saved click events stored alongside the message
+            foreach (var (url, count) in msg.LinkClicks ?? [])
+            {
+                if (string.IsNullOrWhiteSpace(url) || count <= 0) continue;
+                var current = linkClicks.GetValueOrDefault(url);
+                linkClicks[url] = (current.Unique + 1, current.Total + count);
+            }
         }
+
+        analytics.TopLinks = linkClicks
+            .OrderByDescending(entry => entry.Value.Total)
+            .ThenByDescending(entry => entry.Value.Unique)
+            .Take(50)
+            .Select(entry => new EmailLinkClickDto
+            {
+                Url = entry.Key,
+                UniqueClicks = entry.Value.Unique,
+                TotalClicks = entry.Value.Total
+            })
+            .ToList();
 
         return analytics;
     }

@@ -93,6 +93,7 @@ public class MarketingCampaignsController : ControllerBase
     }
 
     [HttpGet("open/{code}")]
+    [HttpGet("/r/{code}")]
     [AllowAnonymous]
     [EnableRateLimiting("analytics-tracking")]
     public async Task<IActionResult> OpenExternal(string code)
@@ -110,14 +111,15 @@ public class MarketingCampaignsController : ControllerBase
                 Secure = Request.IsHttps,
                 SameSite = SameSiteMode.Lax,
                 IsEssential = true,
-                Path = "/api/marketing-campaigns/open",
+            Path = "/",
                 Expires = DateTimeOffset.UtcNow.AddYears(1)
             });
         }
 
-        var destination = await _service.TrackExternalClickAsync(
+        var destination = await _service.ResolveTrackedClickAsync(
             code,
             visitorId,
+            GetFrontendBaseUrl(),
             Request.Headers.Referer.ToString(),
             HttpContext.Connection.RemoteIpAddress?.ToString(),
             Request.Headers.UserAgent.ToString());

@@ -1,6 +1,6 @@
 <a class="song-card" [routerLink]="songLink">
     <div class="song-card-image">
-        <img [src]="(song.imageUrl | cfImage:240:80) || 'assets/default-song.png'" [attr.srcset]="song.imageUrl | cfSrcset:[120, 180, 240, 280]:80" sizes="(max-width: 768px) 110px, 130px" [alt]="song.title" class="song-card-img" width="280" height="158" loading="lazy" decoding="async" [imgFallbackOriginal]="song.imageUrl" imgFallback="assets/default-song.png">
+        <img [src]="(song.imageUrl | cfImage:180:80) || 'assets/default-song.png'" [attr.srcset]="song.imageUrl | cfSrcset:[180, 360]:80" sizes="(max-width: 480px) 62px, (max-width: 768px) 110px, 130px" [alt]="song.title" class="song-card-img" width="280" height="158" loading="lazy" decoding="async" [imgFallbackOriginal]="song.imageUrl" imgFallback="assets/default-song.png">
     </div>
     <div class="song-card-info">
         <span class="song-card-label">{{ 'song_card.label' | translate }}</span>

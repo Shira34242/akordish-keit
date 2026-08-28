@@ -9,6 +9,7 @@ import { TranslatePipe } from '../../../pipes/translate.pipe';
 import { RouteReuseEventsService } from '../../../services/route-reuse-events.service';
 import { ContentRefreshNoticeService } from '../../../services/content-refresh-notice.service';
 import { catchError, filter, of, take } from 'rxjs';
+import { responsiveGridImageSizes } from '../../../pipes/cloudflare-image.pipe';
 
 @Component({
   selector: 'app-blog-list',
@@ -27,6 +28,7 @@ export class BlogListComponent implements OnInit, OnDestroy {
   private readonly contentRefreshNotice = inject(ContentRefreshNoticeService);
 
   isMobile = false;
+  readonly gridImageSizes = responsiveGridImageSizes;
   private mobileMql?: MediaQueryList;
 
   private cachedManagedRows: { slots: number[]; gridCols: string }[] | null = null;

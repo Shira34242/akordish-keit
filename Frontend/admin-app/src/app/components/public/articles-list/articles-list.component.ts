@@ -20,6 +20,7 @@ import { ScrollRestorationService } from '../../../services/scroll-restoration.s
 import { RouteReuseEventsService } from '../../../services/route-reuse-events.service';
 import { ContentRefreshNoticeService } from '../../../services/content-refresh-notice.service';
 import { catchError, filter, of, take } from 'rxjs';
+import { responsiveGridImageSizes } from '../../../pipes/cloudflare-image.pipe';
 
 @Component({
   selector: 'app-articles-list',
@@ -29,6 +30,7 @@ import { catchError, filter, of, take } from 'rxjs';
   styleUrl: './articles-list.component.css'
 })
 export class ArticlesListComponent implements OnInit, OnDestroy {
+  readonly gridImageSizes = responsiveGridImageSizes;
   private readonly articleService = inject(ArticleService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);

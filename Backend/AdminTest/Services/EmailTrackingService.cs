@@ -115,7 +115,24 @@ public class EmailTrackingService
                 msg.FirstClickedAt = DateTime.UtcNow;
             msg.LastClickedAt = DateTime.UtcNow;
             msg.ClickCount++;
+
+            var link = NormalizeTrackedLink(payload.Link);
+            if (link != null)
+            {
+                msg.LinkClicks ??= new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+                msg.LinkClicks[link] = msg.LinkClicks.GetValueOrDefault(link) + 1;
+            }
         });
+    }
+
+    private static string? NormalizeTrackedLink(string? value)
+    {
+        var link = value?.Trim();
+        if (string.IsNullOrEmpty(link) || link.Length > 2_000) return null;
+        return Uri.TryCreate(link, UriKind.Absolute, out var uri) &&
+               (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
+            ? link
+            : null;
     }
 
     private async Task<bool> HandleBounceAsync(int campaignId, BrevoWebhookPayload payload, string type)

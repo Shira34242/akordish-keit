@@ -12,7 +12,7 @@ export type CloudflareImagePreset =
 const PRESET_WIDTHS: Record<CloudflareImagePreset, number> = {
   thumb: 360,
   card: 600,
-  profile: 320,
+  profile: 480,
   content: 1000,
   hero: 1600,
   lightbox: 2000
@@ -85,6 +85,18 @@ export function cloudflareImageSrcset(
   return uniqueWidths
     .map(width => `${cloudflareImageUrl(original, width, quality)} ${width}w`)
     .join(', ');
+}
+
+export function responsiveGridImageSizes(gridCols: string, cellIndex: number): string {
+  const fractions = gridCols
+    .split(/\s+/)
+    .map(column => Number.parseFloat(column))
+    .filter(fraction => Number.isFinite(fraction) && fraction > 0);
+  const fraction = fractions[cellIndex] ?? 1;
+  const total = fractions.reduce((sum, value) => sum + value, 0) || 1;
+  const desktopWidth = Math.ceil((fraction / total) * 100);
+
+  return `(max-width: 640px) calc(100vw - 28px), ${desktopWidth}vw`;
 }
 
 function normalizeSourceUrl(url: string): string | null {

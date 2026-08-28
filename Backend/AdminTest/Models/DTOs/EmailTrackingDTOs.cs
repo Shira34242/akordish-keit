@@ -2,7 +2,7 @@ namespace AkordishKeit.Models.DTOs;
 
 public class EmailTrackingMessage
 {
-    public int SchemaVersion { get; set; } = 1;
+    public int SchemaVersion { get; set; } = 2;
     public int CampaignId { get; set; }
     public string MessageId { get; set; } = string.Empty;
     public string RecipientEmail { get; set; } = string.Empty;
@@ -16,6 +16,7 @@ public class EmailTrackingMessage
     public DateTime? FirstClickedAt { get; set; }
     public DateTime? LastClickedAt { get; set; }
     public int ClickCount { get; set; }
+    public Dictionary<string, int> LinkClicks { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     public string? BounceType { get; set; }
     public DateTime? UnsubscribedAt { get; set; }
     public DateTime? ComplaintAt { get; set; }

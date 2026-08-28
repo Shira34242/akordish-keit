@@ -10,10 +10,10 @@ export function prepareArticleContentHtml(content: string | null | undefined): s
 
   doc.body.querySelectorAll('img').forEach(image => {
     const originalSrc = image.getAttribute('src') || '';
-    const optimizedSrc = cloudflareImageUrl(originalSrc, 'content');
+    const optimizedSrc = cloudflareImageUrl(originalSrc, 720, 85);
 
     if (optimizedSrc && optimizedSrc !== originalSrc) {
-      image.setAttribute('srcset', cloudflareImageSrcset(originalSrc, [480, 720, 1000, 1400], 85));
+      image.setAttribute('srcset', cloudflareImageSrcset(originalSrc, [720, 1440], 85));
       image.setAttribute('sizes', ARTICLE_IMAGE_SIZES);
       image.setAttribute('data-original-src', originalSrc);
     }

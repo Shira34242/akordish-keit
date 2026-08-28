@@ -96,6 +96,7 @@
             <h3>{{ campaign.name }}</h3>
             <span class="status-tag" [class.inactive]="!campaign.isActive">{{ campaign.isActive ? 'פעיל' : 'מושהה' }}</span>
             <span class="target-tag" *ngIf="campaign.isExternal">חיצוני</span>
+            <span class="target-tag" *ngIf="campaign.source === 'Email'">נוצר מהמייל</span>
           </div>
           <p>{{ campaign.source }} · {{ campaign.targetPath }}</p>
           <button class="copy-link" type="button" (click)="copyLink(campaign)" [attr.aria-label]="'העתקת הקישור של ' + campaign.name">

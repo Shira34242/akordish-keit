@@ -116,6 +116,8 @@ builder.Services.AddScoped<IArticleService, ArticleService>();
 builder.Services.Configure<EmailArticleIngestionOptions>(
     builder.Configuration.GetSection(EmailArticleIngestionOptions.SectionName));
 builder.Services.AddHttpClient<IEmailArticleIngestionService, EmailArticleIngestionService>();
+builder.Services.Configure<YouTubePodcastAutomationOptions>(
+    builder.Configuration.GetSection(YouTubePodcastAutomationOptions.SectionName));
 builder.Services.AddScoped<ISongService, SongService>();
 builder.Services.AddHttpClient<ISmartSongImportService, SmartSongImportService>();
 builder.Services.AddHttpClient<ISmartContentImportService, SmartContentImportService>();
@@ -165,6 +167,7 @@ builder.Services.AddSingleton<IAzureBlobService, AzureBlobService>();
 // Add Background Services
 builder.Services.AddHostedService<CleanupService>();
 builder.Services.AddHostedService<AkordishKeit.Services.EmailPipeline.EmailTransientSendJobWorker>();
+builder.Services.AddHostedService<YouTubePodcastAutomationService>();
 
 // Add DbContext
 builder.Services.AddDbContext<AkordishKeitDbContext>(options =>

@@ -27,6 +27,7 @@ interface EventResponse {
   eventDate: string;
   location?: string;
   artistName?: string;
+  taggedArtists?: { artistImageUrl?: string }[];
   isActive: boolean;
   isPast: boolean;
 }
@@ -269,11 +270,13 @@ export class ContentApiService {
   private mapEventToContentItem(event: EventResponse): ContentItem {
     const publicUrl = this.toPublicAssetUrl(event.ticketUrl) || `${this.publicSiteUrl}/events`;
     const eventDate = event.eventDate ? new Date(event.eventDate).toLocaleDateString('he-IL') : '';
+    const imageSource = event.imageUrl || event.bannerImageUrl ||
+      event.taggedArtists?.find(artist => !!artist.artistImageUrl)?.artistImageUrl;
 
     return {
       id: event.id,
       title: event.name,
-      imageUrl: this.toOptimizedEmailImageUrl(event.bannerImageUrl || event.imageUrl, 240),
+      imageUrl: this.toOptimizedEmailImageUrl(imageSource, 240),
       publicUrl,
       altText: event.name,
       artistNames: event.artistName,
@@ -391,6 +394,20 @@ export class ContentApiService {
    */
   private toOptimizedEmailImageUrl(value: string | undefined, width: number): string {
     const publicUrl = this.toPublicAssetUrl(value);
-    return publicUrl ? cloudflareImageUrl(publicUrl, width, 72) : '';
+    if (!publicUrl) return '';
+
+    // Do not proxy third-party event posters through our Cloudflare zone. Some
+    // providers reject the proxy request even though the public HTTPS image is
+    // directly accessible to Gmail. Assets hosted by Akordishkayt still use the
+    // lightweight email derivative.
+    try {
+      const host = new URL(publicUrl).hostname.toLowerCase();
+      if (host !== 'akordishkayt.com' && !host.endsWith('.akordishkayt.com'))
+        return publicUrl;
+    } catch {
+      return publicUrl;
+    }
+
+    return cloudflareImageUrl(publicUrl, width, 72);
   }
 }
