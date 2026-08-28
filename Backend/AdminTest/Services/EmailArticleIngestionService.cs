@@ -42,11 +42,16 @@ public interface IEmailArticleIngestionService
 public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
 {
     private const long MaxAudioFileSizeBytes = 30 * 1024 * 1024;
+    private static readonly TimeSpan YouTubeDuplicateWindow = TimeSpan.FromDays(7);
     private static readonly HashSet<string> AllowedAudioExtensions =
         new(StringComparer.OrdinalIgnoreCase) { ".mp3", ".wav", ".m4a", ".aac", ".ogg" };
 
     private static readonly Regex YouTubeUrlRegex = new(
         @"https?://(?:www\.)?(?:youtube\.com/(?:watch\?[^\s<>]*v=|embed/|shorts/)|youtu\.be/)[A-Za-z0-9_-]{11}[^\s<>]*",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    private static readonly Regex YouTubeShortsVideoIdRegex = new(
+        @"youtube\.com/shorts/(?<id>[A-Za-z0-9_-]{11})",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     private static readonly Regex GoogleDriveUrlRegex = new(
@@ -220,6 +225,55 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
                 RequiresReview = warnings.Count > 0,
                 Warnings = warnings
             };
+        }
+
+        var youtubeVideoId = ExtractYouTubeVideoId(parsed.YouTubeUrl);
+        if (!string.IsNullOrWhiteSpace(youtubeVideoId))
+        {
+            var duplicateCutoff = DateTime.UtcNow.Subtract(YouTubeDuplicateWindow);
+            var recentYouTubeArticles = await _context.Articles
+                .AsNoTracking()
+                .Where(article =>
+                    !article.IsDeleted
+                    && article.CreatedAt >= duplicateCutoff
+                    && article.VideoEmbedUrl != null
+                    && article.VideoEmbedUrl != string.Empty)
+                .Select(article => new
+                {
+                    article.Id,
+                    article.Title,
+                    article.VideoEmbedUrl
+                })
+                .ToListAsync();
+
+            var youtubeDuplicate = recentYouTubeArticles.FirstOrDefault(article =>
+                string.Equals(
+                    ExtractYouTubeVideoId(article.VideoEmbedUrl),
+                    youtubeVideoId,
+                    StringComparison.Ordinal));
+
+            if (youtubeDuplicate != null)
+            {
+                var duplicateWarning =
+                    $"לא נוצרה טיוטה חדשה: סרטון ה-YouTube כבר קיים בכתבה #{youtubeDuplicate.Id}";
+
+                _logger.LogInformation(
+                    "Email article skipped because YouTube video already exists: ExistingArticleId={ArticleId} VideoId={VideoId} Sender={Sender} MessageId={MessageId}",
+                    youtubeDuplicate.Id,
+                    youtubeVideoId,
+                    senderEmail,
+                    request.MessageId);
+
+                return new EmailArticleIngestionResponseDto
+                {
+                    Success = true,
+                    Duplicate = true,
+                    ArticleId = youtubeDuplicate.Id,
+                    Title = youtubeDuplicate.Title,
+                    RequiresReview = false,
+                    Warnings = new List<string> { duplicateWarning }
+                };
+            }
         }
 
         string? audioUrl = null;
@@ -900,6 +954,19 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
             && shorterLength >= longerLength * 0.8
             && (normalizedBlock.Contains(normalizedTitle, StringComparison.Ordinal)
                 || normalizedTitle.Contains(normalizedBlock, StringComparison.Ordinal));
+    }
+
+    private string? ExtractYouTubeVideoId(string? youtubeUrl)
+    {
+        if (string.IsNullOrWhiteSpace(youtubeUrl))
+            return null;
+
+        var videoId = _youTubeService.ExtractVideoId(youtubeUrl);
+        if (!string.IsNullOrWhiteSpace(videoId))
+            return videoId;
+
+        var shortsMatch = YouTubeShortsVideoIdRegex.Match(youtubeUrl);
+        return shortsMatch.Success ? shortsMatch.Groups["id"].Value : null;
     }
 
     private static string ExtractEmailAddress(string sender)
