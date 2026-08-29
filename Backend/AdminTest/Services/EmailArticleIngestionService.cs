@@ -186,6 +186,7 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
                 request.Subject,
                 request.PlainBody,
                 request.DocumentText),
+            "kobis-attachments-v1" => ParseKobisAttachmentsMessage(request.DocumentText),
             _ => throw new InvalidOperationException($"Unsupported producer template: {producer.Template}")
         };
         var warnings = BuildStructureWarnings(parsed, request, producer.Template);
@@ -373,6 +374,9 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
         var warnings = new List<string>();
         var templateName = template.Trim().ToLowerInvariant();
         var plainBody = request.PlainBody ?? string.Empty;
+        var structureText = templateName == "kobis-attachments-v1"
+            ? request.DocumentText ?? string.Empty
+            : plainBody;
 
         if (parsed.UsedFallbackContent)
             AddWarning(warnings, "תוכן הכתבה לא זוהה במלואו");
@@ -403,18 +407,18 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
         if (!parsed.UsedFallbackContent && contentWordCount < 20)
             AddWarning(warnings, "תוכן הכתבה קצר מהמבנה הרגיל וייתכן שחסר בו חלק");
 
-        var youtubeUrls = YouTubeUrlRegex.Matches(plainBody)
+        var youtubeUrls = YouTubeUrlRegex.Matches(structureText)
             .Select(match => NormalizeDetectedUrl(match.Value))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
         if (youtubeUrls.Count > 1)
             AddWarning(warnings, $"נמצאו {youtubeUrls.Count} קישורי YouTube במקום קישור אחד");
 
-        var driveUrls = GoogleDriveUrlRegex.Matches(plainBody)
+        var driveUrls = GoogleDriveUrlRegex.Matches(structureText)
             .Select(match => NormalizeDetectedUrl(match.Value))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
-        var folderUrls = GoogleDriveFolderUrlRegex.Matches(plainBody)
+        var folderUrls = GoogleDriveFolderUrlRegex.Matches(structureText)
             .Select(match => NormalizeDetectedUrl(match.Value))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
@@ -422,7 +426,7 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
         var knownUrls = youtubeUrls
             .Concat(driveUrls)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
-        var otherUrls = AnyUrlRegex.Matches(plainBody)
+        var otherUrls = AnyUrlRegex.Matches(structureText)
             .Select(match => NormalizeDetectedUrl(match.Value))
             .Where(url => !knownUrls.Contains(url))
             .Where(url => templateName != "mendy-kornet-v1" || !IsMendyKornetAllowedExtraUrl(url))
@@ -465,6 +469,11 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
                     AddWarning(warnings, "לא נמצא קישור Google Drive שמופיע בדרך כלל בתבנית המפיק");
                 else if (driveUrls.Count > 2)
                     AddWarning(warnings, $"נמצאו {driveUrls.Count} קישורי Drive, יותר מהמבנה הרגיל");
+                break;
+
+            case "kobis-attachments-v1":
+                if (string.IsNullOrWhiteSpace(request.DocumentText))
+                    AddWarning(warnings, "קובץ ה-Word חסר או שלא ניתן היה לקרוא אותו");
                 break;
         }
 
@@ -817,6 +826,121 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
             Math.Max(1, (int)Math.Ceiling(wordCount / 200d)),
             usedFallbackContent);
     }
+
+    private static ParsedEmailArticle ParseKobisAttachmentsMessage(string? documentText)
+    {
+        var normalizedDocument = (documentText ?? string.Empty)
+            .Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Replace('\r', '\n')
+            .Trim();
+        var paragraphs = normalizedDocument
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .Select(CleanText)
+            .Where(paragraph => !string.IsNullOrWhiteSpace(paragraph))
+            .ToList();
+
+        var youtubeMatch = YouTubeUrlRegex.Match(normalizedDocument);
+        var youtubeUrl = youtubeMatch.Success
+            ? NormalizeDetectedUrl(youtubeMatch.Value)
+            : null;
+
+        var titleStartIndex = paragraphs.FindIndex(paragraph => !IsKobisDocumentHeader(paragraph));
+        var contentStartIndex = titleStartIndex >= 0
+            ? paragraphs.FindIndex(titleStartIndex + 1, paragraph =>
+                !IsKobisCreditsLine(paragraph)
+                && !IsKobisPublicRelationsLine(paragraph)
+                && !YouTubeUrlRegex.IsMatch(paragraph)
+                && paragraph.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length >= 12)
+            : -1;
+
+        if (titleStartIndex >= 0 && contentStartIndex < 0 && titleStartIndex + 1 < paragraphs.Count)
+            contentStartIndex = titleStartIndex + 1;
+
+        var titleLines = titleStartIndex >= 0
+            ? paragraphs
+                .Skip(titleStartIndex)
+                .Take(Math.Max(1, contentStartIndex - titleStartIndex))
+                .ToList()
+            : new List<string>();
+        var title = CleanText(string.Join(" ", titleLines));
+        if (string.IsNullOrWhiteSpace(title))
+            title = "כתבה ללא כותרת";
+
+        var contentEndIndex = contentStartIndex >= 0
+            ? paragraphs.FindIndex(contentStartIndex, paragraph =>
+                IsKobisCreditsLine(paragraph)
+                || IsKobisPublicRelationsLine(paragraph)
+                || YouTubeUrlRegex.IsMatch(paragraph))
+            : -1;
+        if (contentEndIndex < 0)
+            contentEndIndex = paragraphs.Count;
+
+        var contentParagraphs = contentStartIndex >= 0
+            ? paragraphs
+                .Skip(contentStartIndex)
+                .Take(Math.Max(0, contentEndIndex - contentStartIndex))
+                .ToList()
+            : new List<string>();
+        var creditParagraphs = paragraphs
+            .Skip(Math.Max(0, contentStartIndex))
+            .Where(IsKobisCreditsLine)
+            .ToList();
+
+        var usedFallbackContent = string.IsNullOrWhiteSpace(normalizedDocument)
+            || titleStartIndex < 0
+            || contentParagraphs.Count == 0;
+        if (contentParagraphs.Count == 0)
+        {
+            contentParagraphs.Add(
+                "תוכן קובץ ה-Word לא זוהה. יש להשלים את הכתבה לפני הפרסום.");
+        }
+
+        var contentHtml = string.Join("\n", contentParagraphs.Select(paragraph =>
+            $"<p>{WebUtility.HtmlEncode(paragraph)}</p>"));
+        var credits = string.Join(" | ", creditParagraphs).Trim();
+        if (credits.Length > 2000)
+            credits = credits[..2000].TrimEnd();
+
+        var description = contentParagraphs.FirstOrDefault() ?? string.Empty;
+        if (description.Length > 500)
+            description = description[..497] + "...";
+        var wordCount = contentParagraphs.Sum(paragraph =>
+            paragraph.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length);
+
+        return new ParsedEmailArticle(
+            title,
+            contentHtml,
+            description,
+            youtubeUrl,
+            string.IsNullOrWhiteSpace(credits) ? null : credits,
+            Math.Max(1, (int)Math.Ceiling(wordCount / 200d)),
+            usedFallbackContent);
+    }
+
+    private static bool IsKobisDocumentHeader(string paragraph)
+    {
+        var comparable = ComparableTitle(paragraph);
+        return comparable.StartsWith("בסד", StringComparison.Ordinal)
+            || comparable.StartsWith("בעזהשי", StringComparison.Ordinal);
+    }
+
+    private static bool IsKobisCreditsLine(string paragraph)
+    {
+        if (YouTubeUrlRegex.IsMatch(paragraph) || IsKobisPublicRelationsLine(paragraph))
+            return false;
+
+        return LooksLikeCredits(paragraph)
+            || paragraph.StartsWith("מילים:", StringComparison.Ordinal)
+            || paragraph.StartsWith("מילים ולחן:", StringComparison.Ordinal)
+            || paragraph.StartsWith("לחן:", StringComparison.Ordinal)
+            || paragraph.StartsWith("עיבוד:", StringComparison.Ordinal)
+            || paragraph.StartsWith("הפקה מוזיקלית:", StringComparison.Ordinal);
+    }
+
+    private static bool IsKobisPublicRelationsLine(string paragraph) =>
+        paragraph.StartsWith("לפרטים", StringComparison.Ordinal)
+        || paragraph.StartsWith("ניהול יחסי ציבור", StringComparison.Ordinal)
+        || paragraph.Contains("קובי סלע", StringComparison.Ordinal);
 
     private static ParsedEmailArticle ParseMendyKornetMessage(
         string subject,

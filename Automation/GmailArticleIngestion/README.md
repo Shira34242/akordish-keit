@@ -26,6 +26,9 @@ category:
 - `mkgy5778@gmail.com`: prefer an attached Word article when present,
   otherwise extract the article after the personal introduction in the email
   body (`mendy-kornet-v1`).
+- `info@kobis.co.il`: extract the title, article, credits and YouTube link only
+  from the attached Word file; use the attached audio file and ignore the email
+  body (`kobis-attachments-v1`).
 
 ## Google Apps Script configuration
 
