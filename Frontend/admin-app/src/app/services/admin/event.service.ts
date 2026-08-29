@@ -36,7 +36,8 @@ export class EventService {
     uploaderSearch?: string,
     createdFrom?: string,
     createdTo?: string,
-    sortBy?: string
+    sortBy?: string,
+    summaryOnly: boolean = false
   ): Observable<PagedResult<Event>> {
     let params = new HttpParams()
       .set('pageNumber', pageNumber.toString())
@@ -68,6 +69,9 @@ export class EventService {
     }
     if (sortBy) {
       params = params.set('sortBy', sortBy);
+    }
+    if (summaryOnly) {
+      params = params.set('summaryOnly', 'true');
     }
 
     return this.http.get<PagedResult<Event>>(this.apiUrl, { params });

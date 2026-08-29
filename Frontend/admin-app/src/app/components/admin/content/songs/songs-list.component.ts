@@ -82,7 +82,7 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // Infinite scroll
   currentPage = 0;
-  pageSize = 25;
+  pageSize = 5;
   totalItems = 0;
   totalCount = 0;
   allLoaded = false;
@@ -228,7 +228,8 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
       this.uploaderSearch || undefined,
       this.dateFrom || undefined,
       this.dateTo || undefined,
-      this.approvalFilter === 'all' ? undefined : this.approvalFilter === 'approved'
+      this.approvalFilter === 'all' ? undefined : this.approvalFilter === 'approved',
+      true
     ).subscribe({
       next: (result: any) => {
         if (!this.isCurrentListRequest(requestId)) return;
@@ -274,7 +275,8 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
       this.uploaderSearch || undefined,
       this.dateFrom || undefined,
       this.dateTo || undefined,
-      this.approvalFilter === 'all' ? undefined : this.approvalFilter === 'approved'
+      this.approvalFilter === 'all' ? undefined : this.approvalFilter === 'approved',
+      true
     ).subscribe({
       next: (result: any) => {
         if (!this.isCurrentListRequest(requestId) || filterKey !== this.getFilterKey()) return;
@@ -381,7 +383,8 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
         this.sortBy, undefined,
         this.uploaderSearch || undefined,
         this.dateFrom || undefined, this.dateTo || undefined,
-        this.approvalFilter === 'all' ? undefined : this.approvalFilter === 'approved'
+        this.approvalFilter === 'all' ? undefined : this.approvalFilter === 'approved',
+        true
       ));
     }
 
@@ -433,7 +436,8 @@ export class SongsListComponent implements OnInit, OnDestroy, AfterViewInit {
         this.sortBy, undefined,
         this.uploaderSearch || undefined,
         this.dateFrom || undefined, this.dateTo || undefined,
-        this.approvalFilter === 'all' ? undefined : this.approvalFilter === 'approved'
+        this.approvalFilter === 'all' ? undefined : this.approvalFilter === 'approved',
+        true
       ));
     }
 

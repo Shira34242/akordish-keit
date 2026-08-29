@@ -192,7 +192,7 @@ export class SocialShareDesignerComponent implements OnInit, AfterViewInit, OnDe
     }
 
     if (this.kind === 'article') {
-      this.articleService.getArticles(1, 12, query, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, this.sortMode === 'views' ? 'views' : 'publish').subscribe({
+      this.articleService.getArticles(1, 12, query, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, this.sortMode === 'views' ? 'views' : 'publish', true).subscribe({
         next: result => {
           this.searchResults = result.items.map(article => ({
             id: article.id,
@@ -209,7 +209,7 @@ export class SocialShareDesignerComponent implements OnInit, AfterViewInit, OnDe
     }
 
     if (this.kind === 'event') {
-      this.eventService.getEvents(1, 12, query, true, undefined, undefined, undefined, undefined, undefined, undefined, 'created').subscribe({
+      this.eventService.getEvents(1, 12, query, true, undefined, undefined, undefined, undefined, undefined, undefined, 'created', true).subscribe({
         next: result => {
           this.searchResults = result.items.map(event => ({
             id: event.id,
@@ -226,7 +226,7 @@ export class SocialShareDesignerComponent implements OnInit, AfterViewInit, OnDe
     }
 
     if (this.kind === 'podcast') {
-      this.podcastService.getEpisodes(1, this.sortMode === 'views' ? 12 : 500, undefined, query, true, undefined, undefined, this.sortMode === 'views' ? 'views' : 'date').subscribe({
+      this.podcastService.getEpisodes(1, 12, undefined, query, true, undefined, undefined, this.sortMode === 'views' ? 'views' : 'date', true).subscribe({
         next: result => {
           const episodes = this.sortMode === 'newest'
             ? [...result.items].sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()).slice(0, 12)

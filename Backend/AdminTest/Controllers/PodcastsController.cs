@@ -33,9 +33,10 @@ namespace AkordishKeit.Controllers
             [FromQuery] bool? isActive = null,
             [FromQuery] DateTime? dateFrom = null,
             [FromQuery] DateTime? dateTo = null,
-            [FromQuery] string? sortBy = null)
+            [FromQuery] string? sortBy = null,
+            [FromQuery] bool summaryOnly = false)
         {
-            return Ok(await _podcastService.GetPodcastsAsync(pageNumber, pageSize, search, isActive, dateFrom, dateTo, sortBy));
+            return Ok(await _podcastService.GetPodcastsAsync(pageNumber, pageSize, search, isActive, dateFrom, dateTo, sortBy, summaryOnly));
         }
 
         [HttpGet("public")]
@@ -219,9 +220,10 @@ namespace AkordishKeit.Controllers
             [FromQuery] bool? isActive = null,
             [FromQuery] DateTime? dateFrom = null,
             [FromQuery] DateTime? dateTo = null,
-            [FromQuery] string? sortBy = null)
+            [FromQuery] string? sortBy = null,
+            [FromQuery] bool summaryOnly = false)
         {
-            return Ok(await _podcastService.GetEpisodesAsync(pageNumber, pageSize, podcastId, search, isActive, dateFrom, dateTo, sortBy));
+            return Ok(await _podcastService.GetEpisodesAsync(pageNumber, pageSize, podcastId, search, isActive, dateFrom, dateTo, sortBy, summaryOnly));
         }
 
         [HttpGet("episodes/{id:int}")]

@@ -135,7 +135,8 @@ export class ArticleService {
     uploaderSearch?: string,
     dateFrom?: string,
     dateTo?: string,
-    sortBy?: string
+    sortBy?: string,
+    summaryOnly: boolean = false
   ): Observable<PagedResult<Article>> {
     let params = new HttpParams()
       .set('pageNumber', pageNumber.toString())
@@ -186,6 +187,9 @@ export class ArticleService {
     }
     if (sortBy) {
       params = params.set('sortBy', sortBy);
+    }
+    if (summaryOnly) {
+      params = params.set('summaryOnly', 'true');
     }
 
     return this.http.get<PagedResult<Article>>(this.apiUrl, { params });

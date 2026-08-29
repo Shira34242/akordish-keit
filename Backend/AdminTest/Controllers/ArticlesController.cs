@@ -62,11 +62,12 @@ public class ArticlesController : ControllerBase
         [FromQuery] string? uploaderSearch = null,
         [FromQuery] DateTime? dateFrom = null,
         [FromQuery] DateTime? dateTo = null,
-        [FromQuery] string? sortBy = null)
+        [FromQuery] string? sortBy = null,
+        [FromQuery] bool summaryOnly = false)
     {
         var result = await _articleService.GetArticlesAsync(
             search, categoryId, contentType, status, isFeatured, isPremium, authorName, pageNumber, pageSize,
-            tagId, categoryIds, artistId, uploaderSearch, dateFrom, dateTo, sortBy);
+            tagId, categoryIds, artistId, uploaderSearch, dateFrom, dateTo, sortBy, summaryOnly);
 
         return Ok(result);
     }

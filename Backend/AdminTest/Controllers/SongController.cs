@@ -323,13 +323,15 @@ public class SongsController : ControllerBase
         [FromQuery] string? uploaderSearch = null,
         [FromQuery] DateTime? dateFrom = null,
         [FromQuery] DateTime? dateTo = null,
-        [FromQuery] bool? isApproved = null)
+        [FromQuery] bool? isApproved = null,
+        [FromQuery] bool summaryOnly = false)
     {
         try
         {
             var result = await _songService.GetSongsAsync(
                 page, pageSize, search, artistId, genreId, keyId, tagId, sortBy, includeUnapproved: true,
-                uploaderSearch: uploaderSearch, dateFrom: dateFrom, dateTo: dateTo, isApproved: isApproved);
+                uploaderSearch: uploaderSearch, dateFrom: dateFrom, dateTo: dateTo, isApproved: isApproved,
+                summaryOnly: summaryOnly);
 
             return Ok(new
             {

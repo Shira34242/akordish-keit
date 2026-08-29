@@ -49,7 +49,7 @@ export class EventsListComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // Infinite scroll
   currentPage = 0;
-  pageSize = 25;
+  pageSize = 5;
   totalItems = 0;
   allLoaded = false;
   loadingMore = false;
@@ -136,7 +136,8 @@ export class EventsListComponent implements OnInit, OnDestroy, AfterViewInit {
       this.uploaderSearch || undefined,
       this.dateFrom || undefined,
       this.dateTo || undefined,
-      this.sortBy
+      this.sortBy,
+      true
     ).subscribe({
       next: (result: PagedResult<Event>) => {
         this.events = result.items;
@@ -170,7 +171,8 @@ export class EventsListComponent implements OnInit, OnDestroy, AfterViewInit {
       this.uploaderSearch || undefined,
       this.dateFrom || undefined,
       this.dateTo || undefined,
-      this.sortBy
+      this.sortBy,
+      true
     ).subscribe({
       next: (result: PagedResult<Event>) => {
         this.events = [...this.events, ...result.items];
@@ -290,22 +292,24 @@ export class EventsListComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   previewEvent(event: Event): void {
-    this.selectedEventPreview = {
-      id: event.id,
-      name: event.name,
-      imageUrl: event.imageUrl,
-      ticketUrl: event.ticketUrl,
-      eventDate: event.eventDate,
-      location: event.location,
-      artistName: event.artistName,
-      taggedArtists: event.taggedArtists,
-      taggedArtistNames: event.taggedArtists?.map(artist => artist.artistName) ?? [],
-      eventStatus: event.eventStatus,
-      daysUntilEvent: event.daysUntilEvent,
-      isPast: event.isPast,
-      description: event.description,
-      uploaderProfile: event.uploaderProfile
-    };
+    this.eventService.getEvent(event.id).subscribe(fullEvent => {
+      this.selectedEventPreview = {
+        id: fullEvent.id,
+        name: fullEvent.name,
+        imageUrl: fullEvent.imageUrl,
+        ticketUrl: fullEvent.ticketUrl,
+        eventDate: fullEvent.eventDate,
+        location: fullEvent.location,
+        artistName: fullEvent.artistName,
+        taggedArtists: fullEvent.taggedArtists,
+        taggedArtistNames: fullEvent.taggedArtists?.map(artist => artist.artistName) ?? [],
+        eventStatus: fullEvent.eventStatus,
+        daysUntilEvent: fullEvent.daysUntilEvent,
+        isPast: fullEvent.isPast,
+        description: fullEvent.description,
+        uploaderProfile: fullEvent.uploaderProfile
+      };
+    });
   }
 
   setEventStatus(event: Event, isActive: boolean): void {
@@ -314,20 +318,7 @@ export class EventsListComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     this.savingStatusId = event.id;
-    this.eventService.updateEvent(event.id, {
-      name: event.name,
-      description: event.description,
-      imageUrl: event.imageUrl,
-      bannerImageUrl: event.bannerImageUrl,
-      ticketUrl: event.ticketUrl,
-      eventDate: event.eventDate,
-      location: event.location,
-      artistName: event.taggedArtists?.length ? '' : event.artistName,
-      artistIds: event.taggedArtists?.map(artist => artist.artistId) ?? [],
-      price: event.price,
-      displayOrder: event.displayOrder,
-      isActive
-    }).subscribe({
+    this.updateEventStatus(event.id, isActive).subscribe({
       next: (updated) => {
         event.isActive = updated.isActive;
         event.updatedAt = updated.updatedAt;
@@ -403,20 +394,7 @@ export class EventsListComponent implements OnInit, OnDestroy, AfterViewInit {
     if (!await this.siteAlerts.confirm(`${action} ${selectedEvents.length} הופעות שנבחרו?`)) return;
 
     this.bulkActionLoading = true;
-    forkJoin(selectedEvents.map(event => this.eventService.updateEvent(event.id, {
-      name: event.name,
-      description: event.description,
-      imageUrl: event.imageUrl,
-      bannerImageUrl: event.bannerImageUrl,
-      ticketUrl: event.ticketUrl,
-      eventDate: event.eventDate,
-      location: event.location,
-      artistName: event.taggedArtists?.length ? '' : event.artistName,
-      artistIds: event.taggedArtists?.map(artist => artist.artistId) ?? [],
-      price: event.price,
-      displayOrder: event.displayOrder,
-      isActive
-    }))).subscribe({
+    forkJoin(selectedEvents.map(event => this.updateEventStatus(event.id, isActive))).subscribe({
       next: () => {
         this.bulkActionLoading = false;
         this.loadEvents();
@@ -427,6 +405,25 @@ export class EventsListComponent implements OnInit, OnDestroy, AfterViewInit {
         this.bulkActionLoading = false;
       }
     });
+  }
+
+  private updateEventStatus(eventId: number, isActive: boolean) {
+    return this.eventService.getEvent(eventId).pipe(
+      switchMap(event => this.eventService.updateEvent(event.id, {
+        name: event.name,
+        description: event.description,
+        imageUrl: event.imageUrl,
+        bannerImageUrl: event.bannerImageUrl,
+        ticketUrl: event.ticketUrl,
+        eventDate: event.eventDate,
+        location: event.location,
+        artistName: event.taggedArtists?.length ? '' : event.artistName,
+        artistIds: event.taggedArtists?.map(artist => artist.artistId) ?? [],
+        price: event.price,
+        displayOrder: event.displayOrder,
+        isActive
+      }))
+    );
   }
 
   async bulkDuplicateSelected(): Promise<void> {

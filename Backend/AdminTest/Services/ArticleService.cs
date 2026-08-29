@@ -204,29 +204,77 @@ public class ArticleService : IArticleService
         string? uploaderSearch = null,
         DateTime? dateFrom = null,
         DateTime? dateTo = null,
-        string? sortBy = null)
+        string? sortBy = null,
+        bool summaryOnly = false)
     {
-        var query = _context.Articles
-            .AsNoTracking()
-            .Include(a => a.ArticleCategories)
-                .ThenInclude(ac => ac.Category)
-            .Include(a => a.ArticleTags)
-                .ThenInclude(at => at.Tag)
-            .Include(a => a.GalleryImages)
-            .Include(a => a.ArticleArtists)
-                .ThenInclude(aa => aa.Artist)
-            .Include(a => a.UploaderUser)
-                .ThenInclude(u => u!.ManagedArtist)
-            .Include(a => a.UploaderUser)
-                .ThenInclude(u => u!.ServiceProviderProfiles)
-            .AsSplitQuery()
-            .AsQueryable();
+        var query = _context.Articles.AsNoTracking().AsQueryable();
 
         // Apply filters
         query = ApplyFilters(query, search, categoryId, contentType, status, isFeatured, isPremium, authorName,
             tagId, categoryIds, artistId, uploaderSearch, dateFrom, dateTo);
 
         query = _rankingService.ApplyArticleOrdering(query, sortBy, ContentPromotionPlacement.Index);
+
+        if (summaryOnly)
+        {
+            pageNumber = Math.Max(1, pageNumber);
+            pageSize = Math.Clamp(pageSize, 1, 100);
+            var totalCount = await query.CountAsync();
+            var items = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .Select(article => new ArticleDto
+                {
+                    Id = article.Id,
+                    Title = article.Title,
+                    Subtitle = article.Subtitle,
+                    FeaturedImageUrl = article.FeaturedImageUrl,
+                    PublishDate = article.PublishDate,
+                    CreatedAt = article.CreatedAt,
+                    UpdatedAt = article.UpdatedAt,
+                    BumpedAt = article.BumpedAt,
+                    BumpCount = article.BumpCount,
+                    AuthorName = article.AuthorName,
+                    CategoryIds = article.ArticleCategories.Select(ac => ac.CategoryId).ToList(),
+                    CategoryNames = article.ArticleCategories.Select(ac => ac.Category.DisplayName).ToList(),
+                    ContentType = article.ContentType,
+                    Slug = article.Slug,
+                    IsFeatured = article.IsFeatured,
+                    Status = article.Status,
+                    ScheduledDate = article.ScheduledDate,
+                    IsPremium = article.IsPremium,
+                    ViewCount = article.ViewCount,
+                    LikeCount = article.LikeCount,
+                    TaggedArtists = article.ArticleArtists.Select(aa => new ArticleArtistDto
+                    {
+                        ArtistId = aa.ArtistId,
+                        ArtistName = aa.Artist.Name,
+                        ArtistImageUrl = aa.Artist.ImageUrl
+                    }).ToList(),
+                    SubmittedByUserId = article.SubmittedByUserId,
+                    UploaderUserId = article.UploaderUserId,
+                    UploaderProfileType = article.UploaderProfileType,
+                    UploaderProfileId = article.UploaderProfileId
+                })
+                .ToListAsync();
+
+            return new PagedResult<ArticleDto>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            };
+        }
+
+        query = query
+            .Include(a => a.ArticleCategories).ThenInclude(ac => ac.Category)
+            .Include(a => a.ArticleTags).ThenInclude(at => at.Tag)
+            .Include(a => a.GalleryImages)
+            .Include(a => a.ArticleArtists).ThenInclude(aa => aa.Artist)
+            .Include(a => a.UploaderUser).ThenInclude(u => u!.ManagedArtist)
+            .Include(a => a.UploaderUser).ThenInclude(u => u!.ServiceProviderProfiles)
+            .AsSplitQuery();
 
         // Get paginated entities
         var pagedEntities = await query.ToPagedResultAsync(pageNumber, pageSize);

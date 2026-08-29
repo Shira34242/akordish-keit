@@ -720,7 +720,8 @@ public class SongService : ISongService
         string? uploaderSearch = null,
         DateTime? dateFrom = null,
         DateTime? dateTo = null,
-        bool? isApproved = null)
+        bool? isApproved = null,
+        bool summaryOnly = false)
     {
         try
         {
@@ -822,7 +823,8 @@ public class SongService : ISongService
                         })
                         .ToList(),
 
-                    LyricsWithChords = s.LyricsWithChords,
+                    LyricsWithChords = summaryOnly ? string.Empty : s.LyricsWithChords,
+                    HasFullContent = !summaryOnly,
                     OriginalKeyId = s.OriginalKeyId,
                     OriginalKeyName = s.OriginalKey.Name,
                     EasyKeyId = s.EasyKeyId,

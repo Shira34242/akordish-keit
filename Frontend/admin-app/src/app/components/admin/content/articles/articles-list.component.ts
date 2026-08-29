@@ -86,7 +86,7 @@ export class ArticlesListComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // Infinite scroll
   currentPage = 0;
-  pageSize = 25;
+  pageSize = 5;
   totalItems = 0;
   allLoaded = false;
   loadingMore = false;
@@ -199,7 +199,8 @@ export class ArticlesListComponent implements OnInit, OnDestroy, AfterViewInit {
       this.uploaderSearch || undefined,
       this.dateFrom || undefined,
       this.dateTo || undefined,
-      this.sortBy
+      this.sortBy,
+      true
     ).subscribe({
       next: (result: PagedResult<Article>) => {
         this.articles = result.items;
@@ -244,7 +245,8 @@ export class ArticlesListComponent implements OnInit, OnDestroy, AfterViewInit {
       this.uploaderSearch || undefined,
       this.dateFrom || undefined,
       this.dateTo || undefined,
-      this.sortBy
+      this.sortBy,
+      true
     ).subscribe({
       next: (result: PagedResult<Article>) => {
         this.articles = [...this.articles, ...result.items];

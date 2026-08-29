@@ -34,7 +34,8 @@ public interface ISongService
         string? uploaderSearch = null,
         DateTime? dateFrom = null,
         DateTime? dateTo = null,
-        bool? isApproved = null);
+        bool? isApproved = null,
+        bool summaryOnly = false);
 
     /// <summary>
     /// Get a single song by ID

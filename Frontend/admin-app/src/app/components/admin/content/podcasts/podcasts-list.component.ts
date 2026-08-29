@@ -30,8 +30,12 @@ export class PodcastsListComponent implements OnInit {
 
   podcasts: Podcast[] = [];
   episodes: PodcastEpisode[] = [];
+  automationDraftEpisodes: PodcastEpisode[] = [];
+  automationDraftTotal = 0;
   selectedSeriesEpisodes: PodcastEpisode[] = [];
   loading = true;
+  automationDraftsLoading = true;
+  showAllAutomationDrafts = false;
   seriesEpisodesLoading = false;
   bulkActionLoading = false;
   savingEpisodeId: number | null = null;
@@ -57,23 +61,60 @@ export class PodcastsListComponent implements OnInit {
     (localStorage.getItem('admin-podcast-series-episodes-view') as 'grid' | 'list') || 'grid';
 
   currentPage = 1;
-  pageSize = 25;
+  pageSize = 5;
   totalItems = 0;
   totalPages = 0;
 
   ngOnInit(): void {
     this.loadPodcasts();
     this.loadEpisodes();
+    this.loadAutomationDrafts();
     this.loadPromotionState();
   }
 
+  get visibleAutomationDraftEpisodes(): PodcastEpisode[] {
+    return this.showAllAutomationDrafts
+      ? this.automationDraftEpisodes
+      : this.automationDraftEpisodes.slice(0, 4);
+  }
+
+  loadAutomationDrafts(): void {
+    this.automationDraftsLoading = true;
+    this.podcastService.getEpisodes(1, 5, undefined, undefined, false, undefined, undefined, 'date', true).subscribe({
+      next: result => {
+        this.automationDraftEpisodes = result.items.filter(episode => this.isYouTubeEpisode(episode));
+        this.automationDraftTotal = result.totalCount;
+        this.automationDraftsLoading = false;
+      },
+      error: () => {
+        this.automationDraftEpisodes = [];
+        this.automationDraftTotal = 0;
+        this.automationDraftsLoading = false;
+      }
+    });
+  }
+
+  toggleAutomationDrafts(): void {
+    this.showAllAutomationDrafts = !this.showAllAutomationDrafts;
+    if (this.showAllAutomationDrafts && this.automationDraftEpisodes.length < this.automationDraftTotal) {
+      this.podcastService.getEpisodes(1, 100, undefined, undefined, false, undefined, undefined, 'date', true).subscribe(result => {
+        this.automationDraftEpisodes = result.items.filter(episode => this.isYouTubeEpisode(episode));
+      });
+    }
+  }
+
   loadPodcasts(): void {
-    this.podcastService.getPodcasts(1, 200).subscribe({
+    this.podcastService.getPodcasts(1, 5, undefined, undefined, true).subscribe({
       next: result => {
         this.podcasts = [...result.items].sort((a, b) => this.compareDatesDescending(a.createdAt, b.createdAt));
         this.selectedPodcastIds.clear();
         if (!this.selectedSeriesPodcast && this.podcasts.length > 0) {
           this.selectSeries(this.podcasts[0]);
+        }
+        if (result.totalCount > result.items.length) {
+          setTimeout(() => this.podcastService.getPodcasts(1, 100, undefined, undefined, true).subscribe(all => {
+            this.podcasts = [...all.items].sort((a, b) => this.compareDatesDescending(a.createdAt, b.createdAt));
+          }), 0);
         }
       }
     });
@@ -89,7 +130,8 @@ export class PodcastsListComponent implements OnInit {
       this.getActiveFilter(),
       this.dateFrom || undefined,
       this.dateTo || undefined,
-      this.sortBy
+      this.sortBy,
+      true
     ).subscribe({
       next: (result: PagedResult<PodcastEpisode>) => {
         this.episodes = result.items;
@@ -385,10 +427,18 @@ export class PodcastsListComponent implements OnInit {
     }
 
     this.seriesEpisodesLoading = true;
-    this.podcastService.getEpisodes(1, 200, this.selectedSeriesPodcast.id, undefined, undefined, undefined, undefined, 'date').subscribe({
+    this.podcastService.getEpisodes(1, 5, this.selectedSeriesPodcast.id, undefined, undefined, undefined, undefined, 'date', true).subscribe({
       next: result => {
         this.selectedSeriesEpisodes = result.items;
         this.seriesEpisodesLoading = false;
+        if (result.totalCount > result.items.length) {
+          const podcastId = this.selectedSeriesPodcast?.id;
+          setTimeout(() => this.podcastService.getEpisodes(1, 100, podcastId, undefined, undefined, undefined, undefined, 'date', true).subscribe(all => {
+            if (this.selectedSeriesPodcast?.id === podcastId) {
+              this.selectedSeriesEpisodes = all.items;
+            }
+          }), 0);
+        }
       },
       error: () => {
         this.selectedSeriesEpisodes = [];
@@ -417,22 +467,13 @@ export class PodcastsListComponent implements OnInit {
     if (episode.isActive === isActive || this.savingEpisodeId === episode.id) return;
 
     this.savingEpisodeId = episode.id;
-    this.podcastService.updateEpisode(episode.id, {
-      podcastId: episode.podcastId,
-      title: episode.title,
-      slug: episode.slug,
-      description: episode.description,
-      episodeNumber: episode.episodeNumber,
-      sourceUrl: episode.sourceUrl,
-      embedUrl: episode.embedUrl,
-      thumbnailUrl: episode.thumbnailUrl,
-      platform: episode.platform,
-      publishedAt: episode.publishedAt,
-      displayOrder: episode.displayOrder,
-      isActive
-    }).subscribe({
+    this.updateEpisodeStatus(episode.id, isActive).subscribe({
       next: updated => {
         episode.isActive = updated.isActive;
+        if (updated.isActive) {
+          this.automationDraftEpisodes = this.automationDraftEpisodes.filter(item => item.id !== updated.id);
+          this.automationDraftTotal = Math.max(0, this.automationDraftTotal - 1);
+        }
         this.savingEpisodeId = null;
       },
       error: () => {
@@ -446,14 +487,7 @@ export class PodcastsListComponent implements OnInit {
     if (podcast.isActive === isActive || this.savingPodcastId === podcast.id) return;
 
     this.savingPodcastId = podcast.id;
-    this.podcastService.updatePodcast(podcast.id, {
-      name: podcast.name,
-      slug: podcast.slug,
-      description: podcast.description,
-      imageUrl: podcast.imageUrl,
-      displayOrder: podcast.displayOrder,
-      isActive
-    }).subscribe({
+    this.updatePodcastStatus(podcast.id, isActive).subscribe({
       next: updated => {
         podcast.isActive = updated.isActive;
         this.savingPodcastId = null;
@@ -516,20 +550,7 @@ export class PodcastsListComponent implements OnInit {
     if (!await this.siteAlerts.confirm(`${action} ${selectedEpisodes.length} פרקים שנבחרו?`)) return;
 
     this.bulkActionLoading = true;
-    forkJoin(selectedEpisodes.map(episode => this.podcastService.updateEpisode(episode.id, {
-      podcastId: episode.podcastId,
-      title: episode.title,
-      slug: episode.slug,
-      description: episode.description,
-      episodeNumber: episode.episodeNumber,
-      sourceUrl: episode.sourceUrl,
-      embedUrl: episode.embedUrl,
-      thumbnailUrl: episode.thumbnailUrl,
-      platform: episode.platform,
-      publishedAt: episode.publishedAt,
-      displayOrder: episode.displayOrder,
-      isActive
-    }))).subscribe({
+    forkJoin(selectedEpisodes.map(episode => this.updateEpisodeStatus(episode.id, isActive))).subscribe({
       next: () => {
         this.bulkActionLoading = false;
         this.loadEpisodes();
@@ -615,14 +636,7 @@ export class PodcastsListComponent implements OnInit {
     if (!await this.siteAlerts.confirm(`${action} ${selectedPodcasts.length} סדרות שנבחרו?`)) return;
 
     this.bulkActionLoading = true;
-    forkJoin(selectedPodcasts.map(podcast => this.podcastService.updatePodcast(podcast.id, {
-      name: podcast.name,
-      slug: podcast.slug,
-      description: podcast.description,
-      imageUrl: podcast.imageUrl,
-      displayOrder: podcast.displayOrder,
-      isActive
-    }))).subscribe({
+    forkJoin(selectedPodcasts.map(podcast => this.updatePodcastStatus(podcast.id, isActive))).subscribe({
       next: () => {
         this.bulkActionLoading = false;
         this.loadPodcasts();
@@ -645,6 +659,46 @@ export class PodcastsListComponent implements OnInit {
 
   getStatusLabel(isActive: boolean): string {
     return isActive ? 'מוצג באתר' : 'טיוטה';
+  }
+
+  private updateEpisodeStatus(episodeId: number, isActive: boolean) {
+    return this.podcastService.getEpisode(episodeId).pipe(
+      switchMap(episode => this.podcastService.updateEpisode(episode.id, {
+        podcastId: episode.podcastId,
+        title: episode.title,
+        slug: episode.slug,
+        description: episode.description,
+        episodeNumber: episode.episodeNumber,
+        sourceUrl: episode.sourceUrl,
+        embedUrl: episode.embedUrl,
+        thumbnailUrl: episode.thumbnailUrl,
+        platform: episode.platform,
+        publishedAt: episode.publishedAt,
+        displayOrder: episode.displayOrder,
+        isActive
+      }))
+    );
+  }
+
+  private updatePodcastStatus(podcastId: number, isActive: boolean) {
+    return this.podcastService.getPodcast(podcastId).pipe(
+      switchMap(podcast => this.podcastService.updatePodcast(podcast.id, {
+        name: podcast.name,
+        slug: podcast.slug,
+        description: podcast.description,
+        imageUrl: podcast.imageUrl,
+        displayOrder: podcast.displayOrder,
+        isActive
+      }))
+    );
+  }
+
+  private isYouTubeEpisode(episode: PodcastEpisode): boolean {
+    const platform = episode.platform?.toLowerCase() ?? '';
+    const sourceUrl = episode.sourceUrl?.toLowerCase() ?? '';
+    return platform.includes('youtube')
+      || sourceUrl.includes('youtube.com/')
+      || sourceUrl.includes('youtu.be/');
   }
 
   private getActiveFilter(): boolean | undefined {

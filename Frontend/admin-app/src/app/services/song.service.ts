@@ -270,7 +270,8 @@ export class SongService {
         uploaderSearch?: string,
         dateFrom?: string,
         dateTo?: string,
-        isApproved?: boolean
+        isApproved?: boolean,
+        summaryOnly: boolean = false
     ): Observable<any> {
         let params = new HttpParams()
             .set('page', page.toString())
@@ -303,6 +304,9 @@ export class SongService {
         }
         if (isApproved !== undefined) {
             params = params.set('isApproved', String(isApproved));
+        }
+        if (summaryOnly) {
+            params = params.set('summaryOnly', 'true');
         }
 
         return this.http.get<any>(`${this.apiUrl}/manage/all`, { params });

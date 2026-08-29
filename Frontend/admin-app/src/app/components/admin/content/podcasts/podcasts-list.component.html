@@ -1,4 +1,62 @@
 <div class="podcast-admin" dir="rtl">
+  <section
+    class="automation-review-banner"
+    *ngIf="automationDraftsLoading || automationDraftEpisodes.length > 0"
+    aria-labelledby="automation-review-title">
+    <div class="automation-review-header">
+      <div class="automation-review-heading">
+        <span class="automation-review-icon material-icons" aria-hidden="true">smart_toy</span>
+        <div>
+          <h2 id="automation-review-title">פרקים חדשים ממתינים לאישור</h2>
+          <p>פרקים שנקלטו אוטומטית מ־YouTube ונשמרו כטיוטה.</p>
+        </div>
+      </div>
+      <span class="automation-review-count" *ngIf="!automationDraftsLoading">
+        {{ automationDraftEpisodes.length }} ממתינים
+      </span>
+    </div>
+
+    <div class="automation-review-loading" *ngIf="automationDraftsLoading">
+      <span class="material-icons" aria-hidden="true">hourglass_top</span>
+      בודק אם נוספו פרקים חדשים...
+    </div>
+
+    <div class="automation-review-grid" *ngIf="!automationDraftsLoading">
+      <button
+        type="button"
+        class="automation-review-item"
+        *ngFor="let episode of visibleAutomationDraftEpisodes"
+        (click)="editEpisode(episode)"
+        [attr.aria-label]="'בדיקה ואישור של ' + episode.title">
+        <span
+          class="automation-review-thumb"
+          [style.background-image]="episode.thumbnailUrl ? 'url(' + episode.thumbnailUrl + ')' : ''">
+          <span *ngIf="!episode.thumbnailUrl" class="material-icons" aria-hidden="true">play_circle</span>
+        </span>
+        <span class="automation-review-copy">
+          <small>{{ episode.podcastName }}</small>
+          <strong>{{ episode.title }}</strong>
+          <span>{{ formatDate(episode.publishedAt) }}</span>
+        </span>
+        <span class="automation-review-action">
+          בדיקה ואישור
+          <span class="material-icons" aria-hidden="true">arrow_back</span>
+        </span>
+      </button>
+    </div>
+
+    <button
+      *ngIf="!automationDraftsLoading && automationDraftEpisodes.length > 4"
+      type="button"
+      class="automation-review-toggle"
+      (click)="toggleAutomationDrafts()">
+      {{ showAllAutomationDrafts ? 'הצג פחות' : 'הצג את כל הפרקים' }}
+      <span class="material-icons" aria-hidden="true">
+        {{ showAllAutomationDrafts ? 'expand_less' : 'expand_more' }}
+      </span>
+    </button>
+  </section>
+
   <!-- Bulk Actions – Podcasts -->
   <div class="bulk-actions-bar" *ngIf="selectedPodcastIds.size > 0">
     <div class="bulk-summary">

@@ -18,7 +18,8 @@ namespace AkordishKeit.Services
             string? uploaderSearch = null,
             DateTime? createdFrom = null,
             DateTime? createdTo = null,
-            string? sortBy = null);
+            string? sortBy = null,
+            bool summaryOnly = false);
 
         /// <summary>
         /// קבלת הופעה לפי מזהה

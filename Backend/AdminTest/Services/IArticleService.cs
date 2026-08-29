@@ -20,7 +20,8 @@ public interface IArticleService
         string? uploaderSearch = null,
         DateTime? dateFrom = null,
         DateTime? dateTo = null,
-        string? sortBy = null);
+        string? sortBy = null,
+        bool summaryOnly = false);
 
     Task<ArticleDto?> GetArticleByIdAsync(int id);
 

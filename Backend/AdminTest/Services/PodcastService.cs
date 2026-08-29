@@ -28,10 +28,10 @@ namespace AkordishKeit.Services
             _rankingService = rankingService;
         }
 
-        public async Task<PagedResult<PodcastDto>> GetPodcastsAsync(int pageNumber, int pageSize, string? search, bool? isActive, DateTime? dateFrom = null, DateTime? dateTo = null, string? sortBy = null)
+        public async Task<PagedResult<PodcastDto>> GetPodcastsAsync(int pageNumber, int pageSize, string? search, bool? isActive, DateTime? dateFrom = null, DateTime? dateTo = null, string? sortBy = null, bool summaryOnly = false)
         {
             var query = _context.Podcasts
-                .Include(p => p.Episodes.Where(e => !e.IsDeleted))
+                .AsNoTracking()
                 .Where(p => !p.IsDeleted)
                 .AsQueryable();
 
@@ -57,6 +57,26 @@ namespace AkordishKeit.Services
             }
 
             query = _rankingService.ApplyPodcastOrdering(query, sortBy, ContentPromotionPlacement.Index);
+
+            if (summaryOnly)
+            {
+                var summaries = await query.Select(p => new PodcastDto
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Slug = p.Slug,
+                    ImageUrl = p.ImageUrl,
+                    DisplayOrder = p.DisplayOrder,
+                    IsActive = p.IsActive,
+                    CreatedAt = p.CreatedAt,
+                    UpdatedAt = p.UpdatedAt,
+                    EpisodeCount = p.Episodes.Count(e => !e.IsDeleted)
+                }).ToPagedResultAsync(pageNumber, pageSize);
+
+                return summaries;
+            }
+
+            query = query.Include(p => p.Episodes.Where(e => !e.IsDeleted));
             var result = await query.ToPagedResultAsync(pageNumber, pageSize);
 
             return new PagedResult<PodcastDto>
@@ -381,12 +401,10 @@ namespace AkordishKeit.Services
             return true;
         }
 
-        public async Task<PagedResult<PodcastEpisodeDto>> GetEpisodesAsync(int pageNumber, int pageSize, int? podcastId, string? search, bool? isActive, DateTime? dateFrom = null, DateTime? dateTo = null, string? sortBy = null)
+        public async Task<PagedResult<PodcastEpisodeDto>> GetEpisodesAsync(int pageNumber, int pageSize, int? podcastId, string? search, bool? isActive, DateTime? dateFrom = null, DateTime? dateTo = null, string? sortBy = null, bool summaryOnly = false)
         {
             var query = _context.PodcastEpisodes
-                .Include(e => e.Podcast)
-                .Include(e => e.PodcastEpisodeArtists)
-                    .ThenInclude(pa => pa.Artist)
+                .AsNoTracking()
                 .Where(e => !e.IsDeleted && !e.Podcast.IsDeleted)
                 .AsQueryable();
 
@@ -409,6 +427,39 @@ namespace AkordishKeit.Services
             }
 
             query = _rankingService.ApplyPodcastEpisodeOrdering(query, sortBy, ContentPromotionPlacement.Index);
+
+            if (summaryOnly)
+            {
+                return await query.Select(e => new PodcastEpisodeDto
+                {
+                    Id = e.Id,
+                    PodcastId = e.PodcastId,
+                    PodcastName = e.Podcast.Name,
+                    PodcastSlug = e.Podcast.Slug,
+                    Title = e.Title,
+                    Slug = e.Slug,
+                    EpisodeNumber = e.EpisodeNumber,
+                    SourceUrl = e.SourceUrl,
+                    ThumbnailUrl = e.ThumbnailUrl,
+                    Platform = e.Platform,
+                    ViewCount = e.ViewCount,
+                    PublishedAt = e.PublishedAt,
+                    DisplayOrder = e.DisplayOrder,
+                    IsActive = e.IsActive,
+                    CreatedAt = e.CreatedAt,
+                    UpdatedAt = e.UpdatedAt,
+                    TaggedArtists = e.PodcastEpisodeArtists.Select(pa => new PodcastEpisodeArtistDto
+                    {
+                        ArtistId = pa.ArtistId,
+                        ArtistName = pa.Artist.Name,
+                        ArtistImageUrl = pa.Artist.ImageUrl
+                    }).ToList()
+                }).ToPagedResultAsync(pageNumber, pageSize);
+            }
+
+            query = query
+                .Include(e => e.Podcast)
+                .Include(e => e.PodcastEpisodeArtists).ThenInclude(pa => pa.Artist);
             var result = await query.ToPagedResultAsync(pageNumber, pageSize);
 
             return new PagedResult<PodcastEpisodeDto>

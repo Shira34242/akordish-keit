@@ -33,12 +33,11 @@ namespace AkordishKeit.Services
             string? uploaderSearch = null,
             DateTime? createdFrom = null,
             DateTime? createdTo = null,
-            string? sortBy = null)
+            string? sortBy = null,
+            bool summaryOnly = false)
         {
             var query = _context.Events
-                .Include(e => e.EventArtists)
-                    .ThenInclude(ea => ea.Artist)
-                .Include(e => e.SubmittedByUser)
+                .AsNoTracking()
                 .Where(e => !e.IsDeleted)
                 .AsQueryable();
 
@@ -103,6 +102,58 @@ namespace AkordishKeit.Services
                 "uploader" => query.OrderBy(e => e.SubmittedByUser != null ? e.SubmittedByUser.Username : string.Empty).ThenBy(e => e.Name),
                 _ => query.OrderBy(e => e.EventDate).ThenBy(e => e.DisplayOrder)
             };
+
+            if (summaryOnly)
+            {
+                pageNumber = Math.Max(1, pageNumber);
+                pageSize = Math.Clamp(pageSize, 1, 100);
+                var totalCount = await query.CountAsync();
+                var items = await query
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .Select(eventEntity => new EventDto
+                    {
+                        Id = eventEntity.Id,
+                        Name = eventEntity.Name,
+                        ImageUrl = eventEntity.ImageUrl,
+                        TicketUrl = eventEntity.TicketUrl,
+                        EventDate = eventEntity.EventDate,
+                        Location = eventEntity.Location,
+                        ArtistName = eventEntity.ArtistName,
+                        TaggedArtists = eventEntity.EventArtists.Select(ea => new EventArtistDto
+                        {
+                            ArtistId = ea.ArtistId,
+                            ArtistName = ea.Artist.Name,
+                            ArtistImageUrl = ea.Artist.ImageUrl
+                        }).ToList(),
+                        DisplayOrder = eventEntity.DisplayOrder,
+                        IsActive = eventEntity.IsActive,
+                        CreatedAt = eventEntity.CreatedAt,
+                        UpdatedAt = eventEntity.UpdatedAt,
+                        SubmittedByUserId = eventEntity.SubmittedByUserId
+                    })
+                    .ToListAsync();
+
+                foreach (var item in items)
+                {
+                    item.DaysUntilEvent = CalculateDaysUntilEvent(item.EventDate);
+                    item.IsPast = IsPastEvent(item.EventDate);
+                    item.IsToday = item.DaysUntilEvent == 0 && !item.IsPast;
+                    item.EventStatus = GetEventStatus(item.EventDate);
+                }
+
+                return new PagedResult<EventDto>
+                {
+                    Items = items,
+                    TotalCount = totalCount,
+                    PageNumber = pageNumber,
+                    PageSize = pageSize
+                };
+            }
+
+            query = query
+                .Include(e => e.EventArtists).ThenInclude(ea => ea.Artist)
+                .Include(e => e.SubmittedByUser);
 
             // Apply pagination
             var pagedResult = await query.ToPagedResultAsync(pageNumber, pageSize);
