@@ -579,6 +579,32 @@ public class NotificationService : INotificationService
         });
     }
 
+    public Task NotifyEmailArticleDuplicateSkippedAsync(
+        int existingArticleId,
+        string existingArticleTitle,
+        string incomingArticleTitle,
+        string producerEmail)
+    {
+        var message =
+            $"המייל \"{incomingArticleTitle}\" מהמפיק {producerEmail} לא יצר טיוטה חדשה, " +
+            $"מפני שסרטון ה-YouTube כבר קיים בכתבה \"{existingArticleTitle}\".";
+        if (message.Length > 1000)
+        {
+            message = message[..997].TrimEnd() + "...";
+        }
+
+        return CreateAdminContentSubmissionNotificationsAsync(new CreateNotificationDto
+        {
+            Title = "מייל כתבה זוהה ככפילות",
+            Message = message,
+            Type = NotificationType.System,
+            Category = NotificationCategory.Article,
+            RelatedEntityType = "EmailArticleDuplicate",
+            RelatedEntityId = existingArticleId,
+            ActionUrl = $"/admin/content/articles/edit/{existingArticleId}"
+        });
+    }
+
     public Task NotifyArticleApprovedAsync(int userId, int articleId, string articleTitle, string? slug, int contentType)
     {
         var routePrefix = contentType == (int)ArticleContentType.Blog ? "/blog" : "/news";

@@ -6,7 +6,9 @@ and automatically labels new Gmail threads from those senders with
 text and the preferred audio file to the backend. A producer may supply these
 as email attachments or through a different public Google Drive folder link in
 every email. For Drive folders, the automation prefers a Google Doc whose name
-contains `קומוניקט` and an MP3 audio file; images and video files are ignored.
+contains `קומוניקט` and an MP3 audio file no larger than 20MB; larger audio,
+images and video files are ignored. When every audio file is larger than 20MB,
+the draft is still created without audio and is marked for review.
 
 ## Backend authentication
 
@@ -29,6 +31,12 @@ category:
 - `info@kobis.co.il`: extract the title, article, credits and YouTube link only
   from the attached Word file; use the attached audio file and ignore the email
   body (`kobis-attachments-v1`).
+- `yosefpr@gmail.com`: extract the YouTube link from the email body and the
+  title, article and public-relations credit only from the attached Word file;
+  use the attached audio file (`yosef-arnefeld-v1`).
+- `mottymedianyc@gmail.com`: extract the YouTube link and the final Hebrew
+  article section from the email body, separate its credits, and fetch the
+  preferred MP3 from the linked Drive folder (`motty-media-v1`).
 
 ## Google Apps Script configuration
 

@@ -23,6 +23,8 @@ public sealed class EmailArticleIngestionRequestDto
     [StringLength(100_000)]
     public string? DocumentText { get; set; }
 
+    public bool AudioTooLarge { get; set; }
+
     public IFormFile? AudioFile { get; set; }
 }
 

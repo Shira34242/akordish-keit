@@ -41,7 +41,7 @@ public interface IEmailArticleIngestionService
 
 public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
 {
-    private const long MaxAudioFileSizeBytes = 30 * 1024 * 1024;
+    private const long MaxAudioFileSizeBytes = 20 * 1024 * 1024;
     private static readonly TimeSpan YouTubeDuplicateWindow = TimeSpan.FromDays(7);
     private static readonly HashSet<string> AllowedAudioExtensions =
         new(StringComparer.OrdinalIgnoreCase) { ".mp3", ".wav", ".m4a", ".aac", ".ogg" };
@@ -187,6 +187,10 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
                 request.PlainBody,
                 request.DocumentText),
             "kobis-attachments-v1" => ParseKobisAttachmentsMessage(request.DocumentText),
+            "yosef-arnefeld-v1" => ParseYosefArnefeldMessage(
+                request.PlainBody,
+                request.DocumentText),
+            "motty-media-v1" => ParseMottyMediaMessage(request.PlainBody),
             _ => throw new InvalidOperationException($"Unsupported producer template: {producer.Template}")
         };
         var warnings = BuildStructureWarnings(parsed, request, producer.Template);
@@ -265,6 +269,12 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
                     senderEmail,
                     request.MessageId);
 
+                await _notificationService.NotifyEmailArticleDuplicateSkippedAsync(
+                    youtubeDuplicate.Id,
+                    youtubeDuplicate.Title,
+                    parsed.Title,
+                    senderEmail);
+
                 return new EmailArticleIngestionResponseDto
                 {
                     Success = true,
@@ -278,13 +288,17 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
         }
 
         string? audioUrl = null;
-        if (request.AudioFile == null || request.AudioFile.Length == 0)
+        if (request.AudioTooLarge)
+        {
+            AddWarning(warnings, "קובץ השמע גדול מ-20MB ולכן לא הועלה");
+        }
+        else if (request.AudioFile == null || request.AudioFile.Length == 0)
         {
             AddWarning(warnings, "לא נמצא קובץ שמע");
         }
         else if (request.AudioFile.Length > MaxAudioFileSizeBytes)
         {
-            AddWarning(warnings, "קובץ השמע גדול מ-30MB");
+            AddWarning(warnings, "קובץ השמע גדול מ-20MB ולכן לא הועלה");
         }
         else
         {
@@ -387,13 +401,17 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
         if (parsed.Title == "כתבה ללא כותרת")
             AddWarning(warnings, "לא זוהתה כותרת");
 
-        if (request.AudioFile == null || request.AudioFile.Length == 0)
+        if (request.AudioTooLarge)
+        {
+            AddWarning(warnings, "קובץ השמע גדול מ-20MB ולכן לא הועלה");
+        }
+        else if (request.AudioFile == null || request.AudioFile.Length == 0)
         {
             AddWarning(warnings, "לא נמצא קובץ שמע");
         }
         else if (request.AudioFile.Length > MaxAudioFileSizeBytes)
         {
-            AddWarning(warnings, "קובץ השמע גדול מ-30MB");
+            AddWarning(warnings, "קובץ השמע גדול מ-20MB ולכן לא הועלה");
         }
         else if (!AllowedAudioExtensions.Contains(Path.GetExtension(request.AudioFile.FileName)))
         {
@@ -430,6 +448,8 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
             .Select(match => NormalizeDetectedUrl(match.Value))
             .Where(url => !knownUrls.Contains(url))
             .Where(url => templateName != "mendy-kornet-v1" || !IsMendyKornetAllowedExtraUrl(url))
+            .Where(url => templateName != "yosef-arnefeld-v1" || !IsYosefArnefeldAllowedExtraUrl(url))
+            .Where(url => templateName != "motty-media-v1" || !IsMottyMediaAllowedExtraUrl(url))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
         if (otherUrls.Count > 0)
@@ -474,6 +494,20 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
             case "kobis-attachments-v1":
                 if (string.IsNullOrWhiteSpace(request.DocumentText))
                     AddWarning(warnings, "קובץ ה-Word חסר או שלא ניתן היה לקרוא אותו");
+                break;
+
+            case "yosef-arnefeld-v1":
+                if (string.IsNullOrWhiteSpace(request.DocumentText))
+                    AddWarning(warnings, "קובץ הקומוניקט המצורף חסר או שלא ניתן היה לקרוא אותו");
+                break;
+
+            case "motty-media-v1":
+                if (folderUrls.Count == 0)
+                    AddWarning(warnings, "לא נמצא קישור לתיקיית Drive עם קובץ השמע");
+                else if (folderUrls.Count > 1)
+                    AddWarning(warnings, $"נמצאו {folderUrls.Count} קישורים לתיקיות Drive במקום קישור אחד");
+                if (driveUrls.Count > folderUrls.Count)
+                    AddWarning(warnings, "נמצא קישור Drive נוסף שאינו קישור התיקייה שהוגדר");
                 break;
         }
 
@@ -538,6 +572,20 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
         return Uri.TryCreate(url, UriKind.Absolute, out var uri)
             && uri.Host.EndsWith("youtube.com", StringComparison.OrdinalIgnoreCase)
             && uri.AbsolutePath.Equals("/playlist", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsYosefArnefeldAllowedExtraUrl(string url)
+    {
+        return Uri.TryCreate(url, UriKind.Absolute, out var uri)
+            && uri.Host.EndsWith("facebook.com", StringComparison.OrdinalIgnoreCase)
+            && uri.AbsolutePath.TrimEnd('/').Equals("/yosefpr1", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsMottyMediaAllowedExtraUrl(string url)
+    {
+        return Uri.TryCreate(url, UriKind.Absolute, out var uri)
+            && (uri.Host.Equals("musicvelt.com", StringComparison.OrdinalIgnoreCase)
+                || uri.Host.EndsWith(".musicvelt.com", StringComparison.OrdinalIgnoreCase));
     }
 
     private static bool HasShortUnexpectedOpening(string plainBody, string title)
@@ -826,6 +874,197 @@ public sealed class EmailArticleIngestionService : IEmailArticleIngestionService
             Math.Max(1, (int)Math.Ceiling(wordCount / 200d)),
             usedFallbackContent);
     }
+
+    private static ParsedEmailArticle ParseMottyMediaMessage(string plainBody)
+    {
+        var normalizedBody = (plainBody ?? string.Empty)
+            .Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Replace('\r', '\n')
+            .Trim();
+        var youtubeMatch = YouTubeUrlRegex.Match(normalizedBody);
+        var youtubeUrl = youtubeMatch.Success
+            ? NormalizeDetectedUrl(youtubeMatch.Value)
+            : null;
+
+        var sections = Regex.Split(normalizedBody, @"(?m)^\s*[_-]{10,}\s*$")
+            .Select(section => section.Trim())
+            .Where(section => !string.IsNullOrWhiteSpace(section))
+            .ToList();
+        var articleSource = sections.LastOrDefault(section =>
+                section.Contains("קרדיטים", StringComparison.Ordinal)
+                || section.Contains("יחסי ציבור", StringComparison.Ordinal))
+            ?? sections.LastOrDefault()
+            ?? string.Empty;
+        var articleBlocks = Regex.Split(articleSource, @"\n\s*\n")
+            .Select(block => CleanText(Regex.Replace(block, @"\s*\n\s*", " ")))
+            .Where(block => !string.IsNullOrWhiteSpace(block))
+            .ToList();
+
+        var title = articleBlocks.FirstOrDefault() ?? "כתבה ללא כותרת";
+        var remainingBlocks = articleBlocks.Skip(1).ToList();
+        var creditsIndex = remainingBlocks.FindIndex(IsMottyMediaCreditsBlock);
+        var contentParagraphs = creditsIndex >= 0
+            ? remainingBlocks.Take(creditsIndex).ToList()
+            : remainingBlocks;
+        var creditParagraphs = creditsIndex >= 0
+            ? remainingBlocks
+                .Skip(creditsIndex)
+                .Select(block => Regex.Replace(block, @"^\s*קרדיטים\s*:?\s*", string.Empty))
+                .Select(CleanText)
+                .Where(block => !string.IsNullOrWhiteSpace(block))
+                .ToList()
+            : new List<string>();
+
+        var credits = string.Join(" | ", creditParagraphs).Trim();
+        if (string.IsNullOrWhiteSpace(credits))
+            credits = ExtractMottyMediaEnglishCredits(normalizedBody) ?? string.Empty;
+        if (credits.Length > 2000)
+            credits = credits[..2000].TrimEnd();
+
+        var usedFallbackContent = sections.Count < 2 || contentParagraphs.Count == 0;
+        if (contentParagraphs.Count == 0)
+        {
+            contentParagraphs.Add(
+                "תוכן הכתבה בעברית לא זוהה. יש להשלים את הכתבה לפני הפרסום.");
+        }
+
+        var contentHtml = string.Join("\n", contentParagraphs.Select(paragraph =>
+            $"<p>{WebUtility.HtmlEncode(paragraph)}</p>"));
+        var description = contentParagraphs.FirstOrDefault() ?? string.Empty;
+        if (description.Length > 500)
+            description = description[..497] + "...";
+        var wordCount = contentParagraphs.Sum(paragraph =>
+            paragraph.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length);
+
+        return new ParsedEmailArticle(
+            title,
+            contentHtml,
+            description,
+            youtubeUrl,
+            string.IsNullOrWhiteSpace(credits) ? null : credits,
+            Math.Max(1, (int)Math.Ceiling(wordCount / 200d)),
+            usedFallbackContent);
+    }
+
+    private static bool IsMottyMediaCreditsBlock(string block)
+    {
+        if (IsCreditsHeading(block) || LooksLikeCredits(block))
+            return true;
+
+        return Regex.IsMatch(
+            block,
+            @"^(?:אמן|לחן|הפקה|ביצוע|עיבוד|מקהלות|מיקס|הקלטת שירה|יחסי ציבור)\s*:",
+            RegexOptions.IgnoreCase);
+    }
+
+    private static string? ExtractMottyMediaEnglishCredits(string normalizedBody)
+    {
+        var match = Regex.Match(
+            normalizedBody,
+            @"(?ims)^\s*Credits\s*:?\s*$\s*(?<credits>.*?)(?=^\s*(?:Lyrics\s*:?\s*|[_-]{10,})\s*$)");
+        if (!match.Success)
+            return null;
+
+        var lines = match.Groups["credits"].Value
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .Select(line => CleanText(line.TrimStart('*', '•', '-', ' ')))
+            .Where(line => !string.IsNullOrWhiteSpace(line))
+            .ToList();
+        return lines.Count == 0 ? null : string.Join(" | ", lines);
+    }
+
+    private static ParsedEmailArticle ParseYosefArnefeldMessage(
+        string plainBody,
+        string? documentText)
+    {
+        var youtubeMatch = YouTubeUrlRegex.Match(plainBody ?? string.Empty);
+        var youtubeUrl = youtubeMatch.Success
+            ? NormalizeDetectedUrl(youtubeMatch.Value)
+            : null;
+
+        var normalizedDocument = (documentText ?? string.Empty)
+            .Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Replace('\r', '\n')
+            .Trim();
+        var paragraphs = normalizedDocument
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .Select(CleanText)
+            .Where(paragraph => !string.IsNullOrWhiteSpace(paragraph))
+            .ToList();
+
+        var titleStartIndex = paragraphs.FindIndex(paragraph => !IsYosefArnefeldDocumentHeader(paragraph));
+        var contentStartIndex = titleStartIndex >= 0
+            ? paragraphs.FindIndex(titleStartIndex + 1, paragraph =>
+                !IsYosefArnefeldClosingLine(paragraph)
+                && !IsYosefArnefeldPublicRelationsLine(paragraph)
+                && paragraph.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length >= 12)
+            : -1;
+        if (titleStartIndex >= 0 && contentStartIndex < 0 && titleStartIndex + 1 < paragraphs.Count)
+            contentStartIndex = titleStartIndex + 1;
+
+        var titleLines = titleStartIndex >= 0
+            ? paragraphs
+                .Skip(titleStartIndex)
+                .Take(Math.Max(1, contentStartIndex - titleStartIndex))
+                .ToList()
+            : new List<string>();
+        var title = BuildTomerCohenTitle(titleLines);
+        if (string.IsNullOrWhiteSpace(title))
+            title = "כתבה ללא כותרת";
+
+        var contentEndIndex = contentStartIndex >= 0
+            ? paragraphs.FindIndex(contentStartIndex, paragraph =>
+                IsYosefArnefeldClosingLine(paragraph)
+                || IsYosefArnefeldPublicRelationsLine(paragraph))
+            : -1;
+        if (contentEndIndex < 0)
+            contentEndIndex = paragraphs.Count;
+
+        var contentParagraphs = contentStartIndex >= 0
+            ? paragraphs
+                .Skip(contentStartIndex)
+                .Take(Math.Max(0, contentEndIndex - contentStartIndex))
+                .ToList()
+            : new List<string>();
+        var hasPublicRelationsCredit = paragraphs.Any(IsYosefArnefeldPublicRelationsLine);
+        var credits = hasPublicRelationsCredit ? "יחסי ציבור: יוסף ארנפלד" : null;
+
+        var usedFallbackContent = string.IsNullOrWhiteSpace(normalizedDocument)
+            || titleStartIndex < 0
+            || contentParagraphs.Count == 0;
+        if (contentParagraphs.Count == 0)
+        {
+            contentParagraphs.Add(
+                "תוכן קובץ הקומוניקט לא זוהה. יש להשלים את הכתבה לפני הפרסום.");
+        }
+
+        var contentHtml = string.Join("\n", contentParagraphs.Select(paragraph =>
+            $"<p>{WebUtility.HtmlEncode(paragraph)}</p>"));
+        var description = contentParagraphs.FirstOrDefault() ?? string.Empty;
+        if (description.Length > 500)
+            description = description[..497] + "...";
+        var wordCount = contentParagraphs.Sum(paragraph =>
+            paragraph.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length);
+
+        return new ParsedEmailArticle(
+            title,
+            contentHtml,
+            description,
+            youtubeUrl,
+            credits,
+            Math.Max(1, (int)Math.Ceiling(wordCount / 200d)),
+            usedFallbackContent);
+    }
+
+    private static bool IsYosefArnefeldDocumentHeader(string paragraph) =>
+        ComparableTitle(paragraph).StartsWith("בעזרתהיתברך", StringComparison.Ordinal);
+
+    private static bool IsYosefArnefeldClosingLine(string paragraph) =>
+        ComparableTitle(paragraph).StartsWith("האזנהער", StringComparison.Ordinal);
+
+    private static bool IsYosefArnefeldPublicRelationsLine(string paragraph) =>
+        paragraph.StartsWith("לפרטים נוספים", StringComparison.OrdinalIgnoreCase)
+        || paragraph.Contains("YosefPR@gmail.com", StringComparison.OrdinalIgnoreCase);
 
     private static ParsedEmailArticle ParseKobisAttachmentsMessage(string? documentText)
     {

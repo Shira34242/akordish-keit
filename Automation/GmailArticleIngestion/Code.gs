@@ -3,6 +3,7 @@ const PROCESSED_LABEL = 'כתבות/נקלט';
 const REVIEW_LABEL = 'כתבות/דורש בדיקה';
 const ERROR_LABEL = 'כתבות/שגיאת קליטה';
 const MAX_THREADS_PER_RUN = 5;
+const MAX_AUDIO_FILE_SIZE_BYTES = 20 * 1024 * 1024;
 const AUDIO_EXTENSIONS = /\.(mp3|wav|m4a|aac|ogg)$/i;
 const WORD_EXTENSIONS = /\.(doc|docx)$/i;
 const DRIVE_FOLDER_REGEX = /https?:\/\/drive\.google\.com\/drive\/folders\/([A-Za-z0-9_-]+)/i;
@@ -38,9 +39,16 @@ function processIncomingArticles() {
         includeInlineImages: false,
         includeAttachments: true
       });
-      let audio = attachments.find(function(file) {
+      const attachmentAudioCandidates = attachments.filter(function(file) {
         return AUDIO_EXTENSIONS.test(file.getName());
       });
+      attachmentAudioCandidates.sort(function(left, right) {
+        return audioPriority_(left) - audioPriority_(right);
+      });
+      let audio = attachmentAudioCandidates.find(function(file) {
+        return file.getBytes().length <= MAX_AUDIO_FILE_SIZE_BYTES;
+      });
+      let audioTooLarge = attachmentAudioCandidates.length > 0 && !audio;
       const wordDocument = attachments.find(function(file) {
         return WORD_EXTENSIONS.test(file.getName());
       });
@@ -57,6 +65,9 @@ function processIncomingArticles() {
         if (!audio && folderResources.audioFile) {
           audio = folderResources.audioFile;
         }
+        if (!audio && folderResources.audioTooLarge) {
+          audioTooLarge = true;
+        }
       }
 
       const payload = {
@@ -68,6 +79,8 @@ function processIncomingArticles() {
 
       if (audio) {
         payload.audioFile = audio;
+      } else if (audioTooLarge) {
+        payload.audioTooLarge = 'true';
       }
       if (documentText) {
         payload.documentText = documentText;
@@ -200,7 +213,10 @@ function readDriveFolderResources_(folderId) {
   documentCandidates.sort(function(left, right) {
     return documentPriority_(left) - documentPriority_(right);
   });
-  audioCandidates.sort(function(left, right) {
+  const eligibleAudioCandidates = audioCandidates.filter(function(file) {
+    return file.getSize() <= MAX_AUDIO_FILE_SIZE_BYTES;
+  });
+  eligibleAudioCandidates.sort(function(left, right) {
     return audioPriority_(left) - audioPriority_(right);
   });
 
@@ -213,14 +229,15 @@ function readDriveFolderResources_(folderId) {
   }
 
   let audioFile = null;
-  if (audioCandidates.length > 0) {
-    const audio = audioCandidates[0];
+  if (eligibleAudioCandidates.length > 0) {
+    const audio = eligibleAudioCandidates[0];
     audioFile = audio.getBlob().setName(audio.getName());
   }
 
   return {
     documentText: documentText,
-    audioFile: audioFile
+    audioFile: audioFile,
+    audioTooLarge: audioCandidates.length > 0 && eligibleAudioCandidates.length === 0
   };
 }
 

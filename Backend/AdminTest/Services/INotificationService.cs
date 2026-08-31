@@ -30,6 +30,11 @@ public interface INotificationService
         string articleTitle,
         string producerEmail,
         IReadOnlyCollection<string> warnings);
+    Task NotifyEmailArticleDuplicateSkippedAsync(
+        int existingArticleId,
+        string existingArticleTitle,
+        string incomingArticleTitle,
+        string producerEmail);
     Task NotifyArticleApprovedAsync(int userId, int articleId, string articleTitle, string? slug, int contentType);
     Task NotifyEventSubmittedAsync(int userId, int eventId, string eventName);
     Task NotifyEventApprovedAsync(int userId, int eventId, string eventName);
