@@ -153,7 +153,6 @@ export const routes: Routes = [
             {
                 path: 'artists',
                 loadComponent: () => import('./components/artists-list/artists-list.component').then(m => m.ArtistsListComponent),
-                canActivate: [authGuard],
                 data: { reuseKey: 'artists' },
                 title: 'אומנים - אקורדישקייט'
             },
@@ -181,13 +180,11 @@ export const routes: Routes = [
             {
                 path: 'artist/:id/:slug',
                 loadComponent: () => import('./components/artist-detail/artist-detail.component').then(m => m.ArtistDetailComponent),
-                canActivate: [authGuard],
                 title: 'אקורדישקייט'
             },
             {
                 path: 'artist/:id',
                 loadComponent: () => import('./components/artist-detail/artist-detail.component').then(m => m.ArtistDetailComponent),
-                canActivate: [authGuard],
                 title: 'אקורדישקייט'
             },
             {
@@ -287,7 +284,7 @@ export const routes: Routes = [
                 path: 'delete-account',
                 loadComponent: () => import('./components/public/legal-page/legal-page.component').then(m => m.LegalPageComponent),
                 title: 'מחיקת חשבון - אקורדישקייט',
-                data: { page: 'delete-account' }
+                data: { page: 'delete-account', noIndex: true }
             },
             {
                 path: 'terms',

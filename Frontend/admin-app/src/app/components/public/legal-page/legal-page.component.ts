@@ -365,6 +365,7 @@ export class LegalPageComponent implements OnInit {
       title: this.page.title,
       description: this.page.description,
       path,
+      noIndex: this.route.snapshot.data['noIndex'] === true,
       structuredData: [
         this.seo.organizationSchema(),
         this.seo.breadcrumbSchema([

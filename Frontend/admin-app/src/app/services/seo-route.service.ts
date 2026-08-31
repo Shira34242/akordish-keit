@@ -128,7 +128,13 @@ export class SeoRouteService {
       '/artist/create',
       '/teacher/create',
       '/service-provider/create',
-      '/submit'
+      '/submit',
+      '/unsubscribe',
+      '/join-index',
+      '/join-chords',
+      '/stories',
+      '/delete-account',
+      '/404'
     ].some(prefix => path === prefix || path.startsWith(`${prefix}/`));
   }
 }
