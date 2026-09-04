@@ -32,6 +32,10 @@ namespace AkordishKeit.Data.Configurations
             builder.HasIndex(sv => new { sv.SongId, sv.IpAddress, sv.UserAgent, sv.ViewedAt })
                 .HasDatabaseName("IX_SongViews_SongId_IpAddress_UserAgent_ViewedAt");
 
+            // Index for date-range analytics queries that scan across all songs
+            builder.HasIndex(sv => sv.ViewedAt)
+                .HasDatabaseName("IX_SongViews_ViewedAt");
+
             // Default value for ViewedAt
             builder.Property(sv => sv.ViewedAt)
                 .HasDefaultValueSql("GETUTCDATE()");

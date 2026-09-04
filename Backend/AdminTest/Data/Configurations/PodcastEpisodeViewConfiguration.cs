@@ -47,6 +47,9 @@ namespace AkordishKeit.Data.Configurations
             builder.HasIndex(v => new { v.PodcastEpisodeId, v.IpAddress, v.UserAgent, v.ViewedAt })
                 .HasDatabaseName("IX_PodcastEpisodeViews_Episode_Guest_ViewedAt");
 
+            builder.HasIndex(v => v.ViewedAt)
+                .HasDatabaseName("IX_PodcastEpisodeViews_ViewedAt");
+
             builder.HasQueryFilter(v => !v.PodcastEpisode.IsDeleted);
         }
     }

@@ -28,6 +28,11 @@ namespace AkordishKeit.Data.Configurations
 
             builder.HasIndex(bc => new { bc.ButtonType, bc.ItemId, bc.ClickedAt })
                 .HasDatabaseName("IX_ButtonClicks_ButtonType_ItemId_ClickedAt");
+
+            // Covers analytics dashboard queries that filter by ButtonType (or a prefix of it)
+            // and a ClickedAt range without pinning ItemId.
+            builder.HasIndex(bc => new { bc.ButtonType, bc.ClickedAt })
+                .HasDatabaseName("IX_ButtonClicks_ButtonType_ClickedAt");
         }
     }
 }

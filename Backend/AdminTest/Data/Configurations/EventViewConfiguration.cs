@@ -34,6 +34,9 @@ namespace AkordishKeit.Data.Configurations
 
             builder.HasIndex(ev => new { ev.EventId, ev.IpAddress, ev.UserAgent, ev.ViewedAt })
                 .HasDatabaseName("IX_EventViews_EventId_IpAddress_UserAgent_ViewedAt");
+
+            builder.HasIndex(ev => ev.ViewedAt)
+                .HasDatabaseName("IX_EventViews_ViewedAt");
         }
     }
 }

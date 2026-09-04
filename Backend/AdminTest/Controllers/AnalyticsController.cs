@@ -140,13 +140,17 @@ public class AnalyticsController : ControllerBase
 
         var eventListQuery = _context.EventViews.AsNoTracking()
             .Where(v => v.EventId == null && v.ViewedAt >= range.StartUtc && v.ViewedAt < range.EndUtc);
-        var eventListViews = await eventListQuery.CountAsync();
-        var eventListUnique = await eventListQuery.Select(v => new
-        {
-            v.UserId,
-            IpAddress = v.UserId.HasValue ? null : v.IpAddress,
-            UserAgent = v.UserId.HasValue ? null : v.UserAgent
-        }).Distinct().CountAsync();
+        var eventListStats = await eventListQuery.GroupBy(_ => 1)
+            .Select(g => new
+            {
+                Views = g.Count(),
+                Unique = g.Select(v => v.UserId.HasValue
+                    ? "user:" + v.UserId.Value.ToString()
+                    : "visitor:" + (v.IpAddress ?? "") + "|" + (v.UserAgent ?? ""))
+                    .Distinct().Count()
+            }).SingleOrDefaultAsync();
+        var eventListViews = eventListStats?.Views ?? 0;
+        var eventListUnique = eventListStats?.Unique ?? 0;
         var eventListTotal = await _context.EventViews.CountAsync(v => v.EventId == null);
 
         var topEvents = await _context.EventViews.AsNoTracking()
@@ -214,13 +218,17 @@ public class AnalyticsController : ControllerBase
             .ToDictionaryAsync(x => x.Id, x => x.Count);
 
         var pageViewsQuery = buttonPeriodQuery.Where(c => c.ButtonType == "page_view" || c.ButtonType.StartsWith("page_view_"));
-        var pageViews = await pageViewsQuery.CountAsync();
-        var pageUniqueVisitors = await pageViewsQuery.Select(v => new
-        {
-            v.UserId,
-            IpAddress = v.UserId.HasValue ? null : v.IpAddress,
-            UserAgent = v.UserId.HasValue ? null : v.UserAgent
-        }).Distinct().CountAsync();
+        var pageViewStats = await pageViewsQuery.GroupBy(_ => 1)
+            .Select(g => new
+            {
+                Views = g.Count(),
+                Unique = g.Select(v => v.UserId.HasValue
+                    ? "user:" + v.UserId.Value.ToString()
+                    : "visitor:" + (v.IpAddress ?? "") + "|" + (v.UserAgent ?? ""))
+                    .Distinct().Count()
+            }).SingleOrDefaultAsync();
+        var pageViews = pageViewStats?.Views ?? 0;
+        var pageUniqueVisitors = pageViewStats?.Unique ?? 0;
         var topPages = await pageViewsQuery.GroupBy(v => v.ItemLabel ?? "/")
             .Select(g => new
             {
@@ -246,34 +254,46 @@ public class AnalyticsController : ControllerBase
         var mobileDevice = deviceRows.FirstOrDefault(x => x.Type == "page_view_mobile");
         var unclassifiedQuery = pageViewsQuery
             .Where(x => x.ButtonType == "page_view" || x.ButtonType == "page_view_unknown");
-        var unclassifiedViews = await unclassifiedQuery.CountAsync();
-        var unclassifiedUniqueVisitors = await unclassifiedQuery.Select(v => new
-        {
-            v.UserId,
-            IpAddress = v.UserId.HasValue ? null : v.IpAddress,
-            UserAgent = v.UserId.HasValue ? null : v.UserAgent
-        }).Distinct().CountAsync();
+        var unclassifiedStats = await unclassifiedQuery.GroupBy(_ => 1)
+            .Select(g => new
+            {
+                Views = g.Count(),
+                Unique = g.Select(v => v.UserId.HasValue
+                    ? "user:" + v.UserId.Value.ToString()
+                    : "visitor:" + (v.IpAddress ?? "") + "|" + (v.UserAgent ?? ""))
+                    .Distinct().Count()
+            }).SingleOrDefaultAsync();
+        var unclassifiedViews = unclassifiedStats?.Views ?? 0;
+        var unclassifiedUniqueVisitors = unclassifiedStats?.Unique ?? 0;
 
         var articleQuery = _context.ArticleViews.AsNoTracking()
             .Where(v => v.ViewedAt >= range.StartUtc && v.ViewedAt < range.EndUtc);
-        var articleViews = await articleQuery.CountAsync();
-        var articleUnique = await articleQuery.Select(v => new
-        {
-            v.UserId,
-            IpAddress = v.UserId.HasValue ? null : v.IpAddress,
-            UserAgent = v.UserId.HasValue ? null : v.UserAgent
-        }).Distinct().CountAsync();
+        var articleStats = await articleQuery.GroupBy(_ => 1)
+            .Select(g => new
+            {
+                Views = g.Count(),
+                Unique = g.Select(v => v.UserId.HasValue
+                    ? "user:" + v.UserId.Value.ToString()
+                    : "visitor:" + (v.IpAddress ?? "") + "|" + (v.UserAgent ?? ""))
+                    .Distinct().Count()
+            }).SingleOrDefaultAsync();
+        var articleViews = articleStats?.Views ?? 0;
+        var articleUnique = articleStats?.Unique ?? 0;
         var articleViewsTotal = await _context.Articles.Where(a => !a.IsDeleted).SumAsync(a => (long)a.ViewCount);
 
         var chordQuery = _context.SongViews.AsNoTracking()
             .Where(v => v.ViewedAt >= range.StartUtc && v.ViewedAt < range.EndUtc);
-        var chordViews = await chordQuery.CountAsync();
-        var chordUnique = await chordQuery.Select(v => new
-        {
-            v.UserId,
-            IpAddress = v.UserId.HasValue ? null : v.IpAddress,
-            UserAgent = v.UserId.HasValue ? null : v.UserAgent
-        }).Distinct().CountAsync();
+        var chordStats = await chordQuery.GroupBy(_ => 1)
+            .Select(g => new
+            {
+                Views = g.Count(),
+                Unique = g.Select(v => v.UserId.HasValue
+                    ? "user:" + v.UserId.Value.ToString()
+                    : "visitor:" + (v.IpAddress ?? "") + "|" + (v.UserAgent ?? ""))
+                    .Distinct().Count()
+            }).SingleOrDefaultAsync();
+        var chordViews = chordStats?.Views ?? 0;
+        var chordUnique = chordStats?.Unique ?? 0;
         var chordViewsTotal = await _context.Songs.Where(s => !s.IsDeleted).SumAsync(s => (long)s.ViewCount);
         var topChordSongs = await chordQuery.GroupBy(v => v.SongId)
             .Select(g => new
@@ -291,13 +311,17 @@ public class AnalyticsController : ControllerBase
 
         var podcastQuery = _context.PodcastEpisodeViews.AsNoTracking()
             .Where(v => v.ViewedAt >= range.StartUtc && v.ViewedAt < range.EndUtc);
-        var podcastViews = await podcastQuery.CountAsync();
-        var podcastUnique = await podcastQuery.Select(v => new
-        {
-            v.UserId,
-            IpAddress = v.UserId.HasValue ? null : v.IpAddress,
-            UserAgent = v.UserId.HasValue ? null : v.UserAgent
-        }).Distinct().CountAsync();
+        var podcastStats = await podcastQuery.GroupBy(_ => 1)
+            .Select(g => new
+            {
+                Views = g.Count(),
+                Unique = g.Select(v => v.UserId.HasValue
+                    ? "user:" + v.UserId.Value.ToString()
+                    : "visitor:" + (v.IpAddress ?? "") + "|" + (v.UserAgent ?? ""))
+                    .Distinct().Count()
+            }).SingleOrDefaultAsync();
+        var podcastViews = podcastStats?.Views ?? 0;
+        var podcastUnique = podcastStats?.Unique ?? 0;
         var podcastViewsTotal = await _context.PodcastEpisodes.Where(e => !e.IsDeleted).SumAsync(e => (long)e.ViewCount);
         var topPodcastEpisodes = await podcastQuery.GroupBy(v => v.PodcastEpisodeId)
             .Select(g => new
@@ -344,14 +368,18 @@ public class AnalyticsController : ControllerBase
             .Where(v => v.ViewedAt >= range.StartUtc && v.ViewedAt < range.EndUtc);
         var adClicksQuery = _context.AdCampaignClicks.AsNoTracking()
             .Where(v => v.ClickedAt >= range.StartUtc && v.ClickedAt < range.EndUtc);
-        var adViews = await adViewsQuery.CountAsync();
         var adClicks = await adClicksQuery.CountAsync();
-        var adUnique = await adViewsQuery.Select(v => new
-        {
-            v.UserId,
-            IpAddress = v.UserId.HasValue ? null : v.IpAddress,
-            UserAgent = v.UserId.HasValue ? null : v.UserAgent
-        }).Distinct().CountAsync();
+        var adViewStatsSummary = await adViewsQuery.GroupBy(_ => 1)
+            .Select(g => new
+            {
+                Views = g.Count(),
+                Unique = g.Select(v => v.UserId.HasValue
+                    ? "user:" + v.UserId.Value.ToString()
+                    : "visitor:" + (v.IpAddress ?? "") + "|" + (v.UserAgent ?? ""))
+                    .Distinct().Count()
+            }).SingleOrDefaultAsync();
+        var adViews = adViewStatsSummary?.Views ?? 0;
+        var adUnique = adViewStatsSummary?.Unique ?? 0;
         var adViewStats = await adViewsQuery.GroupBy(v => v.AdCampaignId)
             .Select(g => new { Id = g.Key, Views = g.Count() }).ToListAsync();
         var adClickStats = await adClicksQuery.GroupBy(v => v.AdCampaignId)
@@ -558,7 +586,7 @@ public class AnalyticsController : ControllerBase
             trend
         };
 
-        _cache.Set(cacheKey, dashboard, TimeSpan.FromSeconds(30));
+        _cache.Set(cacheKey, dashboard, TimeSpan.FromMinutes(5));
         return Ok(dashboard);
     }
 

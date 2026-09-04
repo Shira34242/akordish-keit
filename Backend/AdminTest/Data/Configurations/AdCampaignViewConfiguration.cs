@@ -32,6 +32,9 @@ namespace AkordishKeit.Data.Configurations
             builder.HasIndex(av => new { av.AdCampaignId, av.IpAddress, av.UserAgent, av.ViewedAt })
                 .HasDatabaseName("IX_AdCampaignViews_AdCampaignId_IpAddress_UserAgent_ViewedAt");
 
+            builder.HasIndex(av => av.ViewedAt)
+                .HasDatabaseName("IX_AdCampaignViews_ViewedAt");
+
             // Default value for ViewedAt
             builder.Property(av => av.ViewedAt)
                 .HasDefaultValueSql("GETUTCDATE()");

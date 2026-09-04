@@ -42,6 +42,8 @@ namespace AkordishKeit.Data.Configurations
             // Indexes for performance
             builder.HasIndex(av => new { av.ArticleId, av.UserId, av.ViewedAt });
             builder.HasIndex(av => new { av.ArticleId, av.IpAddress, av.UserAgent, av.ViewedAt });
+            builder.HasIndex(av => av.ViewedAt)
+                .HasDatabaseName("IX_ArticleViews_ViewedAt");
 
             builder.HasQueryFilter(av => !av.Article.IsDeleted);
         }
