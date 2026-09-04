@@ -1,4 +1,4 @@
-<section class="analytics-page" dir="rtl">
+<section class="analytics-page" [class.is-refreshing]="loading && dashboard" dir="rtl">
   <header class="analytics-header">
     <div>
       <span class="eyebrow">מרכז נתונים</span>
@@ -29,6 +29,7 @@
   </nav>
 
   <div *ngIf="loading && !dashboard" class="state-card"><span class="spinner"></span><p>טוען את נתוני האנליטיקס...</p></div>
+  <div *ngIf="loading && dashboard" class="refresh-banner"><span class="spinner spinner-sm"></span><span>מעדכן נתונים לטווח שנבחר...</span></div>
   <div *ngIf="error" class="state-card error"><span class="material-symbols-outlined">error</span><p>לא הצלחנו לטעון את הנתונים.</p><button type="button" (click)="loadAll()">נסה שוב</button></div>
 
   <div *ngIf="dashboard && (!dashboard.traffic || !dashboard.dataQuality) && !error" class="state-card">
