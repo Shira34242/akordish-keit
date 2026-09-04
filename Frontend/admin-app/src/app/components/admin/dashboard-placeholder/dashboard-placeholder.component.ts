@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { EMPTY, forkJoin, of } from 'rxjs';
-import { catchError, expand, finalize, map, reduce } from 'rxjs/operators';
+import { forkJoin, of } from 'rxjs';
+import { catchError, finalize, map } from 'rxjs/operators';
 import { AnalyticsService, AnalyticsDashboard } from '../../../services/analytics.service';
 import { ReportService } from '../../../services/report.service';
 import { Report } from '../../../models/report.model';
@@ -437,38 +437,11 @@ export class AdminDashboardPlaceholderComponent implements OnInit {
     private loadRecentUsersWindow() {
         const cutoff = new Date();
         cutoff.setDate(cutoff.getDate() - 60);
-        const pageSize = 100;
 
-        return this.userService.getUsers(undefined, undefined, undefined, 1, pageSize, undefined, undefined, 'created_desc').pipe(
-            expand(result => {
-                const items = result.items ?? [];
-                const lastUser = items[items.length - 1];
-                const loadedCount = result.pageNumber * result.pageSize;
-                const shouldLoadMore = !!lastUser &&
-                    loadedCount < result.totalCount &&
-                    new Date(lastUser.createdAt).getTime() >= cutoff.getTime();
-
-                if (!shouldLoadMore) return EMPTY;
-
-                return this.userService.getUsers(
-                    undefined,
-                    undefined,
-                    undefined,
-                    result.pageNumber + 1,
-                    pageSize,
-                    undefined,
-                    undefined,
-                    'created_desc'
-                );
-            }),
-            reduce((accumulator, result) => ({
-                totalCount: result.totalCount,
-                users: accumulator.users.concat(result.items ?? [])
-            }), { totalCount: 0, users: [] as UserListDto[] }),
-            map(result => ({
-                totalCount: result.totalCount,
-                users: result.users.filter(user => new Date(user.createdAt).getTime() >= cutoff.getTime())
-            }))
+        return this.userService.getUsers(
+            undefined, undefined, undefined, 1, 1000, undefined, undefined, 'created_desc', this.isoDate(cutoff)
+        ).pipe(
+            map(result => ({ totalCount: result.totalCount, users: result.items ?? [] }))
         );
     }
 

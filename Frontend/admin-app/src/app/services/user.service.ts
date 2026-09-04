@@ -21,7 +21,8 @@ export class UserService {
     pageSize: number = 10,
     contentTag?: number,
     preferredInstrumentId?: number,
-    sortBy?: string
+    sortBy?: string,
+    createdAfter?: string
   ): Observable<PagedResult<UserListDto>> {
     let params = new HttpParams()
       .set('pageNumber', pageNumber.toString())
@@ -44,6 +45,9 @@ export class UserService {
     }
     if (sortBy) {
       params = params.set('sortBy', sortBy);
+    }
+    if (createdAfter) {
+      params = params.set('createdAfter', createdAfter);
     }
 
     return this.http.get<PagedResult<UserListDto>>(this.apiUrl, { params, withCredentials: true });

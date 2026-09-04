@@ -24,12 +24,18 @@ public class UserService : IUserService
         int? preferredInstrumentId,
         int pageNumber,
         int pageSize,
-        string? sortBy = null)
+        string? sortBy = null,
+        DateTime? createdAfter = null)
     {
         var query = _context.Users
             .Include(u => u.PreferredInstrument)
             .Where(u => !u.IsDeleted)
             .AsQueryable();
+
+        if (createdAfter.HasValue)
+        {
+            query = query.Where(u => u.CreatedAt >= createdAfter.Value);
+        }
 
         // Apply filters
         if (!string.IsNullOrWhiteSpace(search))

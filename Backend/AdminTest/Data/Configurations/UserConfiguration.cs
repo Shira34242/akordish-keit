@@ -115,6 +115,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.HasIndex(e => e.RankingScore)
                .HasDatabaseName("IX_Users_RankingScore");
 
+        builder.HasIndex(e => e.CreatedAt)
+               .HasDatabaseName("IX_Users_CreatedAt");
+
         // Relationships
 
         // PreferredInstrument
