@@ -80,7 +80,7 @@
         <div class="audio-section" *ngIf="article.audioEmbedUrl">
           <ng-container *ngIf="isAudioFileUrl(article.audioEmbedUrl); else audioEmbed">
             <div class="audio-player-card">
-              <audio class="audio-player" [src]="getAudioStreamUrl(article.audioEmbedUrl)" controls preload="metadata"></audio>
+              <audio class="audio-player" [src]="getAudioStreamUrl(article.audioEmbedUrl)" controls controlsList="nodownload noplaybackrate" preload="metadata"></audio>
               <button
                 *ngIf="!isMediaAvailable"
                 type="button"

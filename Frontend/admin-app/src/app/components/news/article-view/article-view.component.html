@@ -96,6 +96,7 @@
                 class="audio-player"
                 [src]="getAudioStreamUrl(article.audioEmbedUrl)"
                 controls
+                controlsList="nodownload noplaybackrate"
                 preload="metadata"
                 (loadstart)="onAudioLoadStart()"
                 (loadedmetadata)="onAudioReady()"
